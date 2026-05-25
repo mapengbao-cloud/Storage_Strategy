@@ -85,6 +85,8 @@ def find_date_in_target(ws, month, day):
 def compute_summary_values(source_path):
     """Compute the 17 summary values (row 4 equivalent) and O6 value
     from raw data in the source workbook's 报价及预中标 sheet.
+    Used for 日前 and 实时 files where 充放测算 row 4 formulas
+    reference 报价及预中标 internally.
     Returns (list_of_17_values, o6_value)."""
     wb = openpyxl.load_workbook(source_path, data_only=False)
 
@@ -97,7 +99,7 @@ def compute_summary_values(source_path):
     ws1 = wb[sn_price]
     ws2 = wb[sn_cap]
 
-    # Read raw data: col J (统一电价日前), col N (充放电需求)
+    # Read raw data: col J (电价), col N (充放电需求)
     charge_vol = 0.0
     discharge_vol = 0.0
     charge_price_sum = 0.0
@@ -170,6 +172,63 @@ def compute_summary_values(source_path):
 
     wb.close()
     return [A, B, C, D, E, F, G, H, I_val, J_val, K, L, M_val, N_val, O_val, P, Q], o6
+
+
+def compute_settlement_values(source_path):
+    """Compute the 17 summary values and O6 from a 日结算收益复盘 file.
+
+    The 日结算 file's 充放测算 row 4 formulas reference settlement sheets
+    (充电日清算费用 / 放电日清算费用), NOT 报价及预中标. This function
+    reads the base values from those settlement sheets and computes
+    the dependent values (D-Q) using the same formula logic as 充放测算 row 4.
+
+    充放测算 row 4 formula sources:
+      A4 = 充电日清算费用!AA29    (col 27)
+      B4 = -充电日清算费用!Z29     (col 26) → negated
+      C4 = -充电日清算费用!AB29    (col 28) → negated
+      L4 = 放电日清算费用!P101     (col 16)
+      M4 = 放电日清算费用!AJ101    (col 36)
+      N4 = 放电日清算费用!AK101    (col 37)
+      O6 = N4 + C4
+
+    Returns (list_of_17_values, o6_value)."""
+    wb = openpyxl.load_workbook(source_path, data_only=True)
+
+    ws_cf = wb['充放测算']
+    ws_charge = wb['充电日清算费用']
+    ws_discharge = wb['放电日清算费用']
+
+    # Base values from settlement sheets
+    A = float(ws_charge.cell(row=29, column=27).value or 0)      # AA29 充电价
+    B = -float(ws_charge.cell(row=29, column=26).value or 0)     # Z29 → 充电量
+    C = -float(ws_charge.cell(row=29, column=28).value or 0)     # AB29 → 充电收入
+    L = float(ws_discharge.cell(row=101, column=16).value or 0)  # P101 放电价
+    M_val = float(ws_discharge.cell(row=101, column=36).value or 0)  # AJ101 放电量
+    N_val = float(ws_discharge.cell(row=101, column=37).value or 0)  # AK101 放电收入
+
+    # Parameters from 充放测算
+    I8 = float(ws_cf.cell(row=8, column=9).value or 0)
+    I9 = float(ws_cf.cell(row=9, column=9).value or 0)
+    I12 = float(ws_cf.cell(row=12, column=9).value or 0)
+    I13 = float(ws_cf.cell(row=13, column=9).value or 0)
+    I14 = float(ws_cf.cell(row=14, column=9).value or 0)
+    J_val = float(ws_cf.cell(row=4, column=10).value or 0)  # 容量分摊系数
+
+    # Compute dependent values using same formulas as 充放测算 row 4
+    P = -M_val / B if B != 0 else 0
+    D = B * I12
+    E_val = B * I13
+    F = B * (1 - P) * I8
+    G = B * (1 - P) * I9
+    H = B * I14
+    I_val = B * J_val * 70.5
+    K = C + D + E_val + F + G + H + I_val
+    O_val = N_val + K
+    Q = L - A
+    o6 = N_val + C
+
+    wb.close()
+    return [A, B, C, D, E_val, F, G, H, I_val, J_val, K, L, M_val, N_val, O_val, P, Q], o6
 
 
 def parse_range_arg(arg):
@@ -302,7 +361,7 @@ if __name__ == '__main__':
             fname = files['settlement']
             print(f"  - 日结算: {fname}")
             src_fpath = os.path.join(ASSETS_DIR, fname)
-            src_values, o6_val = compute_summary_values(src_fpath)
+            src_values, o6_val = compute_settlement_values(src_fpath)
             for src_col, val in enumerate(src_values, 1):
                 target_col = settlement_mapping[src_col]
                 cell = ws.cell(row=target_row, column=target_col)

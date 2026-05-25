@@ -4,95 +4,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **daily settlement review** step (04) of a multi-stage energy storage trading pipeline for **德州润津储能科技有限公司** (Dezhou Runjin Energy Storage Technology Co.).
+Daily settlement review (阶段 04) — consolidates charge/discharge settlement statements with real-time trading parameters into a daily review workbook.
 
-```
-01 biddingSpace_analysis → 02 Dayahead_Trading_Review → 03 Real-time_Trading_Review → 04 Daily_Settlement_Review
-```
+## Template
 
-Each stage corresponds to a sibling directory under `E:\DataWork\Storage\`.
-
-## File Naming Conventions
-
-- **结算单 (Settlement statements)**: `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-{充电|放电}.xlsx`
-  - `充电` = charging (购买侧/purchase side)
-  - `放电` = discharging (发电侧/generation side)
-- **日结算收益复盘 (Daily settlement review)**: `MMDD-日结算收益复盘.xlsx`
-- **实时机组组合收益复盘 (Real-time unit commitment review)**: `MMDD-实时机组组合收益复盘.xlsx`
-
-All source files live in `assets/`. Output files go to `output/`.
-
-## Key Data Relationships
-
-### 日结算收益复盘 workbook (the central consolidation target)
+`assets/输出模版-0504-日结算收益复盘.xlsx` — 3 sheets only:
 
 | Sheet | Source | Description |
 |-------|--------|-------------|
-| `充电日清算费用` | 结算单-充电 → `日清算数据` | Charging side settlement: 29 rows × 28 cols (售电侧, by hour) |
-| `放电日清算费用` | 结算单-放电 → `日清算费用` | Discharging side settlement: 108 rows × 37 cols (发电侧, by 15-min) |
-| `充放测算` | Self-contained + real-time review | Charge/discharge profit calculation; J4 = 容量分摊系数 |
-| `报价及预中标` | From day-ahead stage | Bidding and pre-clearing data |
-| `容量分摊系数` | From real-time stage | Capacity allocation coefficient lookup table |
+| `充放测算` | Self-contained formulas + RT review (J4, I8-I14) | Charge/discharge profit calculation; all row 4 formulas reference the two settlement sheets below |
+| `充电日清算费用` | 充电结算单 → `日清算数据` | Charging side settlement data (29 rows × 28 cols) |
+| `放电日清算费用` | 放电结算单 → `日清算费用` | Discharging side settlement data (108 rows × 37 cols) |
 
-### 容量分摊系数 (Capacity allocation coefficient)
-
-- In `实时机组组合收益复盘.xlsx`, `充放测算` sheet J4 references `=容量分摊系数!G3` (formula, not hardcoded value).
-- The computed value (e.g. `0.1193...`) should be written into `日结算收益复盘.xlsx` `充放测算` sheet J4 as a hardcoded value.
-
-## Template Rule
-
-**日结算收益复盘输出必须以 `assets/0504-日结算收益复盘.xlsx` 为模版生成。** 该文件中的表单结构、格式（合并单元格、列宽、行高、字体、边框、填充色、数字格式、对齐方式）均不可改动。生成新日期的复盘文件时，应在 0504 模版基础上仅替换数据内容（结算单数据 + 实时测算数据），保留所有原始格式。
-
-## Common Operations
-
-### Daily settlement data refresh
-
-Replace settlement data in the review workbook with latest settlement statements:
-
-```python
-# Use openpyxl (pre-installed in Python 3.14)
-# Load settlement statements with data_only=False (to preserve formatting)
-# Load real-time review with data_only=True (to resolve formulas to values)
-
-import openpyxl
-from copy import copy
-
-def copy_sheet_data(source_ws, target_ws):
-    # 1. Unmerge target merged cells
-    # 2. Copy cell values + styles (font, border, fill, number_format, alignment)
-    # 3. Re-merge cells matching source
-    # 4. Copy column/row dimensions
-```
-
-### Template data overlay (NOT full replacement)
-
-**Do NOT clear all cell values before writing source data.** The template contains cells that have no corresponding data in the source files (e.g. `充放测算` N6:O8 = 日总值调整/高频调整/偏差调整, which are settlement-review-specific formulas). Use a selective overwrite approach: only write non-None values from the source into the template, preserving template-only cells untouched.
+## Generate a review file
 
 ```
-# WRONG: clear all then write
-clear_sheet_values(target_ws)
-write_values(target_ws, source_ws)
-
-# RIGHT: only overwrite cells where source has data
-for src_cell in source_cells:
-    if src_cell.value is not None:
-        target_cell.value = src_cell.value
+python generate_review.py
 ```
 
-### MergedCell gotcha
+Edit the `DATES` list in the script to control which dates to process.
 
-When reading/writing sheets with merged cells, use `ws.cell(row=r, column=c)` syntax and check `type(cell).__name__ == 'MergedCell'` to skip non-writable merged cells. Never use bracket notation `ws['A1']` which will raise `'MergedCell' object attribute 'value' is read-only` on merged-cell positions.
+### Per-date inputs
 
-### Numeric conversion
+1. `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-充电.xlsx`
+2. `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-放电.xlsx`
+3. `MMDD-实时机组组合收益复盘.xlsx` (from stage 03 `output/`)
 
-All data read from source files must be converted to numeric types (`int` or `float`) before writing to the target workbook. This ensures the written values can be used directly in formula calculations without type errors. Use `int()` for integer values and `float()` for decimal values (including prices, coefficients, percentages). Handle `None`, empty cells, and non-numeric strings gracefully — default to `0` or raise a clear error depending on the context.
+### Generation logic
 
-### Formula resolution
+1. Copy template → `output/MMDD-日结算收益复盘.xlsx`
+2. 充电日清算费用 ← full copy from 充电结算单 `日清算数据` (hardcoded values, no formulas)
+3. 放电日清算费用 ← full copy from 放电结算单 `日清算费用` (hardcoded values, no formulas)
+4. 充放测算: only update **J4** (容量分摊系数, computed via `compute_J4()` from RT review) and **I8, I9, I12, I13, I14** (parameters from RT review 充放测算)
+5. **Never** overwrite 充放测算 row 4 or row 6-8 formulas
 
-Formulas from source workbooks must be resolved to values before writing to the target. Load the source with `data_only=True` when reading formula cells. The target should receive hardcoded values, not cross-sheet references that won't resolve in the output file.
+### J4 computation
+
+`compute_J4()` reads the RT review file's `容量分摊系数` (column J = 5月, rows 8-103) and `报价及预中标` (column N, rows 2-97) to compute the weighted-average capacity allocation coefficient during charging periods.
+
+### Key rules
+
+- All data written to target must be numeric (`int`/`float`)
+- `copy_sheet_data()` skips MergedCells and never overwrites formulas in the target
+- `convert_to_numeric()` converts string numbers to float/int, skipping formula cells
 
 ## Dependencies
 
 - Python 3.14 with `openpyxl`
-- No virtual environment or package manager configured
-- No build step, linting, or test suite in this project

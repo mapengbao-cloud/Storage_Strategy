@@ -8,7 +8,8 @@ OUTPUT = os.path.join(BASE, 'output')
 os.makedirs(OUTPUT, exist_ok=True)
 
 TEMPLATE_PATH = os.path.join(ASSETS, '输出模版-0504-日结算收益复盘.xlsx')
-DATES = ['0511', '0512', '0513', '0514', '0515', '0516']
+DATES = ['0504', '0511', '0512', '0513', '0514', '0515', '0516', '0517',
+         '0519', '0520', '0521']
 
 
 def _is_merged(cell):
@@ -90,7 +91,8 @@ def compute_J4(rt_review_path):
 
 def generate_review(date_mmdd):
     """Generate daily settlement review from template, replacing only data cells.
-    Preserves all template formulas, formats, and merged cells."""
+    Template has 3 sheets: 充放测算, 充电日清算费用, 放电日清算费用.
+    J4 comes from the corresponding RT review file."""
     day = date_mmdd[2:4]
     date_iso = f'2026-05-{day}'
 
@@ -113,34 +115,15 @@ def generate_review(date_mmdd):
     wb_rt = openpyxl.load_workbook(rt_review, data_only=True)
     wb_out = openpyxl.load_workbook(out_path)
 
-    # 3. 充电日清算费用 ← charge settlement 日清算数据 (full copy, no formulas in source)
+    # 3. 充电日清算费用 ← charge settlement 日清算数据
     copy_sheet_data(wb_charge['日清算数据'], wb_out['充电日清算费用'])
     convert_to_numeric(wb_out['充电日清算费用'])
 
-    # 4. 放电日清算费用 ← discharge settlement 日清算费用 (full copy, no formulas in source)
+    # 4. 放电日清算费用 ← discharge settlement 日清算费用
     copy_sheet_data(wb_discharge['日清算费用'], wb_out['放电日清算费用'])
     convert_to_numeric(wb_out['放电日清算费用'])
 
-    # 5. 报价及预中标: ONLY write data columns H, J, K, N (rows 2-97)
-    #    Template formulas in I, L, M and summary rows B25-D30 are preserved.
-    rt_price = wb_rt['报价及预中标']
-    out_price = wb_out['报价及预中标']
-    for i in range(96):
-        row = i + 2
-        for col in [8, 10, 11, 14]:  # H=time, J=电价, K=电价, N=充放电
-            src_val = rt_price.cell(row=row, column=col).value
-            if src_val is not None:
-                dst_cell = out_price.cell(row=row, column=col)
-                if not _is_merged(dst_cell):
-                    if col == 8:
-                        dst_cell.value = str(src_val)
-                    else:
-                        try:
-                            dst_cell.value = float(src_val)
-                        except (ValueError, TypeError):
-                            dst_cell.value = src_val
-
-    # 6. 充放测算: ONLY update J4 and I8-I14 parameters. All row 4 formulas preserved.
+    # 5. 充放测算: update J4 (from RT review) and I8-I14 parameters
     out_cf = wb_out['充放测算']
     rt_cf = wb_rt['充放测算']
 
@@ -159,9 +142,6 @@ def generate_review(date_mmdd):
                 except (ValueError, TypeError):
                     dst_cell.value = src_val
 
-    # 7. 容量分摊系数: NOT touched — template formulas reference 报价及预中标 columns,
-    #    which now contain the date-specific data. Let Excel compute them.
-
     wb_out.save(out_path)
     for wb in [wb_charge, wb_discharge, wb_rt, wb_out]:
         wb.close()
@@ -170,7 +150,8 @@ def generate_review(date_mmdd):
 
 
 if __name__ == '__main__':
-    print(f'Template: {os.path.basename(TEMPLATE_PATH)}')
+    print(f'Template: {os.path.basename(TEMPLATE_PATH)} '
+          f'(sheets: 充放测算, 充电日清算费用, 放电日清算费用)')
     print(f'Generating daily settlement reviews for dates: {", ".join(DATES)}\n')
     for d in DATES:
         generate_review(d)

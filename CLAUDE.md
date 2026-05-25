@@ -44,34 +44,30 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |------|------|------|
 | 01 | 无（Claude 直接操作 openpyxl） | 读取负荷预测 `.xls` → 写入竞价空间模版 |
 | 02 | `02 Dayahead_Trading_Review/generate.py` | `python generate.py MMDD [src_path]`（用日期特定模版） |
-| 02 | `02 Dayahead_Trading_Review/batch_generate.py` | `python batch_generate.py`（批量处理 0508-0520，用固定模版 `0505-日前机组组合收益复盘.xlsx`） |
+| 02 | `02 Dayahead_Trading_Review/batch_generate.py` | `python batch_generate.py`（批量处理，用固定模版 `输出模版-0505-日前机组组合收益复盘.xlsx`） |
 | 03 | 无（Claude 直接操作 openpyxl） | 读取实时交易 `.xls` → 写入实时复盘模版 |
 | 04 | `04 Daily_Settlement_Review/generate_review.py` | `python generate_review.py`（批量处理脚本内 DATES 列表） |
 | 05 | `05 Review_Dashboard_and _weeklyreport/process_data.py` | `python process_data.py [--day-ahead MMDD-MMDD] [--real-time MMDD-MMDD] [--settlement MMDD-MMDD]` |
 
 阶段 01 和 03 无独立脚本，由 Claude 按对应 `CLAUDE.md` 中的 sheet mapping 直接操作 `openpyxl` 完成。
 
-**阶段 02 `generate.py` vs `batch_generate.py`：** 前者用日期特定模版（`assets/MMDD-日前机组组合收益复盘.xlsx`），后者用固定模版 `0505` 且自动处理带编号后缀的源文件（如 `0509-发电侧日前交易结果查询 (1).xls`）。
+**阶段 02 `generate.py` vs `batch_generate.py`：** 前者用日期特定模版（`assets/MMDD-日前机组组合收益复盘.xlsx`），后者用固定模版 `输出模版-0505-日前机组组合收益复盘.xlsx` 且自动处理带编号后缀的源文件（如 `0509-发电侧日前交易结果查询 (1).xls`）。
 
-**阶段 05 增量更新机制：** `process_data.py` 以上一轮 `output/` 中的文件为基础进行增量更新（而非每次从干净模版重新生成）。首次运行时 `output/` 为空，则从 `assets/` 中的模版开始。这样带 filter 的单类型更新（如 `--settlement 0518-0518`）不会覆盖其他类型已写入的数据。
+**阶段 04 模版（3 sheet）：** 模版为 `assets/输出模版-0504-日结算收益复盘.xlsx`，仅含 3 个 sheet：`充放测算`、`充电日清算费用`、`放电日清算费用`。生成需要三个数据源：充电结算单 `.xlsx`（→ `充电日清算费用`）、放电结算单 `.xlsx`（→ `放电日清算费用`）、实时复盘 `.xlsx`（→ J4 容量分摊系数 + I8-I14 参数）。J4 通过 `compute_J4()` 从实时复盘文件的 `容量分摊系数` 和 `报价及预中标` 加权计算得到。
 
-**阶段 05 文件锁定回退：** 如果输出文件 `山东夏津储能收益统计表.xlsx` 被 Excel 占用，`process_data.py` 自动回退到带时间戳的文件名（如 `山东夏津储能收益统计表_20260521_143000.xlsx`）。运行前需关闭 Excel。
+**阶段 05 增量更新机制：** `process_data.py` 以上一轮 `output/` 中的文件为基础进行增量更新。带 filter 的单类型更新不会覆盖其他类型已写入的数据。首次运行需从 `assets/` 的模版开始。
 
-**阶段 05 源文件位置：** `process_data.py` 从自己的 `assets/` 目录读取源文件，不是从各阶段的 `output/` 读取。运行前需将 02/03/04 的产出文件复制到 05 的 `assets/` 下。
+**阶段 05 文件锁定回退：** 输出文件被 Excel 占用时自动回退到带时间戳文件名。运行前需关闭 Excel。
 
-**目标文件日期格式：** 统计表 `山东夏津储能收益统计表.xlsx` 中 A 列日期存储为 Excel 整数序列号（如 `46163`），不是 `datetime` 对象。`process_data.py` 中的 `find_date_in_target()` 已同时支持两种格式。
+**阶段 05 源文件位置：** `process_data.py` 从自己的 `assets/` 目录读取源文件。运行前需将 02/03/04 的产出文件复制到 05 的 `assets/` 下。
+
+**目标文件日期格式：** 统计表 A 列日期存储为 Excel 整数序列号（如 `46163`），`find_date_in_target()` 已同时支持 `datetime` 和序列号两种格式。
 
 ## 日结算文件命名变体
 
 阶段 05 的源文件匹配同时接受两种文件名：
 - `MMDD-日结算收益复盘.xlsx`（标准）
 - `MMDD-日结算收益复盘-.xlsx`（尾部带 `-` 的变体）
-
-## 阶段 04 模版命名
-
-模版文件为 `assets/输出模版-0504-日结算收益复盘.xlsx`（带 `输出模版-` 前缀），`generate_review.py` 中引用为 `0504-日结算收益复盘.xlsx`，需注意名称匹配。
-
-阶段 04 生成需要三个数据源：充电结算单 `.xlsx`、放电结算单 `.xlsx`、对应日期的实时复盘 `.xlsx`（从 03 的 `output/` 获取）。
 
 ## 源文件来源
 
@@ -84,6 +80,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 数据流向（阶段间依赖）
 
 - 02 的产出 → 05 的「日前」列（B-R），同时也被 04 引用
-- 03 的产出 → 05 的「实时」列（S-AI），同时也被 04 引用
-- 04 的产出 → 05 的「日结算」列（AJ-BA），同时从 02/03 的复盘文件中读取 `报价及预中标` 原始数据重新计算汇总值（因跨文件公式无法解析，用 `compute_summary_values()` 复现计算逻辑）
-- `compute_summary_values()` 从 `报价及预中标` sheet 原始数据（J 列电价、N 列充放电需求）和 `充放测算` I8-I14 参数重新计算 17 个汇总值，等价于源文件中 row 4 的公式结果。该 sheet 通过名称子串 `'报价'` + `'预中标'` 定位（非索引），因为日结算文件比日前/实时文件多出额外 sheet。
+- 03 的产出 → 05 的「实时」列（S-AI），同时也被 04 引用（J4 容量分摊系数）
+- 04 的产出 → 05 的「日结算」列（AJ-BA）
+
+**数据源归属规则（不可更改）：** 统计表「润津」sheet 第一行标注了各列分组归属。取数必须严格对应：
+- **日前列（B-R）** → 来自 `日前机组组合收益复盘` 文件 — `compute_summary_values()` 从 `报价及预中标` J/N 列计算
+- **实时列（S-AI）** → 来自 `实时机组组合收益复盘` 文件 — `compute_summary_values()` 从 `报价及预中标` J/N 列计算
+- **日结算列（AJ-BA）** → 来自 `日结算收益复盘` 文件 — `compute_settlement_values()` 从 `充电日清算费用`/`放电日清算费用` 取基础值后计算（因日结算的 `充放测算` row 4 公式引用结算单数据，而非 `报价及预中标`）
+
+`compute_summary_values()` 和 `compute_settlement_values()` 分别对应不同的数据来源，不能混用。
