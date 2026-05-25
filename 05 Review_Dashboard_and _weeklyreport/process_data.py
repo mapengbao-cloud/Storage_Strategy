@@ -63,19 +63,23 @@ def parse_date_from_filename(filename):
 
 def find_date_in_target(ws, month, day):
     """Find the row in target sheet matching month/day.
-    Try current year (2026) first, then previous year (2025)."""
+    Handles both datetime objects and Excel serial numbers."""
+    excel_epoch = datetime(1899, 12, 30)
     for year in [2026, 2025]:
         try:
-            target_date = datetime(year, month, day)
-            for row in range(4, ws.max_row + 1):
-                cell_val = ws.cell(row=row, column=1).value
-                if isinstance(cell_val, datetime):
-                    if (cell_val.year == target_date.year and
-                        cell_val.month == target_date.month and
-                        cell_val.day == target_date.day):
-                        return row
+            target_serial = (datetime(year, month, day) - excel_epoch).days
         except ValueError:
             continue
+        for row in range(4, ws.max_row + 1):
+            cell_val = ws.cell(row=row, column=1).value
+            if isinstance(cell_val, datetime):
+                if (cell_val.year == year and
+                    cell_val.month == month and
+                    cell_val.day == day):
+                    return row
+            elif isinstance(cell_val, (int, float)) and cell_val > 40000:
+                if int(cell_val) == target_serial:
+                    return row
     return None
 
 def compute_summary_values(source_path):
@@ -233,17 +237,27 @@ if __name__ == '__main__':
     for (m, d), files in sorted(source_files.items()):
         print(f"  {m:02d}/{d:02d}: {files}")
 
-    # Copy target file to output
+    # Use previous output as base (incremental), fall back to template
     src_tpl = os.path.join(ASSETS_DIR, TARGET_FILE)
-    out_path = os.path.join(OUTPUT_DIR, TARGET_FILE)
+    prev_out = os.path.join(OUTPUT_DIR, TARGET_FILE)
+    out_path = prev_out
+
+    if os.path.exists(prev_out):
+        # Previous output exists: use it as base to preserve existing data
+        base_src = prev_out
+        print(f"\nUsing previous output as base: {prev_out}")
+    else:
+        base_src = src_tpl
+        print(f"\nNo previous output, using template: {src_tpl}")
+
     try:
-        shutil.copy2(src_tpl, out_path)
+        shutil.copy2(base_src, out_path)
     except PermissionError:
         ts = datetime.now().strftime('%Y%m%d_%H%M%S')
         name, ext = os.path.splitext(TARGET_FILE)
         out_path = os.path.join(OUTPUT_DIR, f'{name}_{ts}{ext}')
-        shutil.copy2(src_tpl, out_path)
-    print(f"\nCopied target file to: {out_path}")
+        shutil.copy2(base_src, out_path)
+    print(f"Output: {out_path}")
 
     # Open target workbook for editing
     wb = openpyxl.load_workbook(out_path)

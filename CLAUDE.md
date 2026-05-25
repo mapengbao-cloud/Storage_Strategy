@@ -53,13 +53,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **阶段 02 `generate.py` vs `batch_generate.py`：** 前者用日期特定模版（`assets/MMDD-日前机组组合收益复盘.xlsx`），后者用固定模版 `0505` 且自动处理带编号后缀的源文件（如 `0509-发电侧日前交易结果查询 (1).xls`）。
 
-**阶段 05 文件锁定回退：** 如果输出文件 `山东夏津储能收益统计表.xlsx` 被 Excel 占用，`process_data.py` 自动回退到带时间戳的文件名（如 `山东夏津储能收益统计表_20260521_143000.xlsx`）。
+**阶段 05 增量更新机制：** `process_data.py` 以上一轮 `output/` 中的文件为基础进行增量更新（而非每次从干净模版重新生成）。首次运行时 `output/` 为空，则从 `assets/` 中的模版开始。这样带 filter 的单类型更新（如 `--settlement 0518-0518`）不会覆盖其他类型已写入的数据。
+
+**阶段 05 文件锁定回退：** 如果输出文件 `山东夏津储能收益统计表.xlsx` 被 Excel 占用，`process_data.py` 自动回退到带时间戳的文件名（如 `山东夏津储能收益统计表_20260521_143000.xlsx`）。运行前需关闭 Excel。
+
+**阶段 05 源文件位置：** `process_data.py` 从自己的 `assets/` 目录读取源文件，不是从各阶段的 `output/` 读取。运行前需将 02/03/04 的产出文件复制到 05 的 `assets/` 下。
+
+**目标文件日期格式：** 统计表 `山东夏津储能收益统计表.xlsx` 中 A 列日期存储为 Excel 整数序列号（如 `46163`），不是 `datetime` 对象。`process_data.py` 中的 `find_date_in_target()` 已同时支持两种格式。
 
 ## 日结算文件命名变体
 
 阶段 05 的源文件匹配同时接受两种文件名：
 - `MMDD-日结算收益复盘.xlsx`（标准）
 - `MMDD-日结算收益复盘-.xlsx`（尾部带 `-` 的变体）
+
+## 阶段 04 模版命名
+
+模版文件为 `assets/输出模版-0504-日结算收益复盘.xlsx`（带 `输出模版-` 前缀），`generate_review.py` 中引用为 `0504-日结算收益复盘.xlsx`，需注意名称匹配。
+
+阶段 04 生成需要三个数据源：充电结算单 `.xlsx`、放电结算单 `.xlsx`、对应日期的实时复盘 `.xlsx`（从 03 的 `output/` 获取）。
+
+## 源文件来源
+
+用户提供的源数据文件常位于 `d:\Personal\下载\`（带编号后缀如 ` (1)`, ` (2)`），处理时直接使用绝对路径读取，无需复制到项目目录。生成结果写入对应阶段的 `output/` 目录。
+
+## 权限配置
+
+项目根目录 `.claude/settings.local.json` 已预配 Bash（python/git/ls）、Read/Write/Edit（项目 + d:\Personal）、Glob/Grep 权限，覆盖本项目常见操作，减少确认步骤。
 
 ## 数据流向（阶段间依赖）
 
