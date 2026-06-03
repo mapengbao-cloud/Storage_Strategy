@@ -30,6 +30,14 @@ Edit the `DATES` list in the script to control which dates to process.
 2. `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-放电.xlsx`
 3. `MMDD-实时机组组合收益复盘.xlsx` (from stage 03 `output/`)
 
+### 结算单文件命名规则
+
+从下载目录拷入的结算单文件通常没有 `-充电`/`-放电` 后缀，按文件大小区分：
+- **~11KB → `-充电`** — 充电结算单，含「日清算数据」sheet
+- **~21KB → `-放电`** — 放电结算单，含「日清算费用」sheet
+
+带 ` (1)` 编号后缀的文件同理处理，重命名时移除 ` (1)` 再加对应后缀。
+
 ### Generation logic
 
 1. Copy template → `output/MMDD-日结算收益复盘.xlsx`

@@ -1,0 +1,852 @@
+================================================================================
+天机数据库 — 山东相关表分类整理
+数据库: tianrun_new (rm-2zej7q7186wi4eds5no.mysql.rds.aliyuncs.com)
+整理日期: 2026-05-29
+================================================================================
+
+总计约 120+ 张山东相关表，按业务功能分为 12 类。
+表名前缀含义：
+  shandong_px_     = 山东电力交易中心（Power eXchange）
+  shandong_pmos_   = 山东电力市场运营系统（Power Market Operation System）
+  shandong_spot_   = 山东现货市场
+  t_dwd_shandong_  = 山东数据仓库明细层（Data Warehouse Detail）
+
+标记说明：
+  [有2026] = 该表 2026 年有数据（截至 2026-05-29）
+  未标记   = 该表 2026 年暂无数据（历史数据）
+
+每张表标注：关键列（★）和具体用途说明
+
+润津member_id：b9e64e64a713458eba94c9af05c0a757
+特别标注的核心表：
+
+日结算清单数据：
+  - shandong_px_statement_spot_daily_v2   — 每日结算单放电部分 ，充电部分暂时未录入，以协调汪宝处理
+
+
+经行性出清申报分析数据：
+  - shandong_px_spot_surveillance_dayahead_generation_price_v2  — 全省经济性出清电价
+  - shandong_px_unify_settle_accounts_price  — 中长期结算参考点价格（全省统一结算点实时电价）
+
+调频：
+  - shandong_px_tuning_market_dayahead_clearing_price — 调频市场日前出清价格查询
+
+
+ - shandong_px_spot_trade_constraint — 每日报价上下限
+  - shandong_px_intraday_clearing_plan_result — 储能充放电计划
+  - algorithm_clearing_price_forecast — 出清价格预测算法主表
+  - all_province_supply_and_demand_forecast — 供需预测核心表
+  - t_dwd_shandong_spot_actual_load_info — 实际负荷（数仓清洗版）
+  - t_dwd_shandong_spot_dayahead_load_info — 日前负荷预测（数仓清洗版）
+================================================================================
+一、现货日前出清（Spot Dayahead Clearing）                    【有2026: 13/24】
+================================================================================
+
+[有2026] shandong_px_spot_dayahead_clearing_price
+         — 日前出清价格（统一结算价），按 member_id 区分电站
+         ★ date, time_order_24(1-24时段), time_price(时段出清价格),
+           statement_price(结算价格), max/min_declaration_price(最高/最低申报价)
+         用途：查看各电站日前出清价格曲线，与实时价格对比
+
+         shandong_px_spot_dayahead_clearing_price_app
+         — 日前出清价格（APP端展示数据），与上表数据结构相同
+         用途：APP端数据源，通常与主表同步
+
+[有2026] shandong_px_spot_dayahead_clearing_quantity
+         — 日前出清电量，按 member_id 区分电站
+         ★ date, time_order_24(1-24时段), time_quantity(出清电量,MW)
+         用途：查看各电站日前中标电量
+
+         shandong_px_spot_dayahead_clearing_quantity_app
+         — 日前出清电量（APP端），与上表结构相同
+
+[有2026] shandong_px_spot_dayahead_clearing_new
+         — 日前出清新版，96点分辨率，按电站+类型区分
+         ★ date, time_order_96(1-96), energy(出清电量), cqPrice(出清价格),
+           bq(标签:新能源场站/火电等), kt(状态:开机/停机)
+         用途：更精细的96点出清数据，可区分不同电源类型
+
+         shandong_px_spot_dayahead_nodal_price
+         — 日前节点电价，按电网节点（母线）区分
+         ★ date, node_id, node_name(如"山东.滨州站/500kV.#1母线"),
+           time_order(1-96), dayahead_nodal_price(节点电价)
+         用途：查看各节点日前电价差异，分析阻塞情况
+
+         shandong_px_spot_dayahead_declaration
+         — 日前申报数据，各电站的申报价格和电量
+         ★ date, member_id, time_order, declared_price, declared_quantity
+         用途：查看电站申报策略
+
+         shandong_px_spot_dayahead_declared_history
+         — 日前申报历史记录
+         用途：申报数据历史存档
+
+[有2026] shandong_px_spot_dayahead_supervise_info
+         — 日前监管信息，记录是否触发事前监管
+         ★ date, content("触发事前监管"/"未触发事前监管")
+         用途：查看市场监管触发情况
+
+         shandong_px_operation_dayahead_nodal_price
+         — 运行日日前节点电价（调度运行视角）
+         用途：调度侧节点电价数据
+
+         shandong_px_operation_dayahead_total_clearing_quantity
+         — 运行日日前总出清电量（全省汇总）
+         用途：查看全省日前出清总量
+
+         shandong_px_spot_surveillance_dayahead_clearing_quantity
+         — 日前出清电量监控（市场监控视角）
+         用途：市场监管用的出清电量汇总
+
+         shandong_px_spot_surveillance_dayahead_consumer_price
+         — 日前用户侧出清价格（24时段）
+         ★ date, time_order_24, clearing_price(用户侧出清价格)
+         用途：用户侧日前电价
+
+         shandong_px_spot_surveillance_dayahead_consumer_quantity
+         — 日前用户侧出清电量（24时段）
+         用途：用户侧日前电量
+
+[有2026] shandong_px_spot_surveillance_dayahead_consumer_statistics
+         — 日前用户侧统计数据（每日汇总指标）
+         ★ date, index_name("总成交"/"售电公司"等), index_value(指标值)
+         用途：用户侧市场参与情况统计
+
+[有2026] shandong_px_spot_surveillance_dayahead_generation_price
+         — 日前发电侧出清价格（24时段），含最高/均价/最低
+         ★ date, time_order_24, max/avg/min_clearing_price
+         用途：发电侧日前价格分布
+
+[有2026] shandong_px_spot_surveillance_dayahead_generation_price_v2
+         — 日前发电侧出清价格V2（96点分辨率）
+         ★ date, time_order(1-96), max/avg/min_clearing_price
+         用途：更精细的发电侧价格监控
+
+[有2026] shandong_px_spot_surveillance_dayahead_generation_quantity
+         — 日前发电侧出清电量（按电源类型分：风电/光伏/火电等）
+         ★ date, time_order_24, type("风电"/"光伏"/"火电"等), clearing_quantity
+         用途：各类电源日前出清电量对比
+
+[有2026] shandong_px_spot_surveillance_dayahead_generation_statistics
+         — 日前发电侧统计（每日汇总指标）
+         ★ date, index_name("总成交"/"风电场站"等), index_value
+         用途：发电侧市场参与情况统计
+
+[有2026] shandong_spot_dayahead_declare_result
+         — 日前申报结果，按电站记录申报和出清详情
+         ★ date, member_id, time_order_24, power(出力), time_quantity(出清电量),
+           label(电源类型), status(开机/停机), clearing_price(出清价格),
+           statement_price(结算价格)
+         用途：查看单个电站的日前申报和出清结果
+
+         shandong_spot_dayahead_declare_result_app
+         — 日前申报结果（APP端）
+
+[有2026] shandong_spot_settlement_reference_dayahead_price
+         — 日前结算参考价（96点，全省统一）
+         ★ date, time_order(1-96), price(参考价,元/MWh)
+         用途：结算用的日前参考价格，与储能结算直接相关
+
+[有2026] shandong_px_unify_settle_accounts_price
+         — 统一结算电价（96点+24点双分辨率）
+         ★ date, time_order("00:15"~"24:00"), price96(96点价格),
+           price24(24时段均价)
+         用途：储能电站结算使用的统一电价，★核心表★
+
+         shandong_daily_mean_clearing_price_forecast
+         — 日均出清价格预测（算法输出）
+         用途：中长期价格趋势预测
+
+================================================================================
+二、现货实时出清（Spot Realtime Clearing）                    【有2026: 10/16】
+================================================================================
+
+[有2026] shandong_px_spot_realtime_clearing_price
+         — 实时出清价格，按 member_id 区分电站（24时段）
+         ★ date, time_order_24, clearing_price(实时出清价格),
+           statement_price(结算价格), max/min_declaration_price
+         用途：各电站实时出清价格，与日前对比分析价差
+
+         shandong_px_spot_realtime_clearing_price_app
+         — 实时出清价格（APP端）
+
+[有2026] shandong_px_spot_realtime_clearing_quantity
+         — 实时出清电量，按 member_id 区分电站（24时段）
+         ★ date, time_order_24, time_quantity(出清电量,MW)
+         用途：各电站实时中标电量
+
+         shandong_px_spot_realtime_clearing_quantity_app
+         — 实时出清电量（APP端）
+
+[有2026] shandong_px_spot_realtime_clearing_point_quantity
+         — 实时节点出清电量（96点，含储能电站详细数据）
+         ★ date, member_id, tag(电源类型), time_order_96(1-96),
+           clearing_price(出清价格), time_quantity(出清电量),
+           settlement_price(结算价格), open_status(开机/停机),
+           power(实际出力), price(分时价格)
+         用途：★储能电站实时出清详细数据★，96点精细分析
+
+         shandong_px_spot_realtime_clearing_point_quantity_app
+         — 实时节点出清电量（APP端）
+
+[有2026] shandong_px_spot_realtime_clearing_point_quantity_temp
+         — 实时节点出清电量（临时表，与上表结构相同）
+         用途：中间处理数据，结构与 point_quantity 一致
+
+[有2026] shandong_px_spot_realtime_nodal_price
+         — 实时节点电价，按电网节点区分（96点）
+         ★ date, node_id, node_name, time_order(1-96),
+           realtime_nodal_price(实时节点电价)
+         用途：各节点实时电价差异分析（数据量大：419万行）
+
+[有2026] shandong_px_spot_surveillance_realtime_clearing_quantity
+         — 实时出清电量监控（全省汇总，24时段）
+         ★ date, time_order_24, generator_quantity(总出清电量,MW)
+         用途：全省实时出清总量监控
+
+[有2026] shandong_px_spot_surveillance_realtime_consumer_price
+         — 实时用户侧出清价格（24时段）
+         ★ date, time_order_24, clearing_price(用户侧实时价格)
+         用途：用户侧实时电价
+
+[有2026] shandong_px_spot_surveillance_realtime_generation_price
+         — 实时发电侧出清价格（24时段），含最高/均价/最低
+         ★ date, time_order_24, max/avg/min_clearing_price
+         用途：发电侧实时价格分布
+
+[有2026] shandong_px_spot_surveillance_realtime_generation_quantity
+         — 实时发电侧出清电量（按电源类型分，24时段）
+         ★ date, time_order_24, type("风电"/"光伏"等), clearing_quantity
+         用途：各类电源实时出清电量对比
+
+[有2026] shandong_px_spot_surveillance_realtime_generation_statistics
+         — 实时发电侧统计（每日汇总指标）
+         ★ date, index_name("总成交"/"风电场站"等), index_value
+         用途：实时市场参与情况统计
+
+[有2026] shandong_px_intraday_clearing_plan_result
+         — 日内出清计划结果（含储能电站充放电计划）
+         ★ date, unit_name(电站名称), time_point("00:15"~"24:00"),
+           power(计划出力,MW), cq_type(出清类型)
+         用途：★储能电站日内充放电计划★，如"苏留润津独立储能电站"
+
+         shandong_pmos_spot_realtime_nodal_price
+         — PMOS实时节点电价（运营系统视角）
+         用途：运营系统节点电价数据
+
+================================================================================
+三、结算与日结算单（Settlement / Statement）                  【有2026: 8/13】
+================================================================================
+
+         shandong_px_statement_spot_daily
+         — 日结算单（基础版）
+         用途：日结算基础数据
+
+         shandong_px_statement_spot_daily_app
+         — 日结算单（APP端）
+
+[有2026] shandong_px_statement_spot_daily_v2
+         — 日结算单V2（增强版，含更多结算细项）
+         ★ date, + 多个结算金额/电量字段
+         用途：储能电站日结算详细数据
+
+[有2026] shandong_px_statement_spot_daily_v3
+         — 日结算单V3（最新版，最完整的结算数据）
+         ★ date, + 完整结算细项
+         用途：★最完整的日结算数据★
+
+         shandong_px_statement_spot_daily_dq_test
+         — 日结算单（数据质量测试版）
+
+[有2026] shandong_px_statement_spot_daily_attachment
+         — 日结算单附件（Excel/PDF附件文件）
+         ★ date, attachment(附件内容)
+         用途：日结算单原始附件
+
+         shandong_px_statement_spot_daily_attachment_app
+         — 日结算单附件（APP端）
+
+[有2026] shandong_px_statement_spot_monthly_detail
+         — 月结算明细（各电站月度结算细项）
+         ★ date, 月度结算各细项金额/电量
+         用途：月度结算详细分析
+
+[有2026] shandong_px_statement_spot_monthly_summary
+         — 月结算汇总（按 realtime_clearing_quantity 等汇总）
+         ★ realtime_clearing_quantity(实时出清电量)等汇总指标
+         用途：月度结算总览
+
+[有2026] shandong_px_statement_spot_monthly_summary_v2
+         — 月结算汇总V2
+         用途：月度结算总览（增强版）
+
+[有2026] shandong_px_statement_spot_monthly_attachment
+         — 月结算附件（Excel/PDF）
+         用途：月结算单原始附件
+
+[有2026] t_dwd_shandong_spot_actual_load_info
+         — 实际负荷明细（数仓层，24时段）
+         ★ date, time_order_24, actual_dispatched_load(实际直调负荷),
+           actual_tie_line_load(联络线), actual_wind_power(风电),
+           actual_photovoltaic_power(光伏), actual_pumped_storage_power(抽蓄),
+           actual_local_power(地方电厂)
+         用途：★实际负荷数据（数仓清洗版）★，可计算实际竞价空间
+
+[有2026] t_dwd_shandong_spot_dayahead_load_info
+         — 日前负荷明细（数仓层，24时段）
+         ★ date, time_order_24, dispatched_load_forecast(直调负荷预测),
+           tie_line_load_forecast(联络线预测), wind_power_forecast(风电预测),
+           photovoltaic_power_forecast(光伏预测), local_power_forecast(地方电厂预测)
+         用途：★日前负荷预测数据（数仓清洗版）★，可计算预测竞价空间
+
+================================================================================
+四、调频辅助服务市场（Frequency Regulation / Tuning Market）  【有2026: 2/2】
+================================================================================
+
+[有2026] shandong_px_tuning_market_dayahead_clearing_price
+         — 调频市场日前出清价格（96点）
+         ★ date, time_order, clearing_price(调频出清价格)
+         用途：调频辅助服务市场价格
+
+[有2026] shandong_px_tuning_market_dayahead_clearing_attachment
+         — 调频市场日前出清附件
+         ★ date, attachment(附件)
+         用途：调频市场出清原始附件
+
+================================================================================
+五、竞价空间与供需（Bidding Space / Supply & Demand）         【有2026: 0/4】
+================================================================================
+
+         shandong_pmos_spot_dayahead_supply_demand
+         — 日前供需预测（竞价空间计算基础数据）
+         ★ date, time_order(1-96), dayahead_provincial_load(省内负荷),
+           dayahead_transprovincial_load(联络线), dayahead_wind_power(风电),
+           dayahead_photovoltaic_power(光伏)
+         竞价空间 = 省内负荷 - 联络线 - 风电 - 光伏
+         用途：计算日前竞价空间，但数据仅到2020年（陈旧）
+
+         shandong_pmos_spot_actual_supply_demand
+         — 实际供需数据（与上表结构类似）
+         用途：计算实际竞价空间，但数据仅到2020年（陈旧）
+
+         shandong_px_release_constraint_dayahead_load_forecast
+         — 日前负荷预测（信息发布版）
+         用途：日前负荷预测，但数据仅到2021年（陈旧）
+
+         shandong_px_price_new_energy_load_info
+         — 新能源与负荷综合信息（按电站，含价格和出力）
+         ★ station_id(电站ID), date, time_order(1-96),
+           dayahead_clearing_price(日前出清价), intraday_clearing_price(实时出清价),
+           new_energy_power_actual(新能源实际出力),
+           new_energy_power_actual_d1/d2(D+1/D+2预测),
+           provincial_load_actual(省内实际负荷),
+           provincial_load_actual_d1/d2(D+1/D+2预测)
+         用途：多电站综合数据（2021-12~2022-07），含润津电站数据
+
+================================================================================
+六、新能源预测与出力（New Energy Forecast & Output）          【有2026: 9/10】
+================================================================================
+
+[有2026] shandong_px_release_constraint_dayahead_new_energy_forecast
+         — 日前新能源出力预测（96点，全省汇总）
+         ★ date, time_order(1-96), dayahead_new_energy_power_forecast(MW)
+         用途：日前风电+光伏总出力预测，竞价空间计算关键输入
+
+[有2026] shandong_px_release_constraint_dayahead_market_total_new_nrg
+         — 日前市场内新能源总量（96点）
+         ★ date, time_order(1-96), market_total_new_energy(MW)
+         用途：参与市场交易的新能源出力预测
+
+[有2026] shandong_px_release_constraint_dayahead_different_power_pre_plan
+         — 日前各类电源出力预计划（96点，分风电/光伏/总量）
+         ★ date, time_order(1-96), wind_power_forecast(风电预测),
+           photovoltaic_power_forecast(光伏预测), total_power_forecast(总出力预测)
+         用途：分电源类型的出力预测，可分析光伏午间压价程度
+
+         shandong_px_release_constraint_dayahead_renewable_nrg_forecast
+         — 日前可再生能源预测（含水电等）
+         用途：更广义的可再生能源预测
+
+         shandong_px_release_constraint_pre_week_new_energy_forecast
+         — 周前新能源出力预测
+         用途：中期新能源出力趋势预测
+
+[有2026] shandong_px_release_operation_new_energy_realtime_power
+         — 实时新能源出力（96点，分光伏/风电/总量）
+         ★ date, time_order(1-96), realtime_photovoltaic_power(实时光伏),
+           realtime_wind_power(实时风电), realtime_new_energy_power(总新能源)
+         用途：★实际新能源出力★，与预测对比分析偏差
+
+[有2026] shandong_px_release_operation_non_market_realtime_power
+         — 实时非市场机组出力（96点）
+         ★ date, time_order(1-96), non_market_realtime_power(MW)
+         用途：非市场化机组（核电、自备等）实际出力
+
+[有2026] shandong_px_release_operation_hydraulic_realtime_power
+         — 实时水电出力（96点）
+         ★ date, time_order(1-96), realtime_hydraulic_power(MW)
+         用途：水电（含抽蓄）实际出力
+
+[有2026] shandong_px_spot_actual_load_info
+         — 实际负荷信息（96点，全省各项实际值）
+         ★ date, time_order(1-96), actual_dispatched_load(直调负荷),
+           actual_tie_line_load(联络线), actual_wind_power(风电),
+           actual_photovoltaic_power(光伏), actual_pumped_storage_power(抽蓄),
+           actual_local_power(地方电厂), actual_nuclear_power(核电)
+         用途：★实际运行全量数据★，可计算实际竞价空间
+
+[有2026] shandong_px_release_constraint_dayahead_total_power_forecast
+         — 日前总功率预测（96点，全省发电总预测）
+         ★ date, time_order(1-96), dayahead_total_power_forecast(MW)
+         用途：日前全省总发电出力预测
+
+[有2026] shandong_px_release_constraint_non_market_power_forecast
+         — 日前非市场电源预测（96点）
+         ★ date, time_order(1-96), dayahead_non_market_power_forecast(MW)
+         用途：非市场化电源出力预测
+
+================================================================================
+七、联络线与跨省输电（Tie-line / Trans-provincial Transmission）【有2026: 3/5】
+================================================================================
+
+[有2026] shandong_px_spot_dayahead_tie_line_info
+         — 日前联络线信息（96点，按线路分）
+         ★ date, time_order(1-96), tie_line_name("华北来电"/"银东直流"等),
+           tie_line_load_forecast(联络线预测功率,MW)
+         用途：各条跨省联络线日前预测功率
+
+[有2026] shandong_px_spot_actual_tie_line_info
+         — 实际联络线信息（96点，按线路分）
+         ★ date, time_order(1-96), tie_line_name, actual_tie_line_load(实际功率,MW)
+         用途：各条跨省联络线实际功率，与预测对比
+
+         shandong_px_release_constraint_dayahead_tie_line_power_forecast
+         — 日前联络线功率预测（信息发布版）
+         用途：联络线功率预测（另一数据源）
+
+[有2026] shandong_px_release_constraint_intraday_tie_line_power_forecast
+         — 日内联络线功率预测（96点，按线路分）
+         ★ date, time_order(1-96), tie_line_name("银东直流"等),
+           intraday_tie_line_power_forecast(日内预测功率,MW)
+         用途：日内修正后的联络线预测
+
+         shandong_px_release_constraint_next_week_tie_line_prediction
+         — 下周联络线预测
+         用途：中期联络线趋势预测
+
+================================================================================
+八、电网运行与断面约束（Grid Operation / Section Constraints）【有2026: 14/17】
+================================================================================
+
+[有2026] shandong_px_operation_actual_power_flow
+         — 实际潮流数据（按断面，96点）
+         ★ date, section_name("烟威电网外送断面"等), time_order(1-96),
+           actual_power(实际潮流,MW), limit_power(限额,MW)
+         用途：各断面实际潮流与限额对比，判断阻塞
+
+[有2026] shandong_px_operation_actual_transmission_section_limitation
+         — 实际断面限额状态（96点）
+         ★ date, time_order(1-96), nodal_name(断面名称),
+           status("阻塞"/"未阻塞")
+         用途：各断面是否发生阻塞
+
+         shandong_px_operation_section_constraint_block
+         — 断面约束阻塞详情
+         用途：阻塞原因和影响分析
+
+[有2026] shandong_px_spot_trade_constraint
+         — 现货交易约束参数（每日发布）
+         ★ date, parameter_type("电能量申报约束"等),
+           parameter_name("发电企业电能量报价最高限价"等),
+           parameter_value(参数值,如"1300")
+         用途：★查看每日报价上下限★，如最高限价1300元/MWh
+
+         shandong_px_release_constraint_dayahead_transformer_maintenance
+         — 日前变压器检修信息
+         用途：变压器检修对电网运行的影响
+
+[有2026] shandong_px_spot_actual_reserve_capacity_info
+         — 实际备用容量（96点，分正/负备用）
+         ★ date, time_order(1-96), type("正备用"/"负备用"),
+           reserve_capacity(备用容量,MW)
+         用途：实际系统备用容量水平
+
+[有2026] shandong_px_spot_dayahead_reserve_capacity_info
+         — 日前备用容量（96点，分正/负备用）
+         ★ date, time_order(1-96), type("正备用"/"负备用"),
+           reserve_capacity(备用容量,MW)
+         用途：日前备用容量需求/安排
+
+         shandong_px_release_operation_realtime_frequency
+         — 实时系统频率
+         用途：电网频率监控
+
+         shandong_px_release_operation_realtime_load
+         — 实时系统负荷
+         用途：实时全网负荷
+
+[有2026] shandong_px_release_operation_real_time_system_backup
+         — 实时系统备用（96点，分正/负备用）
+         ★ date, time_order(1-96), positive_power(正备用,MW),
+           negative_power(负备用,MW)
+         用途：实时正负备用容量，负备用大说明系统偏紧
+
+[有2026] shandong_px_release_operation_provincial_realtime_power
+         — 省级实时功率（96点，全省实际负荷）
+         ★ date, time_order(1-96), provincial_realtime_power(MW)
+         用途：全省实时总负荷
+
+[有2026] shandong_px_release_constraint_pumped_storage_power_forecast
+         — 抽蓄功率预测（96点）
+         用途：抽水蓄能电站充放电预测
+
+[有2026] shandong_px_provincial_prescheduling_results
+         — 省预调度结果（96点）
+         用途：日前预调度安排
+
+[有2026] shandong_px_release_constraint_pre_week_system_load_forecast
+         — 周前系统负荷预测
+         ★ params_date(预测发布日期), date(预测目标日期), time_order(1-96),
+           load_name("全网负荷"等), system_load_power_forecast(MW)
+         用途：中期负荷趋势预测
+
+================================================================================
+九、检修信息（Maintenance）                                  【有2026: 4/7】
+================================================================================
+
+         shandong_px_spot_actual_device_maintenance_info
+         — 实际设备检修信息
+         用途：设备检修实际执行
+
+         shandong_px_spot_actual_generator_maintenance_info
+         — 实际机组检修信息
+         用途：发电机组检修实际执行
+
+[有2026] shandong_px_spot_dayahead_device_maintenance_info
+         — 日前设备检修信息
+         ★ date, 设备检修计划详情
+         用途：日前设备检修安排
+
+[有2026] shandong_px_spot_dayahead_generator_maintenance_info
+         — 日前机组检修信息
+         ★ date, 机组检修计划详情
+         用途：日前发电机组检修安排
+
+         shandong_px_spot_actual_power_on_off_generator_info
+         — 实际开停机信息
+         用途：机组实际开停机状态
+
+[有2026] shandong_px_spot_dayahead_power_on_off_generator_info
+         — 日前开停机信息
+         用途：日前计划开停机安排
+
+         shandong_px_crew_overhaul_plan
+         — 机组大修计划
+         用途：长期机组检修规划
+
+================================================================================
+十、中长期交易与集中竞价（Long-term / Centralized Bidding）   【有2026: 9/13】
+================================================================================
+
+[有2026] shandong_px_centralized_bidding_declaration
+         — 集中竞价申报数据
+         ★ PDATE(交易日期), 申报价格/电量
+         用途：中长期集中竞价申报详情
+
+[有2026] shandong_px_centralized_bidding_declaration_limit
+         — 集中竞价申报限额
+         用途：集中竞价申报限额设置
+
+[有2026] shandong_px_centralized_bidding_results_query
+         — 集中竞价结果查询
+         ★ date, 成交结果（价格/电量）
+         用途：集中竞价成交结果
+
+         shandong_px_centralized_bidding_trade
+         — 集中竞价交易（旧版）
+
+[有2026] shandong_px_centralized_bidding_trade_v2
+         — 集中竞价交易V2
+         ★ date, 交易详情
+         用途：中长期集中竞价交易详情
+
+[有2026] shandong_px_contract_continuous_match_transaction_declaration
+         — 连续撮合交易申报
+         ★ date, 申报价格/电量
+         用途：中长期连续撮合交易
+
+[有2026] shandong_px_rolling_matching_bidding_results
+         — 滚动撮合结果
+         ★ date, 成交结果
+         用途：滚动撮合成交情况
+
+         shandong_px_listing_transaction_buyer_listing
+         — 挂牌交易买方挂牌
+         用途：买方挂牌详情
+
+         shandong_px_listing_transaction_result
+         — 挂牌交易结果
+         用途：挂牌交易成交结果
+
+[有2026] shandong_px_spot_listing_trading_sequence
+         — 挂牌交易序列
+         用途：挂牌交易序列安排
+
+         shandong_px_generation_side_limit
+         — 发电侧限额
+         用途：发电侧交易限额设置
+
+[有2026] shandong_px_electric_quantity_info
+         — 电量信息
+         ★ create_time, 电量统计
+         用途：电量统计信息
+
+         shandong_px_electric_quantity_info_app
+         — 电量信息（APP端）
+
+[有2026] shandong_px_electric_quantity_info_v2
+         — 电量信息V2
+         ★ pdate, 电量统计
+         用途：电量统计（增强版）
+
+================================================================================
+十一、售电与零售用户（Retail / Consumer）                      【有2026: 0/5】
+================================================================================
+
+         shandong_pmos_retail_consumer
+         — 零售用户信息
+         用途：零售用户基础信息
+
+         shandong_pmos_retail_consumer_actual_load
+         — 零售用户实际负荷
+         用途：零售用户实际用电量
+
+         shandong_px_retail_electricity_consumption_curve
+         — 零售用电曲线
+         用途：零售用户用电曲线
+
+         shandong_seller_electricity_detail
+         — 售电公司电量明细
+         用途：各售电公司代理电量
+
+         shandong_pmos_spot_dayahead_supply_demand
+         — 日前供需（售电侧视角）
+         用途：售电侧日前供需分析
+
+================================================================================
+十二、可靠出清与策略分析（Reliable Clearing / Strategy Analysis）【有2026: 4/7】
+================================================================================
+
+[有2026] shandong_px_reliable_clearing_unit_data
+         — 可靠出清机组数据（96点）
+         ★ date, 必开机组出力数据
+         用途：必开/必停机组出力安排
+
+[有2026] shandong_px_reliable_clearing_unit_results
+         — 可靠出清机组结果
+         ★ date, 出清结果
+         用途：可靠出清结果
+
+[有2026] shandong_px_reliable_clearing_unit_attachment
+         — 可靠出清机组附件
+         用途：可靠出清附件
+
+         shandong_trading_strategy_analysis
+         — 交易策略分析
+         用途：交易策略回测分析
+
+         shandong_duplicate_disk_analysis_parameter_configuration_1
+         — 复盘分析参数配置
+         用途：策略复盘参数设置
+
+[有2026] shandong_px_power_information_details_query
+         — 电力信息详情查询
+         ★ date, 电力运行详情
+         用途：电力运行详细信息
+
+================================================================================
+附录A：跨省通用表（all_province_ 前缀，含山东数据，province_id=14）
+                                                              【有2026: 13/14】
+================================================================================
+
+[有2026] all_province_clearing_price_forecast
+         — 各省出清价格预测（算法输出，含山东）
+         ★ province_id(14=山东), date, time_order, org_price(实际价格),
+           fore_price(预测价格), fore_price_adjusted(调整后预测价)
+         用途：★出清价格预测核心表★，多省对比
+
+[有2026] all_province_clearing_price_forecast_test
+         — 各省出清价格预测（测试版）
+
+[有2026] all_province_clearing_price_forecast_test_ys
+         — 各省出清价格预测（预生产环境）
+
+[有2026] all_province_clearing_price_forecast_wea_gc
+         — 各省出清价格预测（国网气象数据驱动）
+
+[有2026] all_province_clearing_price_forecast_wea_openmto
+         — 各省出清价格预测（OpenMeteo气象数据驱动）
+
+[有2026] all_province_medium_to_longterm_clearing_price_forecast
+         — 各省中长期出清价格预测
+         ★ province_id, date, time_order, 中长期价格预测
+         用途：月度/年度价格趋势预测
+
+[有2026] all_province_medium_to_longterm_clearing_price_forecast_test
+         — 各省中长期出清价格预测（测试版）
+
+[有2026] all_province_medium_to_longterm_clearing_quantity_forecast
+         — 各省中长期出清电量预测
+
+[有2026] all_province_supply_and_demand_forecast
+         — 各省供需预测（按 fore_type 分类）
+         ★ province_id(14=山东), datetime, fore_value(预测值),
+           fore_type("dayahead_photovoltaic_power"等), area_type, base_date
+         用途：★供需预测核心表★，含光伏/风电/负荷分类预测
+
+[有2026] all_province_supply_and_demand_forecast_test
+         — 各省供需预测（测试版）
+
+[有2026] all_province_boundary_data_mtl_forecast
+         — 各省边界数据预测
+         ★ province_id, date, hour, data, data_type, area_type
+         用途：边界条件预测（气象、负荷等）
+
+         all_province_boundary_data_mtl_forecast_test
+         — 各省边界数据预测（测试版）
+
+[有2026] all_province_weather_data_mtl_forecast
+         — 各省气象数据预测
+         ★ province_id, date, 气象预测数据
+         用途：气象预测（温度、辐照等），影响新能源出力
+
+         all_province_weather_data_mtl_forecast_test
+         — 各省气象数据预测（测试版）
+
+================================================================================
+附录B：算法层表（algorithm_ 前缀，含山东数据）              【有2026: 3/4】
+================================================================================
+
+[有2026] algorithm_clearing_price_forecast
+         — 出清价格预测算法输出（★核心表★）
+         ★ province_id(14=山东), date, time_order(1-96),
+           org_price(实际/原始价格), fore_price(预测价格),
+           fore_price_adjusted(调整后预测价格)
+         用途：★出清价格预测主表★，日前/实时价格预测，518万行
+
+[有2026] algorithm_batch_sd_single_storage_settlement_price_forecast
+         — 储能结算价格预测（批量单次）
+         ★ date, 储能结算价格预测
+         用途：储能电站结算价格预测
+
+         algorithm_daily_rolling_optimal_strategy
+         — 日滚动最优策略
+         用途：充放电最优策略计算
+
+[有2026] algorithm_ultra_short_power_curve_adjustment
+         — 超短期功率曲线调整
+         ★ datetime, 功率曲线调整数据
+         用途：超短期出力预测修正
+
+================================================================================
+附录C：数仓与其他表                                          【有2026: 2/3】
+================================================================================
+
+[有2026] tianji_adjust_ratio_median
+         — 调整系数中位数（按 time_order 存储）
+         用途：价格调整系数
+
+[有2026] tianji_adjust_ratio_median_map
+         — 调整系数中位数映射
+         用途：调整系数映射关系
+
+         tianjin_px_statement_bill
+         — 天津结算单（非山东数据）
+         用途：天津电力市场结算
+
+================================================================================
+2026年数据完整性汇总
+================================================================================
+类别                                          有2026数据/总计   数据范围
+一、现货日前出清                               13/24          2026-01-01 ~ 2026-05-28
+二、现货实时出清                               10/16          2026-01-01 ~ 2026-05-28
+三、结算与日结算单                              8/13          2026-01-01 ~ 2026-05-24
+四、调频辅助服务市场                            2/2           2026-01-01 ~ 2026-05-28
+五、竞价空间与供需                              0/4           无2026数据
+六、新能源预测与出力                            9/10          2026-01-01 ~ 2026-05-29
+七、联络线与跨省输电                            3/5           2026-01-01 ~ 2026-05-29
+八、电网运行与断面约束                         14/17          2026-01-01 ~ 2026-05-31
+九、检修信息                                    4/7           2026-01-02 ~ 2026-05-29
+十、中长期交易与集中竞价                        9/13          2026-01-01 ~ 2026-06-30
+十一、售电与零售用户                            0/5           无2026数据
+十二、可靠出清与策略分析                        4/7           2026-01-01 ~ 2026-05-28
+附录A 跨省通用表                               13/14          2026-01-01 ~ 2026-07-26
+附录B 算法层表                                  3/4           2026-01-01 ~ 2026-06-07
+
+重点表（本项目常用）2026年数据状态：
+  ✓ shandong_px_spot_dayahead_clearing_price     — 日前出清价格（至 05-28）
+  ✓ shandong_px_spot_realtime_clearing_price     — 实时出清价格（至 05-27）
+  ✓ shandong_px_spot_dayahead_load_info          — 日前负荷（至 05-29）
+  ✓ shandong_px_spot_actual_load_info            — 实际负荷（至 05-27）
+  ✓ shandong_px_release_constraint_dayahead_new_energy_forecast — 日前新能源预测（至 05-29）
+  ✓ shandong_px_release_operation_new_energy_realtime_power — 实时新能源出力（至 05-27）
+  ✓ shandong_px_statement_spot_daily_v2          — 日结算单V2（至 05-24）
+  ✓ shandong_px_unify_settle_accounts_price      — 统一结算电价（至 05-27）
+  ✓ algorithm_clearing_price_forecast            — 出清价格预测算法（至 06-07，含未来预测）
+  ✓ all_province_supply_and_demand_forecast      — 各省供需预测（至 06-07，含未来预测）
+
+================================================================================
+常用查询示例
+================================================================================
+
+1. 查询山东日前出清价格（96点）：
+   SELECT date, time_order, org_price, fore_price, fore_price_adjusted
+   FROM algorithm_clearing_price_forecast
+   WHERE province_id = 14 AND date >= '2026-05-01'
+   ORDER BY date, time_order;
+
+2. 查询山东日前/实时统一结算价：
+   SELECT date, time_order, price
+   FROM shandong_px_spot_dayahead_clearing_price
+   WHERE date >= '2026-05-01'
+   ORDER BY date, time_order;
+
+   SELECT date, time_order, price
+   FROM shandong_px_spot_realtime_clearing_price
+   WHERE date >= '2026-05-01'
+   ORDER BY date, time_order;
+
+3. 查询山东供需预测（竞价空间基础数据）：
+   SELECT datetime, fore_value, fore_type, area_type
+   FROM all_province_supply_and_demand_forecast
+   WHERE province_id = 14
+   ORDER BY datetime DESC
+   LIMIT 5000;
+
+4. 查询山东日结算单：
+   SELECT *
+   FROM shandong_px_statement_spot_daily_v2
+   WHERE date >= '2026-05-01'
+   ORDER BY date;
+
+5. 查询山东日前新能源预测与实际负荷：
+   SELECT a.date, a.time_order, a.dayahead_new_energy_power_forecast,
+          b.actual_wind_power, b.actual_photovoltaic_power
+   FROM shandong_px_release_constraint_dayahead_new_energy_forecast a
+   JOIN shandong_px_spot_actual_load_info b
+     ON a.date = b.date AND a.time_order = b.time_order
+   WHERE a.date >= '2026-05-01'
+   ORDER BY a.date, a.time_order;
+
+6. 查询储能电站日内充放电计划：
+   SELECT date, unit_name, time_point, power
+   FROM shandong_px_intraday_clearing_plan_result
+   WHERE unit_name LIKE '%润津%' AND date >= '2026-05-01'
+   ORDER BY date, time_point;
+
+7. 查询每日报价上下限：
+   SELECT date, parameter_name, parameter_value
+   FROM shandong_px_spot_trade_constraint
+   WHERE date >= '2026-05-01'
+     AND parameter_name LIKE '%限价%'
+   ORDER BY date;

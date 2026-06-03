@@ -1,0 +1,121 @@
+============================================================
+山东电力市场数据分析 — 数据表索引
+============================================================
+
+## 一、交易申报与结果
+----------------------------------------
+1   shandong_px_centralized_bidding_trade_v2            连续撮合交易申报
+2   shandong_px_contract_continuous_match_transaction_declaration  连续撮合交易申报
+3   shandong_px_rolling_matching_bidding_results        滚动撮合交易
+4   shandong_px_centralized_bidding_declaration         集中竞价交易申报
+5   shandong_px_centralized_bidding_declaration_limit   集中竞价交易申报（限价）
+6   shandong_px_centralized_bidding_results_query       集中竞价交易结果查询
+7   sgcc_px_transprovincial_spot_clearing_result        省间现货出清结果
+
+
+## 二、日前市场 — 出清结果
+----------------------------------------
+8   shandong_px_spot_dayahead_clearing_price            日前交易结果查询（电价）
+9   shandong_px_spot_dayahead_clearing_quantity         日前交易结果查询（结算电量）
+10  shandong_spot_dayahead_declare_result               一次日前交易结果查询
+11  shandong_px_spot_dayahead_clearing_new              日前出清新版
+
+
+## 三、日前市场 — 运行信息
+----------------------------------------
+12  shandong_px_spot_dayahead_load_info                 日前负荷信息
+13  shandong_px_spot_dayahead_tie_line_info             日前联络线信息
+14  shandong_px_spot_dayahead_reserve_capacity_info     日前备用信息
+15  shandong_px_spot_dayahead_generator_maintenance_info 机组检修信息
+16  shandong_px_spot_dayahead_device_maintenance_info   输变电检修信息
+17  shandong_px_spot_dayahead_power_on_off_generator_info 必开必停机组信息
+18  shandong_px_spot_dayahead_supervise_info            事前监管信息
+19  shandong_px_spot_trade_constraint                   交易约束信息
+
+
+## 四、日前市场 — 约束与预测（算法需要）
+----------------------------------------
+20  shandong_px_release_constraint_dayahead_different_power_pre_plan  分电源类型新能源（预计划）
+21  shandong_px_release_constraint_dayahead_new_energy_forecast       可再生能源（预计划）
+22  shandong_px_release_constraint_dayahead_total_power_forecast      发电总出力预测
+23  shandong_px_release_constraint_non_market_power_forecast          各类非市场机组
+24  shandong_px_release_constraint_pumped_storage_power_forecast      抽蓄计划发电
+25  shandong_px_release_constraint_dayahead_hydraulic_power_plan      水电计划发电
+26  shandong_px_release_constraint_dayahead_market_total_new_nrg      参与市场新能源
+27  shandong_px_release_constraint_dayahead_non_market_power_fx       各类非市场机组（分型）
+28  shandong_px_release_constraint_dayahead_renewable_nrg_forecast    可再生能源
+29  shandong_px_release_constraint_dayahead_power_gen_forecast        发电总出力预测
+30  shandong_px_release_constraint_intraday_tie_line_power_forecast   联络线输电能力预测-日内
+31  shandong_px_release_constraint_next_week_tie_line_prediction      联络线输电能力预测-次周
+32  shandong_px_release_constraint_pre_week_new_energy_forecast       周前新能源预测
+33  shandong_px_release_constraint_pre_week_system_load_forecast      系统负荷预测-次周
+
+
+## 五、实时市场 — 出清结果
+----------------------------------------
+34  shandong_px_spot_realtime_clearing_quantity           实时交易结果查询（正式-结算电量）
+35  shandong_px_spot_realtime_clearing_price              实时交易结果查询（正式-电价）
+36  shandong_px_spot_realtime_clearing_point_quantity     实时交易结果查询（正式-节点电量）
+37  shandong_px_spot_realtime_clearing_point_quantity_temp 实时交易结果查询（临时-结算电量）
+38  shandong_px_spot_realtime_nodal_price                 实时节点电价查询
+39  shandong_px_reliable_clearing_unit_results            可靠性机组组合出清结果
+40  shandong_px_reliable_clearing_unit_data               可靠性机组组合出清数据
+41  shandong_px_reliable_clearing_unit_attachment         可靠性机组组合出清（附件）
+42  shandong_px_provincial_prescheduling_results          省内机组预计划结果
+43  shandong_px_intraday_clearing_plan_result             日内出清计划查询
+
+
+## 六、实时市场 — 实际运行数据
+----------------------------------------
+44  shandong_px_spot_actual_load_info                    实际负荷信息
+45  shandong_px_spot_actual_tie_line_info                实际联络线信息
+46  shandong_px_spot_actual_reserve_capacity_info        实际备用信息
+47  shandong_px_release_operation_new_energy_realtime_power  分电源类型新能源总实时出力
+48  shandong_px_release_operation_non_market_realtime_power  非市场化机组实际出力曲线
+49  shandong_px_release_operation_hydraulic_realtime_power   水电总实时出力
+50  shandong_px_release_operation_provincial_realtime_power  全网发电实时总出力
+51  shandong_px_operation_actual_transmission_section_limitation  实际运行输电断面约束
+52  shandong_px_release_operation_real_time_system_backup        实际系统备用
+53  shandong_px_operation_section_constraint_block        市场出清输电断面约束及阻塞情况
+54  shandong_px_operation_actual_power_flow               重要通道实际输电情况
+
+
+## 七、监控数据
+----------------------------------------
+### 日前监控
+55  shandong_px_spot_surveillance_dayahead_clearing_quantity   日前成交电量曲线
+56  shandong_px_spot_surveillance_dayahead_consumer_price      日前用电侧综合出清价格曲线
+57  shandong_px_spot_surveillance_dayahead_consumer_quantity   日前用户侧分类型成交电量曲线
+58  shandong_px_spot_surveillance_dayahead_consumer_statistics 日前用户侧统计
+59  shandong_px_spot_surveillance_dayahead_generation_price_v2 日前发电侧电价信息曲线
+60  shandong_px_spot_surveillance_dayahead_generation_quantity 日前发电侧分类型成交电量曲线
+61  shandong_px_spot_surveillance_dayahead_generation_statistics 日前发电侧统计
+
+### 实时监控
+62  shandong_px_spot_surveillance_realtime_clearing_quantity   实时成交电量曲线
+63  shandong_px_spot_surveillance_realtime_consumer_price      实时用电侧综合出清价格曲线
+64  shandong_px_spot_surveillance_realtime_generation_price    实时发电侧电价信息曲线
+65  shandong_px_spot_surveillance_realtime_generation_quantity 实时发电侧分类型成交电量曲线
+66  shandong_px_spot_surveillance_realtime_generation_statistics 实时发电侧统计
+
+
+## 八、结算
+----------------------------------------
+67  shandong_px_statement_spot_daily                      日清算单查询
+68  shandong_px_statement_spot_daily_attachment           日清算单附件
+69  shandong_px_statement_spot_daily_v2                   日清算单查询V2
+70  shandong_spot_settlement_reference_dayahead_price     中长期结算参考点日前电价
+71  shandong_px_unify_settle_accounts_price              统一结算电价
+
+
+## 九、调频市场
+----------------------------------------
+72  shandong_px_tuning_market_dayahead_clearing_price     调频市场日前出清价格查询
+73  shandong_px_tuning_market_dayahead_clearing_attachment 调频市场日前出清价格（附件）
+
+
+## 十、其他
+----------------------------------------
+74  shandong_px_electric_quantity_info_v2                 电量信息详情查询
+75  shandong_px_electric_quantity_info                    电量信息详情查询
+76  sgcc_px_release_notice                                交易公告

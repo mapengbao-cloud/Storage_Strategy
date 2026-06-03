@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苏留润津 日内出清计划 近一周</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: #f0f2f5; color: #333; }
+  .header { background: linear-gradient(135deg, #1565c0, #0277bd); color: #fff;
+             padding: 20px 32px; }
+  .header h1 { font-size: 22px; font-weight: 600; }
+  .header p { font-size: 13px; opacity: .85; margin-top: 4px; }
+  .controls { display: flex; align-items: center; gap: 10px; padding: 16px 32px;
+               background: #fff; border-bottom: 1px solid #e0e0e0; flex-wrap: wrap; }
+  .controls label { font-size: 14px; font-weight: 500; color: #555; }
+  .date-btn { padding: 7px 16px; border: 1.5px solid #1565c0; border-radius: 20px;
+               background: #fff; color: #1565c0; font-size: 13px; cursor: pointer;
+               transition: all .2s; }
+  .date-btn:hover { background: #e3f2fd; }
+  .date-btn.active { background: #1565c0; color: #fff; }
+  .toggle-group { margin-left: auto; display: flex; gap: 8px; }
+  .toggle-btn { padding: 6px 14px; border: 1.5px solid #ccc; border-radius: 16px;
+                 background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; }
+  .toggle-btn.cq1-active { border-color: #e53935; background: #ffebee; color: #e53935; }
+  .toggle-btn.cq2-active { border-color: #1e88e5; background: #e3f2fd; color: #1e88e5; }
+  #chart { width: 100%; height: calc(100vh - 160px); min-height: 480px; background: #fff; }
+  .stats-bar { display: flex; gap: 24px; padding: 10px 32px; background: #fff;
+                border-bottom: 1px solid #eee; font-size: 13px; color: #666; flex-wrap: wrap; }
+  .stat-item span { font-weight: 600; }
+  .stat-cq1 { color: #e53935; }
+  .stat-cq2 { color: #1e88e5; }
+  .zero-line { color: #999; font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>苏留润津独立储能电站 — 日内出清计划</h1>
+  <p>数据来源: shandong_px_intraday_clearing_plan_result · 2026年5月23日~29日 · 每日96点（15分钟间隔）</p>
+</div>
+
+<div class="controls">
+  <label>选择日期：</label>
+  <div id="dateButtons"></div>
+  <div class="toggle-group">
+    <button class="toggle-btn cq1-active" id="togCQ1" onclick="toggleSeries('cq1')">日内第一批(cq_type=1)</button>
+    <button class="toggle-btn cq2-active" id="togCQ2" onclick="toggleSeries('cq2')">日内第二批(cq_type=2)</button>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+<div id="chart"></div>
+
+<script>
+const DATES = ["2026-05-23", "2026-05-24", "2026-05-25", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29"];
+const LABELS = {"2026-05-23": "5\u670823\u65e5(\u5468\u516d)", "2026-05-24": "5\u670824\u65e5(\u5468\u65e5)", "2026-05-25": "5\u670825\u65e5(\u5468\u4e00)", "2026-05-26": "5\u670826\u65e5(\u5468\u4e8c)", "2026-05-27": "5\u670827\u65e5(\u5468\u4e09)", "2026-05-28": "5\u670828\u65e5(\u5468\u56db)", "2026-05-29": "5\u670829\u65e5(\u5468\u4e94)"};
+const DATA = {"2026-05-23": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 26.04, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -56.0, -56.0, -60.0, -60.0, -60.0, -60.0, -60.0, -60.0, -60.0, -60.0, -60.0, -60.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, -3.16, -3.16, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 52.58, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "2026-05-24": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 9.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -95.0, -95.0, -95.0, -95.0, -95.0, -95.0, -23.67, -23.67, -23.67, -23.67, -23.67, -23.67, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 0.0, 0.0, 0.0, 0.0, 0.0, 88.2, 88.2, 88.2, 88.2, 88.2, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 30.32, 0.0, 0.0, 0.0, 0.0, 0.0, 88.2, 88.2, 88.2, 88.2, 88.2, 0.0, 0.0]}, "2026-05-25": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, -7.29, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -13.75, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 90.0, 0.0, -100.0, -100.0, -95.0, -95.0, 92.13, 92.13, 92.13, 92.13, 66.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "2026-05-26": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 13.52, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.61, 1.61, 1.61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "2026-05-27": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 7.26, 7.26, 7.26, 7.26, 7.26, 1.68, 1.68, 1.68, 1.68, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 29.55, 29.55, 29.55, 3.05, 3.05, 3.05, 3.05, 3.05, 3.05, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, "2026-05-28": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -23.5, -23.5, -95.0, -95.0, -95.0, -95.0, -95.0, -95.0, -95.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 95.0, 95.0, 95.0, 95.0, 95.0, 95.0, 95.0, 10.58, 7.94, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, -6.8, -6.8, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 36.23, 0.0, 95.0, 95.0, 95.0, 0.0, 0.0, 0.0, 0.0]}, "2026-05-29": {"cq1": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -33.7, -33.7, -33.7, -33.7, -95.0, -95.0, -95.0, -95.0, -95.0, -95.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 34.62, 95.0, 0.0, 0.0], "cq2": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, -3.84, -3.84, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 62.14, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}};
+const TIMES = ["00:00", "00:15", "00:30", "00:45", "01:00", "01:15", "01:30", "01:45", "02:00", "02:15", "02:30", "02:45", "03:00", "03:15", "03:30", "03:45", "04:00", "04:15", "04:30", "04:45", "05:00", "05:15", "05:30", "05:45", "06:00", "06:15", "06:30", "06:45", "07:00", "07:15", "07:30", "07:45", "08:00", "08:15", "08:30", "08:45", "09:00", "09:15", "09:30", "09:45", "10:00", "10:15", "10:30", "10:45", "11:00", "11:15", "11:30", "11:45", "12:00", "12:15", "12:30", "12:45", "13:00", "13:15", "13:30", "13:45", "14:00", "14:15", "14:30", "14:45", "15:00", "15:15", "15:30", "15:45", "16:00", "16:15", "16:30", "16:45", "17:00", "17:15", "17:30", "17:45", "18:00", "18:15", "18:30", "18:45", "19:00", "19:15", "19:30", "19:45", "20:00", "20:15", "20:30", "20:45", "21:00", "21:15", "21:30", "21:45", "22:00", "22:15", "22:30", "22:45", "23:00", "23:15", "23:30", "23:45"];
+
+let currentDate = DATES[0];
+let showCQ1 = true, showCQ2 = true;
+const chart = echarts.init(document.getElementById('chart'));
+
+// Build date buttons
+const btnContainer = document.getElementById('dateButtons');
+DATES.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'date-btn' + (d === currentDate ? ' active' : '');
+  btn.textContent = LABELS[d];
+  btn.onclick = () => selectDate(d);
+  btnContainer.appendChild(btn);
+});
+
+function selectDate(d) {
+  currentDate = d;
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateChart();
+}
+
+function toggleSeries(s) {
+  if (s === 'cq1') { showCQ1 = !showCQ1; document.getElementById('togCQ1').classList.toggle('cq1-active'); }
+  if (s === 'cq2') { showCQ2 = !showCQ2; document.getElementById('togCQ2').classList.toggle('cq2-active'); }
+  updateChart();
+}
+
+function computeStats(arr) {
+  const valid = arr.filter(v => v !== null);
+  if (!valid.length) return { avg: '-', max: '-', min: '-', pos_count: 0, neg_count: 0 };
+  const pos = valid.filter(v => v > 0);
+  const neg = valid.filter(v => v < 0);
+  const avg = (valid.reduce((a, b) => a + b, 0) / valid.length).toFixed(2);
+  const mx = Math.max(...valid).toFixed(2);
+  const mn = Math.min(...valid).toFixed(2);
+  return { avg, max: mx, min: mn, pos_count: pos.length, neg_count: neg.length };
+}
+
+function updateStats(cq1, cq2) {
+  const s1 = computeStats(cq1);
+  const s2 = computeStats(cq2);
+  let html = '';
+  if (showCQ1) {
+    html += `<div class="stat-item">日内第一批 有效点数: <span class="stat-cq1">${s1.pos_count + s1.neg_count}</span></div>`;
+    html += `<div class="stat-item">正(放电): <span class="stat-cq1">${s1.pos_count}</span>点</div>`;
+    html += `<div class="stat-item">负(充电): <span class="stat-cq1">${s1.neg_count}</span>点</div>`;
+    html += `<div class="stat-item">最大: <span class="stat-cq1">${s1.max}</span> MW</div>`;
+    html += `<div class="stat-item">最小: <span class="stat-cq1">${s1.min}</span> MW</div>`;
+  }
+  if (showCQ2) {
+    html += `<div class="stat-item" style="margin-left:16px">日内第二批 有效点数: <span class="stat-cq2">${s2.pos_count + s2.neg_count}</span></div>`;
+    html += `<div class="stat-item">正(放电): <span class="stat-cq2">${s2.pos_count}</span>点</div>`;
+    html += `<div class="stat-item">负(充电): <span class="stat-cq2">${s2.neg_count}</span>点</div>`;
+    html += `<div class="stat-item">最大: <span class="stat-cq2">${s2.max}</span> MW</div>`;
+    html += `<div class="stat-item">最小: <span class="stat-cq2">${s2.min}</span> MW</div>`;
+  }
+  document.getElementById('statsBar').innerHTML = html;
+}
+
+function updateChart() {
+  const d = DATA[currentDate];
+  const cq1 = d.cq1;
+  const cq2 = d.cq2;
+
+  updateStats(cq1, cq2);
+
+  const series = [];
+  if (showCQ1) {
+    series.push({
+      name: '日内第一批',
+      type: 'bar',
+      data: cq1.map((v, i) => [i, v]),
+      barMaxWidth: 9,
+      itemStyle: {
+        color: function(params) {
+          if (params.value[1] === null) return 'transparent';
+          return params.value[1] >= 0 ? 'rgba(229,57,53,0.75)' : 'rgba(244,67,54,0.35)';
+        }
+      },
+      emphasis: { focus: 'series' },
+    });
+  }
+  if (showCQ2) {
+    series.push({
+      name: '日内第二批',
+      type: 'bar',
+      data: cq2.map((v, i) => [i, v]),
+      barMaxWidth: 9,
+      itemStyle: {
+        color: function(params) {
+          if (params.value[1] === null) return 'transparent';
+          return params.value[1] >= 0 ? 'rgba(30,136,229,0.75)' : 'rgba(33,150,243,0.35)';
+        }
+      },
+      emphasis: { focus: 'series' },
+    });
+  }
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(255,255,255,0.96)',
+      borderColor: '#ddd',
+      textStyle: { color: '#333', fontSize: 12 },
+      formatter: function(params) {
+        const idx = params[0].axisValue;
+        const time = TIMES[idx];
+        let tip = '<b>' + time + '</b><br/>';
+        params.forEach(p => {
+          if (p.value[1] !== null) {
+            tip += p.marker + ' ' + p.seriesName + ': <b>' + p.value[1].toFixed(2) + '</b> MW<br/>';
+          }
+        });
+        if (params.every(p => p.value[1] === null)) {
+          tip += '<span style="color:#999">无计划数据</span>';
+        }
+        return tip;
+      }
+    },
+    legend: { show: false },
+    grid: { left: 60, right: 40, top: 30, bottom: 60 },
+    xAxis: {
+      type: 'category',
+      data: TIMES,
+      axisLabel: {
+        fontSize: 10,
+        interval: 3,
+        rotate: 45,
+      },
+      axisTick: { alignWithLabel: true },
+    },
+    yAxis: {
+      type: 'value',
+      name: '功率 (MW)',
+      nameTextStyle: { fontSize: 12 },
+      axisLabel: { fontSize: 11 },
+      splitLine: { lineStyle: { type: 'dashed', color: '#eee' } },
+    },
+    dataZoom: [
+      { type: 'inside', start: 0, end: 100 },
+      { type: 'slider', start: 0, end: 100, height: 20, bottom: 8 },
+    ],
+    series: series,
+  };
+
+  chart.setOption(option, true);
+}
+
+updateChart();
+window.addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>

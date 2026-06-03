@@ -1,0 +1,209 @@
+================================================================================
+天机数据库 — 山东相关表（2026年有数据）
+查询时间: 2026-05-29
+总计: 90 张表
+================================================================================
+
+一、现货出清价格（Spot Clearing Prices）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_dayahead_clearing_price                         date              2026-01-01 ~ 2026-05-28   71,040
+shandong_px_spot_dayahead_clearing_quantity                      date              2026-01-01 ~ 2026-05-28   71,040
+shandong_px_spot_dayahead_clearing_new                           date              2026-01-01 ~ 2026-05-27   68,640
+shandong_px_spot_realtime_clearing_price                         date              2026-01-01 ~ 2026-05-27   70,560
+shandong_px_spot_realtime_clearing_quantity                      date              2026-01-01 ~ 2026-05-27   70,560
+shandong_px_spot_realtime_clearing_point_quantity                date              2026-01-01 ~ 2026-05-27   70,560
+shandong_px_spot_realtime_clearing_point_quantity_temp           date              2026-01-01 ~ 2026-05-28   70,944
+shandong_px_spot_realtime_nodal_price                            date              2026-01-01 ~ 2026-05-25    4,190,400
+shandong_px_unify_settle_accounts_price                          date              2026-01-01 ~ 2026-05-27   14,112
+shandong_spot_settlement_reference_dayahead_price                date              2026-01-01 ~ 2026-05-28   14,208
+shandong_spot_dayahead_declare_result                            date              2026-01-01 ~ 2026-03-22    6,720
+shandong_px_spot_surveillance_dayahead_generation_price          date              2026-01-01 ~ 2026-01-14      336
+shandong_px_spot_surveillance_dayahead_generation_price_v2       date              2026-01-01 ~ 2026-05-28   14,112
+shandong_px_spot_surveillance_dayahead_generation_quantity       date              2026-01-01 ~ 2026-05-28   15,984
+shandong_px_spot_surveillance_dayahead_generation_statistics     date              2026-01-01 ~ 2026-05-28    1,105
+shandong_px_spot_surveillance_dayahead_consumer_statistics       date              2026-01-01 ~ 2026-05-28      888
+shandong_px_spot_surveillance_realtime_generation_price          date              2026-01-01 ~ 2026-05-27    3,528
+shandong_px_spot_surveillance_realtime_generation_quantity       date              2026-01-01 ~ 2026-05-27   29,952
+shandong_px_spot_surveillance_realtime_generation_statistics     date              2026-01-01 ~ 2026-05-27    1,689
+shandong_px_spot_surveillance_realtime_consumer_price            date              2026-01-01 ~ 2026-05-27    3,528
+shandong_px_spot_surveillance_realtime_clearing_quantity         date              2026-01-01 ~ 2026-05-27    3,528
+
+二、供需与负荷预测（Supply/Demand & Load Forecast）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_dayahead_load_info                              date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_spot_actual_load_info                                date              2026-01-01 ~ 2026-05-27   14,112
+shandong_px_release_constraint_dayahead_total_power_forecast     date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_release_constraint_pre_week_system_load_forecast     date              2026-01-01 ~ 2026-05-31   28,992
+shandong_px_release_operation_provincial_realtime_power          date              2026-01-01 ~ 2026-05-27   14,112
+shandong_px_release_operation_real_time_system_backup            date              2026-01-01 ~ 2026-05-27   14,016
+t_dwd_shandong_spot_actual_load_info                             date              2026-01-01 ~ 2026-05-27    3,528
+t_dwd_shandong_spot_dayahead_load_info                           date              2026-01-01 ~ 2026-05-29    3,576
+all_province_supply_and_demand_forecast                          datetime          2026-03-04 ~ 2026-06-07  186,144
+all_province_supply_and_demand_forecast_test                     datetime          2026-01-01 ~ 2026-03-30  3,910,288
+
+三、新能源与出力（New Energy & Generation）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_release_constraint_dayahead_new_energy_forecast      date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_release_constraint_dayahead_market_total_new_nrg     date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_release_constraint_dayahead_different_power_pre_plan date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_release_constraint_non_market_power_forecast         date              2026-01-01 ~ 2026-05-29   14,304
+shandong_px_release_operation_new_energy_realtime_power          date              2026-01-01 ~ 2026-05-27   14,112
+shandong_px_release_operation_non_market_realtime_power          date              2026-01-01 ~ 2026-05-27   14,112
+shandong_px_release_operation_hydraulic_realtime_power           date              2026-01-01 ~ 2026-05-27   14,016
+algorithm_ultra_short_power_curve_adjustment                     datetime          2026-01-02 ~ 2026-02-19    2,715
+
+四、联络线与断面约束（Tie-line & Section Constraints）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_dayahead_tie_line_info                          date              2026-01-01 ~ 2026-05-29   71,520
+shandong_px_spot_actual_tie_line_info                            date              2026-01-01 ~ 2026-05-27   70,560
+shandong_px_release_constraint_intraday_tie_line_power_forecast  date              2026-01-01 ~ 2026-05-28   71,040
+shandong_px_spot_trade_constraint                                date              2026-01-01 ~ 2026-05-29   30,003
+shandong_px_operation_actual_transmission_section_limitation     date              2026-02-28 ~ 2026-03-10   11,040
+shandong_px_operation_actual_power_flow                          date              2026-03-01 ~ 2026-03-10    5,664
+
+五、备用容量（Reserve Capacity）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_dayahead_reserve_capacity_info                  date              2026-01-01 ~ 2026-05-29   28,608
+shandong_px_spot_actual_reserve_capacity_info                    date              2026-01-01 ~ 2026-05-27   28,224
+
+六、结算单（Settlement/Statement）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_statement_spot_daily_v2                              date              2026-01-01 ~ 2026-05-24   88,416
+shandong_px_statement_spot_daily_v3                              date              2026-01-01 ~ 2026-05-24  109,728
+shandong_px_statement_spot_daily_attachment                      date              2026-01-01 ~ 2026-05-24    2,014
+shandong_px_statement_spot_monthly_detail                        date              2026-01-01 ~ 2026-04-30      720
+shandong_px_statement_spot_monthly_summary                       realtime_clearing_quantity  2090~43840        392
+shandong_px_statement_spot_monthly_summary_v2                    realtime_clearing_quantity  2042~19810         14
+shandong_px_statement_spot_monthly_attachment                    creation_time     2026-02-26 ~ 2026-05-21       30
+
+七、调频辅助服务市场（Frequency Regulation / Tuning Market）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_tuning_market_dayahead_clearing_price                date              2026-01-01 ~ 2026-05-28   10,440
+shandong_px_tuning_market_dayahead_clearing_attachment           date              2026-01-01 ~ 2026-05-28      435
+
+八、检修信息（Maintenance）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_dayahead_device_maintenance_info                date              2026-01-05 ~ 2026-05-29    4,765
+shandong_px_spot_dayahead_generator_maintenance_info             date              2026-01-02 ~ 2026-05-29      120
+shandong_px_spot_dayahead_power_on_off_generator_info            date              2026-03-22 ~ 2026-05-28        5
+shandong_px_spot_dayahead_supervise_info                         date              2026-01-01 ~ 2026-05-27      147
+
+九、中长期与集中竞价交易（Medium/Long-term & Centralized Bidding）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_centralized_bidding_declaration                      PDATE             2026-01-01 ~ 2026-06-26    8,983
+shandong_px_centralized_bidding_declaration_limit                creation_time     2026-01-06 ~ 2026-05-05       28
+shandong_px_centralized_bidding_trade_v2                         date              2026-01-01 ~ 2026-05-27    6,960
+shandong_px_centralized_bidding_results_query                    date              2026-01-06 ~ 2026-05-21      112
+shandong_px_contract_continuous_match_transaction_declaration    date              2026-01-01 ~ 2026-05-27    6,960
+shandong_px_rolling_matching_bidding_results                     date              2026-02-09 ~ 2026-05-27        8
+
+十、电量信息（Electric Quantity）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_electric_quantity_info                               create_time       2026-01-01 ~ 2026-05-21    1,077
+shandong_px_electric_quantity_info_v2                            pdate             2026-01-01 ~ 2026-06-30   49,473
+
+十一、可靠出清机组（Reliable Clearing Units）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_reliable_clearing_unit_data                          date              2026-01-01 ~ 2026-05-28   13,632
+shandong_px_reliable_clearing_unit_results                       date              2026-01-01 ~ 2026-05-28      148
+shandong_px_reliable_clearing_unit_attachment                    date              2026-04-01 ~ 2026-05-28      106
+
+十二、预调度与日内计划（Pre-scheduling & Intraday）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_provincial_prescheduling_results                     date              2026-01-01 ~ 2026-03-30  126,048
+shandong_px_intraday_clearing_plan_result                        date              2026-03-31 ~ 2026-05-28   11,232
+
+十三、挂牌交易（Listing Trading）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_spot_listing_trading_sequence                        creation_time     2026-01-15 ~ 2026-05-26       19
+
+十四、跨省通用表（All Province Tables，province_id=14 为山东）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+all_province_clearing_price_forecast                             date              2026-01-01 ~ 2026-06-12  5,921,370
+all_province_clearing_price_forecast_test                        date              2026-03-01 ~ 2026-03-20    7,632
+all_province_clearing_price_forecast_test_ys                     date              2026-01-01 ~ 2026-05-10  1,699,980
+all_province_clearing_price_forecast_wea_gc                      date              2026-02-02 ~ 2026-04-03   16,992
+all_province_clearing_price_forecast_wea_openmto                 date              2026-02-02 ~ 2026-04-03   16,992
+all_province_medium_to_longterm_clearing_price_forecast          date              2026-01-01 ~ 2026-07-26  3,966,960
+all_province_medium_to_longterm_clearing_price_forecast_test     date              2026-01-01 ~ 2026-01-22    2,112
+all_province_medium_to_longterm_clearing_quantity_forecast       date              2026-02-10 ~ 2026-02-28    3,264
+all_province_boundary_data_mtl_forecast                          date              2026-01-01 ~ 2026-07-26  952,728
+all_province_weather_data_mtl_forecast                           date              2026-01-01 ~ 2026-07-26  547,920
+
+十五、算法表（Algorithm Tables）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+algorithm_clearing_price_forecast                                date              2026-01-01 ~ 2026-06-07  5,187,360
+algorithm_batch_sd_single_storage_settlement_price_forecast      date              2026-01-02 ~ 2026-05-09    3,000
+
+十六、其他（Other）
+--------------------------------------------------------------------------------
+表名                                                              日期字段           2026数据范围              行数
+shandong_px_power_information_details_query                      date              2026-01-30 ~ 2026-01-30       96
+tianji_adjust_ratio_median                                       time_order        data_eight~data_two      379,296
+tianji_adjust_ratio_median_map                                   time_order        data_eight~data_two           96
+tianjin_px_statement_bill                                        date              2026-01-01 ~ 2026-03-01       12
+
+================================================================================
+常用查询示例
+================================================================================
+
+1. 查询山东 2026 年 5 月日前出清价格
+SELECT date, time_order, price
+FROM shandong_px_spot_dayahead_clearing_price
+WHERE date >= '2026-05-01' AND date <= '2026-05-31'
+ORDER BY date, time_order;
+
+2. 查询山东 2026 年 5 月实时出清价格
+SELECT date, time_order, price
+FROM shandong_px_spot_realtime_clearing_price
+WHERE date >= '2026-05-01' AND date <= '2026-05-31'
+ORDER BY date, time_order;
+
+3. 查询山东日前负荷预测
+SELECT date, time_order, load
+FROM shandong_px_spot_dayahead_load_info
+WHERE date >= '2026-05-01' AND date <= '2026-05-31'
+ORDER BY date, time_order;
+
+4. 查询山东日前新能源预测
+SELECT date, time_order, power
+FROM shandong_px_release_constraint_dayahead_new_energy_forecast
+WHERE date >= '2026-05-01' AND date <= '2026-05-31'
+ORDER BY date, time_order;
+
+5. 查询山东跨省通用表数据（需指定 province_id=14）
+SELECT date, time_order, price
+FROM all_province_clearing_price_forecast
+WHERE province_id = 14 AND date >= '2026-05-01'
+ORDER BY date, time_order
+LIMIT 1000;
+
+6. 查询算法层出清价格预测
+SELECT date, time_order, org_price, fore_price, fore_price_adjusted
+FROM algorithm_clearing_price_forecast
+WHERE province_id = 14 AND date >= '2026-05-01'
+ORDER BY date, time_order
+LIMIT 1000;
+
+================================================================================
+数据完整性说明
+================================================================================
+- 大部分表数据覆盖 2026-01-01 ~ 2026-05-29（当前日期）
+- 部分表数据截止到 2026-05-24 或 2026-05-27（可能存在数据延迟）
+- 跨省通用表（all_province_*）和算法表（algorithm_*）包含多个省份数据，需用 province_id=14 筛选山东数据
+- tianji_adjust_ratio_median 系列表使用 time_order 而非 date 字段，需特殊处理

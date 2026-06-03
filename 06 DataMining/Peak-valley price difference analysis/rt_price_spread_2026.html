@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山东实时电价峰谷价差分析 (2026年1月-5月)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+.header {
+    background: linear-gradient(135deg, #1a3a5c 0%, #2d6aa6 100%);
+    color: #fff; padding: 20px 30px; display: flex; align-items: center;
+    justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.header h1 { font-size: 20px; font-weight: 600; letter-spacing: 1px; }
+.header .sub { font-size: 13px; opacity: .7; margin-top: 4px; }
+.header .time { font-size: 12px; opacity: .6; }
+
+.stats-row {
+    display: flex; gap: 12px; margin: 16px 20px 0; flex-wrap: wrap;
+}
+.stat-card {
+    background: #fff; border-radius: 10px; padding: 16px 24px;
+    flex: 1; min-width: 140px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    text-align: center;
+}
+.stat-card .num { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.stat-card .label { font-size: 12px; color: #888; }
+.stat-card.red .num { color: #e34a4a; }
+.stat-card.blue .num { color: #2d6aa6; }
+.stat-card.green .num { color: #3ba272; }
+.stat-card.orange .num { color: #f39c12; }
+.stat-card.purple .num { color: #9a60b4; }
+
+.chart-wrap {
+    margin: 16px 20px; background: #fff; border-radius: 10px;
+    padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.chart { width: 100%; height: 420px; }
+
+.section-title {
+    font-size: 16px; font-weight: 600; margin: 20px 20px 12px;
+    padding-left: 12px; border-left: 4px solid #2d6aa6; color: #333;
+}
+
+.data-table {
+    margin: 0 20px 20px; background: #fff; border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden;
+}
+.data-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table thead th {
+    background: #f8f9fb; padding: 10px 12px; text-align: center;
+    border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555;
+    position: sticky; top: 0; z-index: 1; white-space: nowrap;
+}
+.data-table tbody td { padding: 8px 12px; text-align: center; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+.data-table tbody tr:hover td { background: #f0f5ff; }
+.data-table tbody tr:nth-child(even) td { background: #fafbfc; }
+.data-table tbody tr:nth-child(even):hover td { background: #f0f5ff; }
+.data-table .num { font-variant-numeric: tabular-nums; text-align: right; }
+.data-table .neg { color: #e34a4a; }
+.data-table .pos { color: #3ba272; }
+
+.spread-bar {
+    display: inline-block; height: 14px; border-radius: 3px; min-width: 2px;
+    vertical-align: middle;
+}
+.tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 500;
+}
+.tag-peak { background: #fff0e6; color: #d46b08; }
+.tag-valley { background: #e6f7ff; color: #096dd9; }
+
+.monthly-badge { font-size: 12px; color: #888; margin-left: 20px; font-weight: 400; }
+.filter-bar {
+    display: flex; gap: 8px; margin: 0 20px 12px; flex-wrap: wrap; align-items: center;
+}
+.filter-bar button {
+    padding: 5px 14px; border: 1px solid #d0d5dd; border-radius: 6px;
+    background: #fff; cursor: pointer; font-size: 13px; transition: all .2s;
+}
+.filter-bar button:hover { background: #f0f2f5; }
+.filter-bar button.active { background: #2d6aa6; color: #fff; border-color: #2d6aa6; }
+.filter-bar button.primary { background: #5470C6; color: #fff; border-color: #5470C6; }
+.filter-bar button.primary:hover { opacity: .85; }
+
+.scroll-wrap { max-height: 600px; overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>山东实时电价峰谷价差分析 (2026年1月-5月)</h1>
+        <div class="sub">数据: shandong_px_spot_realtime_clearing_price | 峰谷窗口: 连续2小时(8个时点)滑动平均</div>
+    </div>
+    <div class="time">更新: 2026-05-25 14:58</div>
+</div>
+
+<div class="stats-row" id="statCards">
+    <!-- injected by JS -->
+</div>
+
+<div class="chart-wrap">
+    <div id="chartSpread" class="chart"></div>
+</div>
+
+<div class="chart-wrap">
+    <div id="chartMonthly" class="chart"></div>
+</div>
+
+<div class="section-title">
+    📅 逐日明细一览
+    <span class="monthly-badge">点击月份按钮快速筛选 | 绿色=谷值时段 红色=峰值时段</span>
+</div>
+
+<div class="filter-bar" id="filterBar">
+    <button class="primary active" data-month="all">全部</button>
+    <!-- injected by JS -->
+</div>
+
+<div class="data-table">
+    <div class="scroll-wrap" id="tableWrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>日均价</th>
+                    <th>峰值 (连续2h)</th>
+                    <th>峰值时段</th>
+                    <th>谷值 (连续2h)</th>
+                    <th>谷值时段</th>
+                    <th>峰谷价差</th>
+                    <th>价差/谷值比</th>
+                    <th>日内曲线</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- injected by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="section-title">📊 月度汇总统计</div>
+
+<div class="data-table">
+    <table>
+        <thead>
+            <tr>
+                <th>月份</th>
+                <th>天数</th>
+                <th>日均价</th>
+                <th>日均价范围</th>
+                <th>平均价差</th>
+                <th>最大价差</th>
+                <th>最小价差</th>
+                <th>价差趋势</th>
+            </tr>
+        </thead>
+        <tbody id="monthlyBody">
+            <!-- injected by JS -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+// ======== DATA ========
+const DATA = {"summary": {"total_days": 144, "avg_spread": 546.24, "max_spread": 1178.29, "min_spread": 37.72, "avg_daily_avg": 284.47}, "days": [{"date": "2026-01-01", "daily_avg": 166.99, "peak_val": 492.66, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "09:15-11:00", "spread": 572.66, "spread_pct": -715.8}, {"date": "2026-01-02", "daily_avg": 259.1, "peak_val": 491.47, "peak_time": "16:00-17:45", "valley_val": -80.0, "valley_time": "09:00-10:45", "spread": 571.47, "spread_pct": -714.3}, {"date": "2026-01-03", "daily_avg": 203.12, "peak_val": 525.71, "peak_time": "20:00-21:45", "valley_val": -80.68, "valley_time": "05:30-07:15", "spread": 606.39, "spread_pct": -751.6}, {"date": "2026-01-04", "daily_avg": 368.44, "peak_val": 425.81, "peak_time": "14:15-16:00", "valley_val": 318.99, "valley_time": "22:00-23:45", "spread": 106.82, "spread_pct": 33.5}, {"date": "2026-01-05", "daily_avg": 277.8, "peak_val": 413.13, "peak_time": "19:15-21:00", "valley_val": -50.51, "valley_time": "12:30-14:15", "spread": 463.65, "spread_pct": -917.9}, {"date": "2026-01-06", "daily_avg": 349.43, "peak_val": 478.61, "peak_time": "08:15-10:00", "valley_val": 154.96, "valley_time": "22:00-23:45", "spread": 323.65, "spread_pct": 208.9}, {"date": "2026-01-07", "daily_avg": 198.76, "peak_val": 472.33, "peak_time": "16:00-17:45", "valley_val": -85.0, "valley_time": "13:00-14:45", "spread": 557.33, "spread_pct": -655.7}, {"date": "2026-01-08", "daily_avg": 212.16, "peak_val": 526.79, "peak_time": "07:00-08:45", "valley_val": -90.0, "valley_time": "11:15-13:00", "spread": 616.79, "spread_pct": -685.3}, {"date": "2026-01-09", "daily_avg": 66.69, "peak_val": 457.24, "peak_time": "07:45-09:30", "valley_val": -82.5, "valley_time": "13:45-15:30", "spread": 539.74, "spread_pct": -654.2}, {"date": "2026-01-10", "daily_avg": 57.42, "peak_val": 434.24, "peak_time": "17:30-19:15", "valley_val": -82.5, "valley_time": "09:45-11:30", "spread": 516.74, "spread_pct": -626.3}, {"date": "2026-01-11", "daily_avg": 107.64, "peak_val": 626.73, "peak_time": "16:30-18:15", "valley_val": -80.48, "valley_time": "05:30-07:15", "spread": 707.21, "spread_pct": -878.8}, {"date": "2026-01-12", "daily_avg": 159.26, "peak_val": 623.6, "peak_time": "15:15-17:00", "valley_val": -85.0, "valley_time": "13:00-14:45", "spread": 708.6, "spread_pct": -833.6}, {"date": "2026-01-13", "daily_avg": 246.86, "peak_val": 445.03, "peak_time": "07:15-09:00", "valley_val": -80.37, "valley_time": "11:45-13:30", "spread": 525.4, "spread_pct": -653.7}, {"date": "2026-01-14", "daily_avg": 360.26, "peak_val": 628.06, "peak_time": "14:15-16:00", "valley_val": 279.32, "valley_time": "05:00-06:45", "spread": 348.74, "spread_pct": 124.9}, {"date": "2026-01-15", "daily_avg": 132.71, "peak_val": 478.92, "peak_time": "07:15-09:00", "valley_val": -80.0, "valley_time": "11:15-13:00", "spread": 558.92, "spread_pct": -698.6}, {"date": "2026-01-16", "daily_avg": 246.43, "peak_val": 681.03, "peak_time": "10:30-12:15", "valley_val": -80.0, "valley_time": "00:00-01:45", "spread": 761.03, "spread_pct": -951.3}, {"date": "2026-01-17", "daily_avg": 280.91, "peak_val": 619.15, "peak_time": "16:30-18:15", "valley_val": -13.9, "valley_time": "09:30-11:15", "spread": 633.05, "spread_pct": -4553.1}, {"date": "2026-01-18", "daily_avg": 482.34, "peak_val": 1079.34, "peak_time": "10:45-12:30", "valley_val": 51.43, "valley_time": "22:00-23:45", "spread": 1027.91, "spread_pct": 1998.6}, {"date": "2026-01-19", "daily_avg": 428.93, "peak_val": 639.57, "peak_time": "14:00-15:45", "valley_val": 80.38, "valley_time": "05:45-07:30", "spread": 559.19, "spread_pct": 695.7}, {"date": "2026-01-20", "daily_avg": 325.98, "peak_val": 410.28, "peak_time": "16:15-18:00", "valley_val": 111.87, "valley_time": "11:45-13:30", "spread": 298.41, "spread_pct": 266.7}, {"date": "2026-01-21", "daily_avg": 320.67, "peak_val": 461.25, "peak_time": "16:30-18:15", "valley_val": -80.19, "valley_time": "12:15-14:00", "spread": 541.45, "spread_pct": -675.2}, {"date": "2026-01-22", "daily_avg": 333.04, "peak_val": 466.92, "peak_time": "18:30-20:15", "valley_val": -80.0, "valley_time": "11:15-13:00", "spread": 546.92, "spread_pct": -683.6}, {"date": "2026-01-23", "daily_avg": 346.35, "peak_val": 545.08, "peak_time": "07:15-09:00", "valley_val": -55.94, "valley_time": "11:30-13:15", "spread": 601.02, "spread_pct": -1074.4}, {"date": "2026-01-24", "daily_avg": 260.12, "peak_val": 412.45, "peak_time": "20:00-21:45", "valley_val": -80.0, "valley_time": "11:45-13:30", "spread": 492.45, "spread_pct": -615.6}, {"date": "2026-01-25", "daily_avg": 205.41, "peak_val": 474.26, "peak_time": "19:45-21:30", "valley_val": -80.0, "valley_time": "05:30-07:15", "spread": 554.26, "spread_pct": -692.8}, {"date": "2026-01-26", "daily_avg": 494.27, "peak_val": 1314.75, "peak_time": "09:00-10:45", "valley_val": 319.41, "valley_time": "22:00-23:45", "spread": 995.34, "spread_pct": 311.6}, {"date": "2026-01-27", "daily_avg": 314.05, "peak_val": 413.0, "peak_time": "07:15-09:00", "valley_val": 40.49, "valley_time": "11:15-13:00", "spread": 372.52, "spread_pct": 920.1}, {"date": "2026-01-28", "daily_avg": 324.7, "peak_val": 360.59, "peak_time": "15:30-17:15", "valley_val": 281.38, "valley_time": "11:45-13:30", "spread": 79.22, "spread_pct": 28.2}, {"date": "2026-01-29", "daily_avg": 327.69, "peak_val": 355.73, "peak_time": "16:00-17:45", "valley_val": 312.93, "valley_time": "12:30-14:15", "spread": 42.8, "spread_pct": 13.7}, {"date": "2026-01-30", "daily_avg": 288.63, "peak_val": 370.31, "peak_time": "16:30-18:15", "valley_val": -80.0, "valley_time": "10:15-12:00", "spread": 450.31, "spread_pct": -562.9}, {"date": "2026-01-31", "daily_avg": 340.05, "peak_val": 365.82, "peak_time": "09:45-11:30", "valley_val": 301.12, "valley_time": "05:15-07:00", "spread": 64.69, "spread_pct": 21.5}, {"date": "2026-02-01", "daily_avg": 393.65, "peak_val": 467.96, "peak_time": "10:15-12:00", "valley_val": 247.95, "valley_time": "05:15-07:00", "spread": 220.0, "spread_pct": 88.7}, {"date": "2026-02-02", "daily_avg": 294.56, "peak_val": 426.51, "peak_time": "20:15-22:00", "valley_val": -80.0, "valley_time": "11:15-13:00", "spread": 506.51, "spread_pct": -633.1}, {"date": "2026-02-03", "daily_avg": 213.74, "peak_val": 394.83, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "08:45-10:30", "spread": 474.83, "spread_pct": -593.5}, {"date": "2026-02-04", "daily_avg": 281.66, "peak_val": 581.78, "peak_time": "16:00-17:45", "valley_val": -80.0, "valley_time": "05:15-07:00", "spread": 661.78, "spread_pct": -827.2}, {"date": "2026-02-05", "daily_avg": 243.14, "peak_val": 535.09, "peak_time": "01:45-03:30", "valley_val": -80.0, "valley_time": "08:45-10:30", "spread": 615.09, "spread_pct": -768.9}, {"date": "2026-02-06", "daily_avg": 285.06, "peak_val": 658.04, "peak_time": "17:45-19:30", "valley_val": -27.28, "valley_time": "09:15-11:00", "spread": 685.32, "spread_pct": -2512.1}, {"date": "2026-02-07", "daily_avg": 266.79, "peak_val": 419.64, "peak_time": "00:00-01:45", "valley_val": -82.5, "valley_time": "10:30-12:15", "spread": 502.14, "spread_pct": -608.7}, {"date": "2026-02-08", "daily_avg": 225.03, "peak_val": 427.33, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 507.33, "spread_pct": -634.2}, {"date": "2026-02-09", "daily_avg": 54.98, "peak_val": 337.4, "peak_time": "20:15-22:00", "valley_val": -80.0, "valley_time": "00:15-02:00", "spread": 417.4, "spread_pct": -521.7}, {"date": "2026-02-10", "daily_avg": 342.92, "peak_val": 439.8, "peak_time": "20:15-22:00", "valley_val": 288.93, "valley_time": "05:15-07:00", "spread": 150.87, "spread_pct": 52.2}, {"date": "2026-02-11", "daily_avg": 234.27, "peak_val": 428.76, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "08:45-10:30", "spread": 508.76, "spread_pct": -635.9}, {"date": "2026-02-12", "daily_avg": 106.42, "peak_val": 360.72, "peak_time": "18:00-19:45", "valley_val": -80.0, "valley_time": "05:15-07:00", "spread": 440.72, "spread_pct": -550.9}, {"date": "2026-02-13", "daily_avg": 196.73, "peak_val": 407.3, "peak_time": "06:15-08:00", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 487.3, "spread_pct": -609.1}, {"date": "2026-02-14", "daily_avg": 43.6, "peak_val": 323.79, "peak_time": "22:00-23:45", "valley_val": -82.5, "valley_time": "03:45-05:30", "spread": 406.29, "spread_pct": -492.5}, {"date": "2026-02-15", "daily_avg": 99.2, "peak_val": 405.11, "peak_time": "21:45-23:30", "valley_val": -80.0, "valley_time": "02:30-04:15", "spread": 485.11, "spread_pct": -606.4}, {"date": "2026-02-16", "daily_avg": 199.56, "peak_val": 396.8, "peak_time": "18:30-20:15", "valley_val": -80.0, "valley_time": "08:00-09:45", "spread": 476.8, "spread_pct": -596.0}, {"date": "2026-02-17", "daily_avg": 158.96, "peak_val": 478.5, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "07:45-09:30", "spread": 558.5, "spread_pct": -698.1}, {"date": "2026-02-18", "daily_avg": 117.45, "peak_val": 492.17, "peak_time": "20:45-22:30", "valley_val": -80.0, "valley_time": "00:00-01:45", "spread": 572.17, "spread_pct": -715.2}, {"date": "2026-02-19", "daily_avg": 123.38, "peak_val": 550.74, "peak_time": "17:00-18:45", "valley_val": -80.0, "valley_time": "02:30-04:15", "spread": 630.74, "spread_pct": -788.4}, {"date": "2026-02-20", "daily_avg": 20.57, "peak_val": 264.5, "peak_time": "05:30-07:15", "valley_val": -80.0, "valley_time": "03:15-05:00", "spread": 344.5, "spread_pct": -430.6}, {"date": "2026-02-21", "daily_avg": -21.5, "peak_val": 216.44, "peak_time": "20:15-22:00", "valley_val": -80.0, "valley_time": "00:00-01:45", "spread": 296.44, "spread_pct": -370.6}, {"date": "2026-02-22", "daily_avg": 56.82, "peak_val": 449.76, "peak_time": "17:15-19:00", "valley_val": -80.0, "valley_time": "00:00-01:45", "spread": 529.76, "spread_pct": -662.2}, {"date": "2026-02-23", "daily_avg": 311.1, "peak_val": 529.9, "peak_time": "16:15-18:00", "valley_val": -70.0, "valley_time": "05:15-07:00", "spread": 599.9, "spread_pct": -857.0}, {"date": "2026-02-24", "daily_avg": 330.56, "peak_val": 395.73, "peak_time": "16:15-18:00", "valley_val": 106.95, "valley_time": "09:45-11:30", "spread": 288.78, "spread_pct": 270.0}, {"date": "2026-02-25", "daily_avg": 254.65, "peak_val": 442.56, "peak_time": "16:45-18:30", "valley_val": -80.0, "valley_time": "10:00-11:45", "spread": 522.56, "spread_pct": -653.2}, {"date": "2026-02-26", "daily_avg": 322.1, "peak_val": 419.85, "peak_time": "08:00-09:45", "valley_val": 284.96, "valley_time": "15:15-17:00", "spread": 134.89, "spread_pct": 47.3}, {"date": "2026-02-27", "daily_avg": 327.15, "peak_val": 458.8, "peak_time": "21:30-23:15", "valley_val": -80.0, "valley_time": "12:15-14:00", "spread": 538.8, "spread_pct": -673.5}, {"date": "2026-02-28", "daily_avg": 252.26, "peak_val": 352.38, "peak_time": "20:15-22:00", "valley_val": -46.38, "valley_time": "11:30-13:15", "spread": 398.76, "spread_pct": -859.7}, {"date": "2026-03-01", "daily_avg": 427.91, "peak_val": 951.07, "peak_time": "10:15-12:00", "valley_val": 298.63, "valley_time": "03:30-05:15", "spread": 652.44, "spread_pct": 218.5}, {"date": "2026-03-02", "daily_avg": 371.73, "peak_val": 526.9, "peak_time": "19:15-21:00", "valley_val": 290.7, "valley_time": "05:15-07:00", "spread": 236.2, "spread_pct": 81.3}, {"date": "2026-03-03", "daily_avg": 380.18, "peak_val": 476.62, "peak_time": "10:30-12:15", "valley_val": 328.23, "valley_time": "01:30-03:15", "spread": 148.39, "spread_pct": 45.2}, {"date": "2026-03-04", "daily_avg": 444.23, "peak_val": 995.41, "peak_time": "09:15-11:00", "valley_val": 300.99, "valley_time": "05:15-07:00", "spread": 694.42, "spread_pct": 230.7}, {"date": "2026-03-05", "daily_avg": 406.51, "peak_val": 830.32, "peak_time": "08:00-09:45", "valley_val": 275.9, "valley_time": "22:00-23:45", "spread": 554.42, "spread_pct": 201.0}, {"date": "2026-03-06", "daily_avg": 216.68, "peak_val": 689.94, "peak_time": "21:45-23:30", "valley_val": -80.0, "valley_time": "02:30-04:15", "spread": 769.94, "spread_pct": -962.4}, {"date": "2026-03-07", "daily_avg": 279.74, "peak_val": 553.11, "peak_time": "21:30-23:15", "valley_val": -80.0, "valley_time": "08:15-10:00", "spread": 633.11, "spread_pct": -791.4}, {"date": "2026-03-08", "daily_avg": 416.08, "peak_val": 634.98, "peak_time": "20:15-22:00", "valley_val": -18.0, "valley_time": "13:00-14:45", "spread": 652.98, "spread_pct": -3627.7}, {"date": "2026-03-09", "daily_avg": 219.46, "peak_val": 551.91, "peak_time": "21:45-23:30", "valley_val": -80.0, "valley_time": "08:15-10:00", "spread": 631.91, "spread_pct": -789.9}, {"date": "2026-03-10", "daily_avg": 122.68, "peak_val": 409.35, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "07:00-08:45", "spread": 489.35, "spread_pct": -611.7}, {"date": "2026-03-11", "daily_avg": 360.95, "peak_val": 516.32, "peak_time": "16:15-18:00", "valley_val": -82.54, "valley_time": "10:15-12:00", "spread": 598.86, "spread_pct": -725.5}, {"date": "2026-03-12", "daily_avg": 309.24, "peak_val": 559.33, "peak_time": "22:00-23:45", "valley_val": -80.0, "valley_time": "09:00-10:45", "spread": 639.33, "spread_pct": -799.2}, {"date": "2026-03-13", "daily_avg": 343.57, "peak_val": 656.97, "peak_time": "21:45-23:30", "valley_val": -80.0, "valley_time": "07:30-09:15", "spread": 736.97, "spread_pct": -921.2}, {"date": "2026-03-14", "daily_avg": 361.37, "peak_val": 390.94, "peak_time": "01:00-02:45", "valley_val": 325.33, "valley_time": "08:30-10:15", "spread": 65.61, "spread_pct": 20.2}, {"date": "2026-03-15", "daily_avg": 304.42, "peak_val": 555.29, "peak_time": "22:00-23:45", "valley_val": -74.61, "valley_time": "08:30-10:15", "spread": 629.9, "spread_pct": -844.2}, {"date": "2026-03-16", "daily_avg": 398.49, "peak_val": 643.74, "peak_time": "06:30-08:15", "valley_val": -80.0, "valley_time": "12:15-14:00", "spread": 723.74, "spread_pct": -904.7}, {"date": "2026-03-17", "daily_avg": 323.78, "peak_val": 590.14, "peak_time": "16:30-18:15", "valley_val": -80.0, "valley_time": "09:15-11:00", "spread": 670.14, "spread_pct": -837.7}, {"date": "2026-03-18", "daily_avg": 351.9, "peak_val": 513.97, "peak_time": "17:45-19:30", "valley_val": -81.85, "valley_time": "13:15-15:00", "spread": 595.82, "spread_pct": -727.9}, {"date": "2026-03-19", "daily_avg": 255.79, "peak_val": 487.31, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "07:45-09:30", "spread": 567.31, "spread_pct": -709.1}, {"date": "2026-03-20", "daily_avg": 232.51, "peak_val": 469.88, "peak_time": "05:00-06:45", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 549.88, "spread_pct": -687.4}, {"date": "2026-03-21", "daily_avg": 208.88, "peak_val": 375.9, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 455.9, "spread_pct": -569.9}, {"date": "2026-03-22", "daily_avg": 439.27, "peak_val": 611.13, "peak_time": "18:30-20:15", "valley_val": 144.74, "valley_time": "10:00-11:45", "spread": 466.39, "spread_pct": 322.2}, {"date": "2026-03-23", "daily_avg": 389.96, "peak_val": 515.35, "peak_time": "18:30-20:15", "valley_val": -33.25, "valley_time": "12:45-14:30", "spread": 548.6, "spread_pct": -1649.9}, {"date": "2026-03-24", "daily_avg": 354.82, "peak_val": 499.9, "peak_time": "17:45-19:30", "valley_val": -80.0, "valley_time": "11:45-13:30", "spread": 579.9, "spread_pct": -724.9}, {"date": "2026-03-25", "daily_avg": 228.73, "peak_val": 420.56, "peak_time": "16:15-18:00", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 500.56, "spread_pct": -625.7}, {"date": "2026-03-26", "daily_avg": 308.43, "peak_val": 502.69, "peak_time": "22:00-23:45", "valley_val": -80.0, "valley_time": "13:30-15:15", "spread": 582.7, "spread_pct": -728.3}, {"date": "2026-03-27", "daily_avg": 360.71, "peak_val": 671.76, "peak_time": "22:00-23:45", "valley_val": -80.22, "valley_time": "12:15-14:00", "spread": 751.99, "spread_pct": -937.3}, {"date": "2026-03-28", "daily_avg": 378.51, "peak_val": 518.72, "peak_time": "00:00-01:45", "valley_val": 81.99, "valley_time": "10:45-12:30", "spread": 436.73, "spread_pct": 532.7}, {"date": "2026-03-29", "daily_avg": 461.64, "peak_val": 653.43, "peak_time": "19:30-21:15", "valley_val": 29.59, "valley_time": "11:45-13:30", "spread": 623.85, "spread_pct": 2108.7}, {"date": "2026-03-30", "daily_avg": 301.3, "peak_val": 395.25, "peak_time": "21:30-23:15", "valley_val": -73.25, "valley_time": "11:30-13:15", "spread": 468.5, "spread_pct": -639.6}, {"date": "2026-03-31", "daily_avg": 278.27, "peak_val": 329.33, "peak_time": "00:00-01:45", "valley_val": 167.78, "valley_time": "11:00-12:45", "spread": 161.55, "spread_pct": 96.3}, {"date": "2026-04-01", "daily_avg": 321.3, "peak_val": 533.84, "peak_time": "04:45-06:30", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 613.84, "spread_pct": -767.3}, {"date": "2026-04-02", "daily_avg": 375.64, "peak_val": 551.07, "peak_time": "04:45-06:30", "valley_val": -80.0, "valley_time": "12:00-13:45", "spread": 631.07, "spread_pct": -788.8}, {"date": "2026-04-03", "daily_avg": 350.3, "peak_val": 732.03, "peak_time": "18:30-20:15", "valley_val": -80.0, "valley_time": "07:45-09:30", "spread": 812.03, "spread_pct": -1015.0}, {"date": "2026-04-04", "daily_avg": 189.29, "peak_val": 358.77, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "07:30-09:15", "spread": 438.77, "spread_pct": -548.5}, {"date": "2026-04-05", "daily_avg": 169.84, "peak_val": 370.78, "peak_time": "18:15-20:00", "valley_val": -80.0, "valley_time": "06:45-08:30", "spread": 450.78, "spread_pct": -563.5}, {"date": "2026-04-06", "daily_avg": 195.76, "peak_val": 550.55, "peak_time": "16:30-18:15", "valley_val": -80.0, "valley_time": "07:00-08:45", "spread": 630.55, "spread_pct": -788.2}, {"date": "2026-04-07", "daily_avg": 187.51, "peak_val": 358.88, "peak_time": "16:30-18:15", "valley_val": -80.0, "valley_time": "07:30-09:15", "spread": 438.88, "spread_pct": -548.6}, {"date": "2026-04-08", "daily_avg": 304.16, "peak_val": 599.05, "peak_time": "14:45-16:30", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 679.05, "spread_pct": -848.8}, {"date": "2026-04-09", "daily_avg": 480.62, "peak_val": 875.43, "peak_time": "11:30-13:15", "valley_val": 380.55, "valley_time": "05:15-07:00", "spread": 494.89, "spread_pct": 130.0}, {"date": "2026-04-10", "daily_avg": 306.01, "peak_val": 597.7, "peak_time": "00:00-01:45", "valley_val": -82.0, "valley_time": "14:00-15:45", "spread": 679.7, "spread_pct": -828.9}, {"date": "2026-04-11", "daily_avg": 348.09, "peak_val": 632.21, "peak_time": "04:30-06:15", "valley_val": -80.0, "valley_time": "08:00-09:45", "spread": 712.21, "spread_pct": -890.3}, {"date": "2026-04-12", "daily_avg": 282.77, "peak_val": 637.96, "peak_time": "19:15-21:00", "valley_val": -80.0, "valley_time": "06:45-08:30", "spread": 717.96, "spread_pct": -897.5}, {"date": "2026-04-13", "daily_avg": 307.12, "peak_val": 632.32, "peak_time": "20:00-21:45", "valley_val": -81.32, "valley_time": "09:30-11:15", "spread": 713.64, "spread_pct": -877.6}, {"date": "2026-04-14", "daily_avg": 318.96, "peak_val": 540.03, "peak_time": "22:00-23:45", "valley_val": -80.0, "valley_time": "08:15-10:00", "spread": 620.03, "spread_pct": -775.0}, {"date": "2026-04-15", "daily_avg": 317.58, "peak_val": 586.64, "peak_time": "00:00-01:45", "valley_val": -71.18, "valley_time": "10:45-12:30", "spread": 657.81, "spread_pct": -924.2}, {"date": "2026-04-16", "daily_avg": 571.69, "peak_val": 1300.0, "peak_time": "13:30-15:15", "valley_val": 351.52, "valley_time": "06:45-08:30", "spread": 948.48, "spread_pct": 269.8}, {"date": "2026-04-17", "daily_avg": 351.19, "peak_val": 525.34, "peak_time": "17:45-19:30", "valley_val": -80.2, "valley_time": "10:30-12:15", "spread": 605.54, "spread_pct": -755.0}, {"date": "2026-04-18", "daily_avg": 301.32, "peak_val": 996.8, "peak_time": "19:30-21:15", "valley_val": -81.89, "valley_time": "07:00-08:45", "spread": 1078.69, "spread_pct": -1317.2}, {"date": "2026-04-19", "daily_avg": 296.2, "peak_val": 1096.9, "peak_time": "16:15-18:00", "valley_val": -81.39, "valley_time": "08:00-09:45", "spread": 1178.29, "spread_pct": -1447.8}, {"date": "2026-04-20", "daily_avg": 237.59, "peak_val": 531.32, "peak_time": "20:45-22:30", "valley_val": -80.85, "valley_time": "14:15-16:00", "spread": 612.16, "spread_pct": -757.2}, {"date": "2026-04-21", "daily_avg": 363.25, "peak_val": 379.29, "peak_time": "13:45-15:30", "valley_val": 341.57, "valley_time": "06:15-08:00", "spread": 37.72, "spread_pct": 11.0}, {"date": "2026-04-22", "daily_avg": 265.03, "peak_val": 397.79, "peak_time": "19:45-21:30", "valley_val": -59.84, "valley_time": "12:30-14:15", "spread": 457.64, "spread_pct": -764.7}, {"date": "2026-04-23", "daily_avg": 250.65, "peak_val": 393.96, "peak_time": "00:00-01:45", "valley_val": -77.0, "valley_time": "13:45-15:30", "spread": 470.96, "spread_pct": -611.6}, {"date": "2026-04-24", "daily_avg": 153.84, "peak_val": 337.0, "peak_time": "04:30-06:15", "valley_val": -80.81, "valley_time": "09:45-11:30", "spread": 417.81, "spread_pct": -517.0}, {"date": "2026-04-25", "daily_avg": 177.34, "peak_val": 364.02, "peak_time": "04:00-05:45", "valley_val": -80.0, "valley_time": "06:45-08:30", "spread": 444.02, "spread_pct": -555.0}, {"date": "2026-04-26", "daily_avg": 318.11, "peak_val": 650.23, "peak_time": "21:30-23:15", "valley_val": -82.5, "valley_time": "06:15-08:00", "spread": 732.73, "spread_pct": -888.2}, {"date": "2026-04-27", "daily_avg": 278.71, "peak_val": 790.38, "peak_time": "22:00-23:45", "valley_val": -81.79, "valley_time": "13:00-14:45", "spread": 872.17, "spread_pct": -1066.4}, {"date": "2026-04-28", "daily_avg": 369.88, "peak_val": 552.74, "peak_time": "22:00-23:45", "valley_val": -80.0, "valley_time": "07:45-09:30", "spread": 632.74, "spread_pct": -790.9}, {"date": "2026-04-29", "daily_avg": 310.75, "peak_val": 587.38, "peak_time": "00:00-01:45", "valley_val": -80.37, "valley_time": "10:30-12:15", "spread": 667.74, "spread_pct": -830.9}, {"date": "2026-04-30", "daily_avg": 196.05, "peak_val": 378.41, "peak_time": "18:00-19:45", "valley_val": -79.51, "valley_time": "06:45-08:30", "spread": 457.92, "spread_pct": -575.9}, {"date": "2026-05-01", "daily_avg": 348.14, "peak_val": 578.63, "peak_time": "15:00-16:45", "valley_val": -80.0, "valley_time": "08:45-10:30", "spread": 658.63, "spread_pct": -823.3}, {"date": "2026-05-02", "daily_avg": 407.03, "peak_val": 550.0, "peak_time": "19:00-20:45", "valley_val": 360.17, "valley_time": "05:15-07:00", "spread": 189.83, "spread_pct": 52.7}, {"date": "2026-05-03", "daily_avg": 349.52, "peak_val": 605.44, "peak_time": "16:30-18:15", "valley_val": -80.0, "valley_time": "10:15-12:00", "spread": 685.44, "spread_pct": -856.8}, {"date": "2026-05-04", "daily_avg": 248.76, "peak_val": 548.82, "peak_time": "17:30-19:15", "valley_val": -80.0, "valley_time": "06:45-08:30", "spread": 628.82, "spread_pct": -786.0}, {"date": "2026-05-05", "daily_avg": 192.06, "peak_val": 502.3, "peak_time": "18:30-20:15", "valley_val": -80.43, "valley_time": "08:45-10:30", "spread": 582.72, "spread_pct": -724.5}, {"date": "2026-05-06", "daily_avg": 232.69, "peak_val": 614.04, "peak_time": "15:45-17:30", "valley_val": -80.0, "valley_time": "06:00-07:45", "spread": 694.04, "spread_pct": -867.5}, {"date": "2026-05-07", "daily_avg": 291.35, "peak_val": 751.15, "peak_time": "17:45-19:30", "valley_val": -80.45, "valley_time": "07:30-09:15", "spread": 831.6, "spread_pct": -1033.7}, {"date": "2026-05-08", "daily_avg": 252.93, "peak_val": 597.46, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "06:15-08:00", "spread": 677.46, "spread_pct": -846.8}, {"date": "2026-05-09", "daily_avg": 165.68, "peak_val": 520.85, "peak_time": "19:30-21:15", "valley_val": -80.0, "valley_time": "06:00-07:45", "spread": 600.85, "spread_pct": -751.1}, {"date": "2026-05-10", "daily_avg": 283.93, "peak_val": 915.27, "peak_time": "21:00-22:45", "valley_val": -80.0, "valley_time": "06:30-08:15", "spread": 995.27, "spread_pct": -1244.1}, {"date": "2026-05-11", "daily_avg": 448.44, "peak_val": 577.74, "peak_time": "00:15-02:00", "valley_val": 87.57, "valley_time": "09:15-11:00", "spread": 490.17, "spread_pct": 559.7}, {"date": "2026-05-12", "daily_avg": 331.57, "peak_val": 605.12, "peak_time": "03:45-05:30", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 685.12, "spread_pct": -856.4}, {"date": "2026-05-13", "daily_avg": 282.92, "peak_val": 605.85, "peak_time": "17:00-18:45", "valley_val": -80.0, "valley_time": "07:00-08:45", "spread": 685.85, "spread_pct": -857.3}, {"date": "2026-05-14", "daily_avg": 357.85, "peak_val": 589.14, "peak_time": "20:00-21:45", "valley_val": -45.06, "valley_time": "08:45-10:30", "spread": 634.2, "spread_pct": -1407.3}, {"date": "2026-05-15", "daily_avg": 360.81, "peak_val": 660.82, "peak_time": "17:15-19:00", "valley_val": -70.12, "valley_time": "09:30-11:15", "spread": 730.94, "spread_pct": -1042.4}, {"date": "2026-05-16", "daily_avg": 410.7, "peak_val": 667.33, "peak_time": "15:00-16:45", "valley_val": -80.0, "valley_time": "08:30-10:15", "spread": 747.33, "spread_pct": -934.2}, {"date": "2026-05-17", "daily_avg": 311.3, "peak_val": 641.16, "peak_time": "19:30-21:15", "valley_val": -66.03, "valley_time": "09:00-10:45", "spread": 707.19, "spread_pct": -1071.0}, {"date": "2026-05-18", "daily_avg": 399.07, "peak_val": 428.75, "peak_time": "18:00-19:45", "valley_val": 337.33, "valley_time": "00:00-01:45", "spread": 91.42, "spread_pct": 27.1}, {"date": "2026-05-19", "daily_avg": 341.79, "peak_val": 430.24, "peak_time": "09:45-11:30", "valley_val": 268.48, "valley_time": "05:45-07:30", "spread": 161.76, "spread_pct": 60.2}, {"date": "2026-05-20", "daily_avg": 376.17, "peak_val": 498.44, "peak_time": "10:00-11:45", "valley_val": 214.24, "valley_time": "02:30-04:15", "spread": 284.21, "spread_pct": 132.7}, {"date": "2026-05-21", "daily_avg": 274.42, "peak_val": 620.03, "peak_time": "21:30-23:15", "valley_val": -80.0, "valley_time": "07:00-08:45", "spread": 700.03, "spread_pct": -875.0}, {"date": "2026-05-22", "daily_avg": 311.19, "peak_val": 431.35, "peak_time": "19:45-21:30", "valley_val": -80.0, "valley_time": "06:30-08:15", "spread": 511.35, "spread_pct": -639.2}, {"date": "2026-05-23", "daily_avg": 331.37, "peak_val": 544.19, "peak_time": "21:45-23:30", "valley_val": -80.0, "valley_time": "09:00-10:45", "spread": 624.19, "spread_pct": -780.2}, {"date": "2026-05-24", "daily_avg": 298.7, "peak_val": 550.66, "peak_time": "00:00-01:45", "valley_val": -80.0, "valley_time": "13:45-15:30", "spread": 630.66, "spread_pct": -788.3}], "monthly": [{"month": "2026-01", "days": 31, "avg_spread": 507.89, "max_spread": 1027.91, "min_spread": 42.8, "avg_daily_avg": 273.75, "max_daily_avg": 494.27, "min_daily_avg": 57.42}, {"month": "2026-02", "days": 28, "avg_spread": 462.93, "max_spread": 685.32, "min_spread": 134.89, "avg_daily_avg": 204.81, "max_daily_avg": 393.65, "min_daily_avg": -21.5}, {"month": "2026-03", "days": 31, "avg_spread": 542.5, "max_spread": 769.94, "min_spread": 65.61, "avg_daily_avg": 330.25, "max_daily_avg": 461.64, "min_daily_avg": 122.68}, {"month": "2026-04", "days": 30, "avg_spread": 630.19, "max_spread": 1178.29, "min_spread": 37.72, "avg_daily_avg": 296.55, "max_daily_avg": 571.69, "min_daily_avg": 153.84}, {"month": "2026-05", "days": 24, "avg_spread": 592.88, "max_spread": 995.27, "min_spread": 91.42, "avg_daily_avg": 317.02, "max_daily_avg": 448.44, "min_daily_avg": 165.68}]};
+const MAX_SPREAD = Math.max(...DATA.days.map(d => d.spread), 1);
+
+const COLORS = {
+    spread: '#5470C6',
+    spreadBar: '#e34a4a',
+    avgPrice: '#91CC75',
+    peak: '#d46b08',
+    valley: '#096dd9',
+};
+
+// ======== STAT CARDS ========
+function renderStats() {
+    const s = DATA.summary;
+    const cards = [
+        { label: '分析天数', num: s.total_days, cls: 'blue' },
+        { label: '日均价(均值)', num: s.avg_daily_avg.toFixed(0) + ' 元/MWh', cls: 'green' },
+        { label: '平均峰谷价差', num: s.avg_spread.toFixed(0) + ' 元/MWh', cls: 'red' },
+        { label: '最大峰谷价差', num: s.max_spread.toFixed(0) + ' 元/MWh', cls: 'orange' },
+        { label: '最小峰谷价差', num: s.min_spread.toFixed(0) + ' 元/MWh', cls: 'purple' },
+    ];
+    document.getElementById('statCards').innerHTML = cards.map(c =>
+        `<div class="stat-card ${c.cls}"><div class="label">${c.label}</div><div class="num">${c.num}</div></div>`
+    ).join('');
+}
+
+// ======== SPREAD LINE CHART ========
+function renderSpreadChart() {
+    const chart = echarts.init(document.getElementById('chartSpread'));
+    const dates = DATA.days.map(d => d.date.slice(5));
+    const spreads = DATA.days.map(d => d.spread);
+    const avgPrices = DATA.days.map(d => d.daily_avg);
+
+    chart.setOption({
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' },
+            formatter: function(params) {
+                const idx = params[0].dataIndex;
+                const d = DATA.days[idx];
+                return `<strong>${d.date}</strong><br/>
+                日均价: ${d.daily_avg} 元/MWh<br/>
+                峰谷价差: ${d.spread} 元/MWh<br/>
+                峰值: ${d.peak_val} (${d.peak_time})<br/>
+                谷值: ${d.valley_val} (${d.valley_time})<br/>
+                价差/谷值: ${d.spread_pct}%`;
+            }
+        },
+        legend: {
+            data: ['峰谷价差', '日均价'],
+            top: 0, right: 20,
+            textStyle: { fontSize: 12 },
+        },
+        grid: { left: 60, right: 50, top: 40, bottom: 30 },
+        xAxis: {
+            type: 'category', data: dates,
+            axisLabel: { fontSize: 10, interval: 4 },
+            splitLine: { show: false },
+        },
+        yAxis: [
+            { type: 'value', name: '价差 (元/MWh)', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 } },
+            { type: 'value', name: '均价 (元/MWh)', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 } },
+        ],
+        dataZoom: [
+            { type: 'inside', start: 0, end: 100 },
+            { type: 'slider', start: 0, end: 100, height: 22, bottom: 5 },
+        ],
+        series: [
+            {
+                name: '峰谷价差',
+                type: 'bar',
+                data: spreads,
+                itemStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: '#e34a4a' },
+                        { offset: 1, color: '#f5a5a5' },
+                    ]),
+                    borderRadius: [2,2,0,0],
+                },
+            },
+            {
+                name: '日均价',
+                type: 'line',
+                yAxisIndex: 1,
+                data: avgPrices,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 4,
+                lineStyle: { width: 2, color: '#91CC75' },
+                itemStyle: { color: '#91CC75' },
+            },
+        ],
+    });
+    window.addEventListener('resize', () => chart.resize());
+}
+
+// ======== MONTHLY CHART ========
+function renderMonthlyChart() {
+    const chart = echarts.init(document.getElementById('chartMonthly'));
+    const months = DATA.monthly.map(m => m.month);
+    const avgSpread = DATA.monthly.map(m => m.avg_spread);
+    const maxSpread = DATA.monthly.map(m => m.max_spread);
+    const minSpread = DATA.monthly.map(m => m.min_spread);
+    const avgPrice = DATA.monthly.map(m => m.avg_daily_avg);
+
+    chart.setOption({
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'shadow' },
+        },
+        legend: {
+            data: ['平均价差', '最大价差', '最小价差', '日均价'],
+            top: 0, right: 20, textStyle: { fontSize: 12 },
+        },
+        grid: { left: 60, right: 50, top: 40, bottom: 30 },
+        xAxis: {
+            type: 'category', data: months,
+            axisLabel: { fontSize: 11 },
+        },
+        yAxis: [
+            { type: 'value', name: '价差 (元/MWh)', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 } },
+            { type: 'value', name: '均价 (元/MWh)', nameTextStyle: { fontSize: 11 }, axisLabel: { fontSize: 10 } },
+        ],
+        series: [
+            {
+                name: '平均价差',
+                type: 'bar',
+                data: avgSpread,
+                itemStyle: { color: '#5470C6', borderRadius: [3,3,0,0] },
+                barWidth: 24,
+            },
+            {
+                name: '最大价差',
+                type: 'bar',
+                data: maxSpread,
+                itemStyle: { color: '#e34a4a', borderRadius: [3,3,0,0] },
+                barWidth: 24,
+            },
+            {
+                name: '最小价差',
+                type: 'bar',
+                data: minSpread,
+                itemStyle: { color: '#91CC75', borderRadius: [3,3,0,0] },
+                barWidth: 24,
+            },
+            {
+                name: '日均价',
+                type: 'line',
+                yAxisIndex: 1,
+                data: avgPrice,
+                smooth: true,
+                symbol: 'diamond',
+                symbolSize: 10,
+                lineStyle: { width: 2, color: '#f39c12' },
+                itemStyle: { color: '#f39c12' },
+            },
+        ],
+    });
+    window.addEventListener('resize', () => chart.resize());
+}
+
+// ======== TABLE ========
+function getColorForSpread(spread, maxSp) {
+    const t = Math.min(spread / maxSp, 1);
+    const r = Math.round(100 + t * 155);
+    const g = Math.round(200 - t * 180);
+    const b = Math.round(100 - t * 100);
+    return `rgb(${Math.min(r,255)},${Math.max(g,0)},${Math.max(b,0)})`;
+}
+
+function getSpreadClass(spread, avg) {
+    if (spread > avg * 1.5) return 'neg';
+    if (spread < avg * 0.5) return '';
+    return '';
+}
+
+function renderTable(monthFilter) {
+    const avgSp = DATA.summary.avg_spread;
+
+    let html = '';
+    const filtered = monthFilter === 'all'
+        ? DATA.days
+        : DATA.days.filter(d => d.date.startsWith(monthFilter));
+
+    filtered.forEach(d => {
+        const barColor = getColorForSpread(d.spread, MAX_SPREAD);
+        const barW = Math.max(2, (d.spread / MAX_SPREAD) * 100);
+        const cls = getSpreadClass(d.spread, avgSp);
+
+        html += `<tr>
+            <td>${d.date.slice(5)}</td>
+            <td class="num">${d.daily_avg.toFixed(0)}</td>
+            <td class="num"><strong style="color:#d46b08">${d.peak_val.toFixed(0)}</strong></td>
+            <td><span class="tag tag-peak">${d.peak_time}</span></td>
+            <td class="num neg"><strong>${d.valley_val.toFixed(0)}</strong></td>
+            <td><span class="tag tag-valley">${d.valley_time}</span></td>
+            <td class="num ${cls}"><strong>${d.spread.toFixed(0)}</strong></td>
+            <td class="num">${d.spread_pct.toFixed(0)}%</td>
+            <td style="text-align:left;padding:2px 12px;">
+                <div class="spread-bar" style="width:${barW}%;background:${barColor};"></div>
+            </td>
+        </tr>`;
+    });
+
+    document.getElementById('tableBody').innerHTML = html;
+}
+
+function renderMonthlyTable() {
+    let html = '';
+    DATA.monthly.forEach(m => {
+        const rangePct = ((m.max_daily_avg - m.min_daily_avg) / m.avg_daily_avg * 100).toFixed(0);
+        html += `<tr>
+            <td><strong>${m.month}</strong></td>
+            <td>${m.days}</td>
+            <td class="num">${m.avg_daily_avg.toFixed(0)}</td>
+            <td class="num">${m.min_daily_avg.toFixed(0)} ~ ${m.max_daily_avg.toFixed(0)} (±${rangePct}%)</td>
+            <td class="num"><strong>${m.avg_spread.toFixed(0)}</strong></td>
+            <td class="num neg"><strong>${m.max_spread.toFixed(0)}</strong></td>
+            <td class="num green"><strong>${m.min_spread.toFixed(0)}</strong></td>
+            <td style="text-align:left;padding:2px 12px;">
+                <div style="display:flex;gap:4px;align-items:center;">
+                    <div class="spread-bar" style="width:${(m.min_spread/MAX_SPREAD*40).toFixed(0)}px;background:#91CC75;"></div>
+                    <div class="spread-bar" style="width:${(m.avg_spread/MAX_SPREAD*40).toFixed(0)}px;background:#5470C6;"></div>
+                    <div class="spread-bar" style="width:${(m.max_spread/MAX_SPREAD*40).toFixed(0)}px;background:#e34a4a;"></div>
+                </div>
+            </td>
+        </tr>`;
+    });
+    document.getElementById('monthlyBody').innerHTML = html;
+}
+
+// ======== FILTERS ========
+function setupFilters() {
+    const months = [...new Set(DATA.days.map(d => d.date.slice(0, 7)))];
+    const bar = document.getElementById('filterBar');
+    months.forEach(m => {
+        const btn = document.createElement('button');
+        btn.textContent = m;
+        btn.dataset.month = m;
+        btn.onclick = () => {
+            bar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTable(m);
+        };
+        bar.appendChild(btn);
+    });
+
+    bar.querySelector('[data-month="all"]').onclick = () => {
+        bar.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-month="all"]').classList.add('active');
+        renderTable('all');
+    };
+}
+
+// ======== INIT ========
+renderStats();
+renderSpreadChart();
+renderMonthlyChart();
+renderTable('all');
+renderMonthlyTable();
+setupFilters();
+</script>
+</body>
+</html>

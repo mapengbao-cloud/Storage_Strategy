@@ -1,0 +1,84 @@
+山东省实时出清数据库查询结果
+==============================
+查询时间: 2026-05-28
+数据库: tianrun_new @ rm-2zej7q7186wi4eds5no.mysql.rds.aliyuncs.com:3306
+
+一、核心表概览
+==============
+
+1. shandong_px_spot_realtime_clearing_price (实时出清价格)
+   行数: 432,096 | 日期范围: 2021-11-30 ~ 2026-05-26
+   字段: data_id, market_id, member_id, date, time_order_24,
+         clearing_price, statement_price, max_declaration_price, min_declaration_price
+   说明: 主力表，每天480条（5个成员 × 96点）
+
+2. shandong_px_spot_realtime_clearing_quantity (实时出清量)
+   行数: 437,760 | 日期范围: 2021-12-01 ~ 2026-05-26
+   字段: data_id, market_id, member_id, date, time_order_24, time_quantity
+   说明: 主力表，每天480条（5个成员 × 96点）
+
+3. shandong_px_spot_realtime_clearing_point_quantity (实时出清分时量)
+   行数: 1,237,920 | 日期范围: 2022-01-01 ~ 2026-05-26
+   字段: data_id, market_id, member_id, date, tag, clearing_price,
+         day_parting_price, time_quantity, settlement_price, open_status,
+         time_order_96, power, power_state, price, day_parting_tag
+   说明: 更细粒度，含tag区分机组类型，96点
+
+4. shandong_px_spot_realtime_nodal_price (实时节点电价)
+   行数: 21,311,520 | 日期范围: ~ 2026-01-31
+   字段: data_id, market_id, date, node_id, node_name, time_order, realtime_nodal_price
+   说明: 节点级电价，最新只到2026-01-31
+
+5. shandong_pmos_spot_realtime_nodal_price (PMOS旧版节点电价)
+   行数: 1,272 | 日期范围: 2020-08
+   字段: data_id, date, time_order_24, realtime_nodal_price
+   说明: 旧版，仅2020年8月数据，已废弃
+
+二、监视(surveillance)类表
+==========================
+
+6. shandong_px_spot_surveillance_realtime_clearing_quantity
+   行数: 38,736 | 日期范围: 2021-12-01 ~ 2026-05-26
+   字段: data_id, market_id, date, time_order_24, generator_quantity
+   说明: 24点发电侧出清总量
+
+7. shandong_px_spot_surveillance_realtime_generation_price
+   行数: 38,520 | 日期范围: 2021-12-01 ~ 2026-05-26
+   字段: data_id, market_id, date, time_order_24,
+         max_clearing_price, avg_clearing_price, min_clearing_price
+   说明: 24点发电侧价格统计（最高/平均/最低）
+
+8. shandong_px_spot_surveillance_realtime_generation_quantity
+   行数: 237,960 | 日期范围: 2021-12-01 ~ 2026-05-26
+   字段: data_id, market_id, date, time_order_24, type, clearing_quantity
+   说明: 分机组类型的24点发电侧出清量
+
+9. shandong_px_spot_surveillance_realtime_consumer_price
+   行数: 38,712 | 日期范围: 2021-12-01 ~ 2026-05-26
+   字段: data_id, market_id, date, time_order_24, clearing_price
+   说明: 24点用户侧出清价
+
+10. shandong_px_spot_surveillance_realtime_generation_statistics
+    行数: 13,425 | 日期范围: 2021-12-01 ~ 2026-05-26
+    字段: data_id, market_id, date, index_name, index_value
+    说明: 每日汇总统计（均价、成交量等指标）
+
+三、最新数据样本（最近5天 clearing_price 均价）
+================================================
+
+日期        条目数  均价      最低      最高
+2026-05-26  480    316.85   -100.00   406.38
+2026-05-25  480    381.07    300.30   456.00
+2026-05-24  480    298.70    -94.64   838.00
+2026-05-23  480    331.37    -80.00   558.13
+2026-05-22  480    311.19   -100.00   445.00
+
+四、最新数据样本（最近5天 clearing_quantity 均量）
+===================================================
+
+日期        条目数  均量    最小    最大
+2026-05-26  480    7.64    0.32    19.16
+2026-05-25  480    5.97    0.04    24.33
+2026-05-24  480    3.91    0.00    22.69
+2026-05-23  480    1.01    0.00    18.01
+2026-05-22  480    6.44    0.00    27.39

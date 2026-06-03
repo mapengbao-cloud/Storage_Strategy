@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山东调频市场日前出清价格</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f6f8; }
+.header {
+    background: linear-gradient(135deg, #1a3a5c 0%, #2d6aa6 100%);
+    color: #fff; padding: 16px 24px; display: flex; align-items: center;
+    justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.header h1 { font-size: 18px; font-weight: 500; }
+.header .info { font-size: 12px; opacity: .75; }
+
+.controls {
+    background: #fff; margin: 12px 20px; padding: 14px 20px;
+    border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.controls label { display: flex; align-items: center; gap: 6px;
+    font-size: 13px; cursor: pointer; padding: 4px 12px;
+    border-radius: 4px; background: #f0f2f5; transition: background .2s;
+}
+.controls label:hover { background: #e4e7ed; }
+.controls label input[type="checkbox"] { accent-color: #5470C6; }
+.controls .btn-group { margin-left: auto; display: flex; gap: 8px; }
+.controls button {
+    padding: 6px 16px; border: 1px solid #d0d5dd; border-radius: 6px;
+    background: #fff; cursor: pointer; font-size: 13px; transition: all .2s;
+}
+.controls button:hover { background: #f0f2f5; border-color: #5470C6; color: #5470C6; }
+.controls button.primary { background: #5470C6; color: #fff; border-color: #5470C6; }
+.controls button.primary:hover { opacity: .85; }
+
+.chart-wrap {
+    margin: 0 20px 12px; background: #fff; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); padding: 10px;
+}
+.chart { width: 100%; height: 520px; }
+
+.data-table {
+    margin: 0 20px 20px; background: #fff; border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden;
+}
+.data-table summary {
+    padding: 12px 20px; cursor: pointer; font-size: 14px; color: #555;
+    border-bottom: 1px solid #eee; user-select: none;
+}
+.data-table table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table thead { position: sticky; top: 0; }
+.data-table th {
+    background: #f8f9fb; padding: 8px 12px; text-align: left;
+    border-bottom: 2px solid #e0e0e0; white-space: nowrap; font-weight: 500; color: #555;
+}
+.data-table td { padding: 7px 12px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+.data-table tr:hover td { background: #f5f8ff; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table-wrap { max-height: 400px; overflow-y: auto; }
+
+.tooltip-row { display: flex; gap: 20px; align-items: center; }
+.tooltip-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="header">
+    <div>
+        <h1>山东调频市场日前出清价格</h1>
+        <div class="info">数据来源: rm-2zej7q7186wi4eds5no.mysql.rds.aliyuncs.com:3306/tianrun_new | 更新时间: 2026-05-27 13:11:25</div>
+    </div>
+</div>
+
+<div class="controls">
+    <span style="font-size:13px;color:#888;font-weight:500;">系列筛选:</span>
+    <label><input type="checkbox" class="series-cb" value="出清价格 (元/MW)" checked><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#5470C6;"></span>出清价格 (元/MW)</label>
+    <div class="btn-group">
+        <button onclick="selectAll()">全选</button>
+        <button onclick="deselectAll()">全不选</button>
+        <button class="primary" onclick="resetZoom()">重置缩放</button>
+    </div>
+</div>
+
+<div class="chart-wrap">
+    <div id="chart" class="chart"></div>
+</div>
+
+<div class="data-table-wrap">
+<details class="data-table" open>
+    <summary>数据明细 (160 条)</summary>
+    <div class="data-table-wrap">
+        <table>
+            <thead><th class="num">datetime</th><th class="num">price</th></thead>
+            <tbody><tr><td class="num">2026-03-03 01:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 02:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 03:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 04:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 05:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 06:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 07:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 08:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 09:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 10:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 11:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 12:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-03 13:00</td><td class="num">7.0</td></tr><tr><td class="num">2026-03-03 14:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-03 15:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-03 16:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-03 17:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-03 18:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 19:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 20:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 21:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 22:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 23:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-03 24:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 01:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 02:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 03:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 04:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 05:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 06:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 07:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 08:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 09:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 10:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 11:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 12:00</td><td class="num">5.0</td></tr><tr><td class="num">2026-03-04 13:00</td><td class="num">8.0</td></tr><tr><td class="num">2026-03-04 14:00</td><td class="num">5.0</td></tr><tr><td class="num">2026-03-04 15:00</td><td class="num">5.0</td></tr><tr><td class="num">2026-03-04 16:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-04 17:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-04 18:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 19:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 20:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 21:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 22:00</td><td class="num">3.6</td></tr><tr><td class="num">2026-03-04 23:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-04 24:00</td><td class="num">3.6</td></tr><tr><td class="num">2026-03-05 01:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 02:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 03:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 04:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 05:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 06:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 07:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 08:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 09:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 10:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 11:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 12:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 13:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 14:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 15:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 16:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 17:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 18:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 19:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 20:00</td><td class="num">3.0</td></tr><tr><td class="num">2026-03-05 21:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 22:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 23:00</td><td class="num">4.0</td></tr><tr><td class="num">2026-03-05 24:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-06 01:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 02:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 03:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 04:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 05:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 06:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 07:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 08:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 09:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 10:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 11:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 12:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 13:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 14:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 15:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 16:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-06 17:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-11 09:00</td><td class="num">8.0</td></tr><tr><td class="num">2026-03-11 10:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 11:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 12:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 13:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 14:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 15:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 16:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-11 17:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 08:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-12 09:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 10:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 11:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 12:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 13:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 14:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 15:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 16:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-03-12 17:00</td><td class="num">8.0</td></tr><tr><td class="num">2026-03-30 05:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 06:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 07:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 08:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 09:00</td><td class="num">7.0</td></tr><tr><td class="num">2026-03-30 10:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 11:00</td><td class="num">8.0</td></tr><tr><td class="num">2026-03-30 12:00</td><td class="num">8.0</td></tr><tr><td class="num">2026-03-30 13:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 14:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 15:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 16:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 17:00</td><td class="num">7.0</td></tr><tr><td class="num">2026-03-30 18:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 19:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 20:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 21:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 22:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-03-30 23:00</td><td class="num">7.0</td></tr><tr><td class="num">2026-04-13 11:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-04-13 12:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-04-13 13:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-04-13 14:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-04-13 15:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-04-21 01:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 02:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 03:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 04:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 05:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 06:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 07:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 08:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 09:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 10:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 11:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 12:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 13:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-04-21 14:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 15:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 16:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 17:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 18:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 19:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 20:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 21:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 22:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 23:00</td><td class="num">12.0</td></tr><tr><td class="num">2026-04-21 24:00</td><td class="num">10.0</td></tr><tr><td class="num">2026-05-25 11:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-05-25 12:00</td><td class="num">6.0</td></tr><tr><td class="num">2026-05-27 11:00</td><td class="num">5.97</td></tr><tr><td class="num">2026-05-27 12:00</td><td class="num">5.97</td></tr></tbody>
+        </table>
+    </div>
+</details>
+</div>
+
+<script>
+const RAW_DATA = [{"datetime": "2026-03-03 01:00", "price": 3.0}, {"datetime": "2026-03-03 02:00", "price": 4.0}, {"datetime": "2026-03-03 03:00", "price": 4.0}, {"datetime": "2026-03-03 04:00", "price": 4.0}, {"datetime": "2026-03-03 05:00", "price": 4.0}, {"datetime": "2026-03-03 06:00", "price": 4.0}, {"datetime": "2026-03-03 07:00", "price": 4.0}, {"datetime": "2026-03-03 08:00", "price": 4.0}, {"datetime": "2026-03-03 09:00", "price": 4.0}, {"datetime": "2026-03-03 10:00", "price": 3.0}, {"datetime": "2026-03-03 11:00", "price": 4.0}, {"datetime": "2026-03-03 12:00", "price": 6.0}, {"datetime": "2026-03-03 13:00", "price": 7.0}, {"datetime": "2026-03-03 14:00", "price": 6.0}, {"datetime": "2026-03-03 15:00", "price": 6.0}, {"datetime": "2026-03-03 16:00", "price": 6.0}, {"datetime": "2026-03-03 17:00", "price": 4.0}, {"datetime": "2026-03-03 18:00", "price": 3.0}, {"datetime": "2026-03-03 19:00", "price": 3.0}, {"datetime": "2026-03-03 20:00", "price": 3.0}, {"datetime": "2026-03-03 21:00", "price": 3.0}, {"datetime": "2026-03-03 22:00", "price": 3.0}, {"datetime": "2026-03-03 23:00", "price": 3.0}, {"datetime": "2026-03-03 24:00", "price": 3.0}, {"datetime": "2026-03-04 01:00", "price": 4.0}, {"datetime": "2026-03-04 02:00", "price": 4.0}, {"datetime": "2026-03-04 03:00", "price": 6.0}, {"datetime": "2026-03-04 04:00", "price": 4.0}, {"datetime": "2026-03-04 05:00", "price": 4.0}, {"datetime": "2026-03-04 06:00", "price": 4.0}, {"datetime": "2026-03-04 07:00", "price": 6.0}, {"datetime": "2026-03-04 08:00", "price": 6.0}, {"datetime": "2026-03-04 09:00", "price": 6.0}, {"datetime": "2026-03-04 10:00", "price": 6.0}, {"datetime": "2026-03-04 11:00", "price": 6.0}, {"datetime": "2026-03-04 12:00", "price": 5.0}, {"datetime": "2026-03-04 13:00", "price": 8.0}, {"datetime": "2026-03-04 14:00", "price": 5.0}, {"datetime": "2026-03-04 15:00", "price": 5.0}, {"datetime": "2026-03-04 16:00", "price": 6.0}, {"datetime": "2026-03-04 17:00", "price": 4.0}, {"datetime": "2026-03-04 18:00", "price": 3.0}, {"datetime": "2026-03-04 19:00", "price": 3.0}, {"datetime": "2026-03-04 20:00", "price": 3.0}, {"datetime": "2026-03-04 21:00", "price": 3.0}, {"datetime": "2026-03-04 22:00", "price": 3.6}, {"datetime": "2026-03-04 23:00", "price": 3.0}, {"datetime": "2026-03-04 24:00", "price": 3.6}, {"datetime": "2026-03-05 01:00", "price": 4.0}, {"datetime": "2026-03-05 02:00", "price": 4.0}, {"datetime": "2026-03-05 03:00", "price": 4.0}, {"datetime": "2026-03-05 04:00", "price": 4.0}, {"datetime": "2026-03-05 05:00", "price": 4.0}, {"datetime": "2026-03-05 06:00", "price": 4.0}, {"datetime": "2026-03-05 07:00", "price": 4.0}, {"datetime": "2026-03-05 08:00", "price": 4.0}, {"datetime": "2026-03-05 09:00", "price": 3.0}, {"datetime": "2026-03-05 10:00", "price": 3.0}, {"datetime": "2026-03-05 11:00", "price": 4.0}, {"datetime": "2026-03-05 12:00", "price": 3.0}, {"datetime": "2026-03-05 13:00", "price": 3.0}, {"datetime": "2026-03-05 14:00", "price": 3.0}, {"datetime": "2026-03-05 15:00", "price": 3.0}, {"datetime": "2026-03-05 16:00", "price": 3.0}, {"datetime": "2026-03-05 17:00", "price": 3.0}, {"datetime": "2026-03-05 18:00", "price": 3.0}, {"datetime": "2026-03-05 19:00", "price": 3.0}, {"datetime": "2026-03-05 20:00", "price": 3.0}, {"datetime": "2026-03-05 21:00", "price": 4.0}, {"datetime": "2026-03-05 22:00", "price": 4.0}, {"datetime": "2026-03-05 23:00", "price": 4.0}, {"datetime": "2026-03-05 24:00", "price": 6.0}, {"datetime": "2026-03-06 01:00", "price": 12.0}, {"datetime": "2026-03-06 02:00", "price": 12.0}, {"datetime": "2026-03-06 03:00", "price": 12.0}, {"datetime": "2026-03-06 04:00", "price": 12.0}, {"datetime": "2026-03-06 05:00", "price": 12.0}, {"datetime": "2026-03-06 06:00", "price": 12.0}, {"datetime": "2026-03-06 07:00", "price": 12.0}, {"datetime": "2026-03-06 08:00", "price": 12.0}, {"datetime": "2026-03-06 09:00", "price": 12.0}, {"datetime": "2026-03-06 10:00", "price": 12.0}, {"datetime": "2026-03-06 11:00", "price": 12.0}, {"datetime": "2026-03-06 12:00", "price": 12.0}, {"datetime": "2026-03-06 13:00", "price": 12.0}, {"datetime": "2026-03-06 14:00", "price": 12.0}, {"datetime": "2026-03-06 15:00", "price": 12.0}, {"datetime": "2026-03-06 16:00", "price": 12.0}, {"datetime": "2026-03-06 17:00", "price": 6.0}, {"datetime": "2026-03-11 09:00", "price": 8.0}, {"datetime": "2026-03-11 10:00", "price": 12.0}, {"datetime": "2026-03-11 11:00", "price": 12.0}, {"datetime": "2026-03-11 12:00", "price": 12.0}, {"datetime": "2026-03-11 13:00", "price": 12.0}, {"datetime": "2026-03-11 14:00", "price": 12.0}, {"datetime": "2026-03-11 15:00", "price": 12.0}, {"datetime": "2026-03-11 16:00", "price": 12.0}, {"datetime": "2026-03-11 17:00", "price": 12.0}, {"datetime": "2026-03-12 08:00", "price": 6.0}, {"datetime": "2026-03-12 09:00", "price": 12.0}, {"datetime": "2026-03-12 10:00", "price": 12.0}, {"datetime": "2026-03-12 11:00", "price": 12.0}, {"datetime": "2026-03-12 12:00", "price": 12.0}, {"datetime": "2026-03-12 13:00", "price": 12.0}, {"datetime": "2026-03-12 14:00", "price": 12.0}, {"datetime": "2026-03-12 15:00", "price": 12.0}, {"datetime": "2026-03-12 16:00", "price": 12.0}, {"datetime": "2026-03-12 17:00", "price": 8.0}, {"datetime": "2026-03-30 05:00", "price": 6.0}, {"datetime": "2026-03-30 06:00", "price": 6.0}, {"datetime": "2026-03-30 07:00", "price": 6.0}, {"datetime": "2026-03-30 08:00", "price": 6.0}, {"datetime": "2026-03-30 09:00", "price": 7.0}, {"datetime": "2026-03-30 10:00", "price": 6.0}, {"datetime": "2026-03-30 11:00", "price": 8.0}, {"datetime": "2026-03-30 12:00", "price": 8.0}, {"datetime": "2026-03-30 13:00", "price": 6.0}, {"datetime": "2026-03-30 14:00", "price": 6.0}, {"datetime": "2026-03-30 15:00", "price": 6.0}, {"datetime": "2026-03-30 16:00", "price": 6.0}, {"datetime": "2026-03-30 17:00", "price": 7.0}, {"datetime": "2026-03-30 18:00", "price": 6.0}, {"datetime": "2026-03-30 19:00", "price": 6.0}, {"datetime": "2026-03-30 20:00", "price": 6.0}, {"datetime": "2026-03-30 21:00", "price": 6.0}, {"datetime": "2026-03-30 22:00", "price": 6.0}, {"datetime": "2026-03-30 23:00", "price": 7.0}, {"datetime": "2026-04-13 11:00", "price": 6.0}, {"datetime": "2026-04-13 12:00", "price": 6.0}, {"datetime": "2026-04-13 13:00", "price": 6.0}, {"datetime": "2026-04-13 14:00", "price": 6.0}, {"datetime": "2026-04-13 15:00", "price": 6.0}, {"datetime": "2026-04-21 01:00", "price": 10.0}, {"datetime": "2026-04-21 02:00", "price": 10.0}, {"datetime": "2026-04-21 03:00", "price": 10.0}, {"datetime": "2026-04-21 04:00", "price": 10.0}, {"datetime": "2026-04-21 05:00", "price": 10.0}, {"datetime": "2026-04-21 06:00", "price": 12.0}, {"datetime": "2026-04-21 07:00", "price": 12.0}, {"datetime": "2026-04-21 08:00", "price": 12.0}, {"datetime": "2026-04-21 09:00", "price": 12.0}, {"datetime": "2026-04-21 10:00", "price": 12.0}, {"datetime": "2026-04-21 11:00", "price": 12.0}, {"datetime": "2026-04-21 12:00", "price": 12.0}, {"datetime": "2026-04-21 13:00", "price": 10.0}, {"datetime": "2026-04-21 14:00", "price": 12.0}, {"datetime": "2026-04-21 15:00", "price": 12.0}, {"datetime": "2026-04-21 16:00", "price": 12.0}, {"datetime": "2026-04-21 17:00", "price": 12.0}, {"datetime": "2026-04-21 18:00", "price": 12.0}, {"datetime": "2026-04-21 19:00", "price": 12.0}, {"datetime": "2026-04-21 20:00", "price": 12.0}, {"datetime": "2026-04-21 21:00", "price": 12.0}, {"datetime": "2026-04-21 22:00", "price": 12.0}, {"datetime": "2026-04-21 23:00", "price": 12.0}, {"datetime": "2026-04-21 24:00", "price": 10.0}, {"datetime": "2026-05-25 11:00", "price": 6.0}, {"datetime": "2026-05-25 12:00", "price": 6.0}, {"datetime": "2026-05-27 11:00", "price": 5.97}, {"datetime": "2026-05-27 12:00", "price": 5.97}];
+const SERIES = [{"name": "出清价格 (元/MW)", "x_field": "datetime", "y_field": "price", "color": "#5470C6"}];
+const COLORS = ["#5470C6", "#91CC75", "#FAC858", "#EE6666", "#73C0DE", "#3BA272", "#FC8452", "#9A60B4", "#EA7CCC", "#48B9C7", "#E69D87", "#52A88C", "#D4626B", "#7F88E0", "#DDA93A"];
+
+const chart = echarts.init(document.getElementById('chart'));
+
+function buildOption() {
+    const checked = new Set(
+        Array.from(document.querySelectorAll('.series-cb:checked')).map(cb => cb.value)
+    );
+    const activeSeries = SERIES.filter(s => checked.has(s.name));
+    const datasets = [];
+
+    activeSeries.forEach(s => {
+        datasets.push({
+            name: s.name,
+            type: 'line',
+            data: RAW_DATA.map(row => [row[s.x_field], row[s.y_field]]),
+            smooth: true,
+            symbol: 'none',
+            lineStyle: { width: 2, color: s.color },
+            itemStyle: { color: s.color },
+            emphasis: { focus: 'series' },
+        });
+    });
+
+    return {
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: { type: 'cross' },
+        },
+        legend: {
+            type: 'scroll', bottom: 0, data: activeSeries.map(s => s.name),
+            textStyle: { fontSize: 12 },
+        },
+        grid: { left: 70, right: 60, top: 30, bottom: 40 },
+        xAxis: {
+            type: 'time', axisLabel: { fontSize: 11 },
+            splitLine: { show: false },
+        },
+        yAxis: {
+            type: 'value', axisLabel: { fontSize: 11 },
+            splitLine: { lineStyle: { color: '#eee', type: 'dashed' } },
+        },
+        dataZoom: [
+            { type: 'inside', start: 0, end: 100 },
+            { type: 'slider', start: 0, end: 100, height: 24, bottom: 28 },
+        ],
+        series: datasets,
+    };
+}
+
+function render() {
+    chart.setOption(buildOption(), true);
+}
+
+document.querySelectorAll('.series-cb').forEach(cb => cb.addEventListener('change', render));
+
+function selectAll()   { document.querySelectorAll('.series-cb').forEach(cb => cb.checked = true);  render(); }
+function deselectAll() { document.querySelectorAll('.series-cb').forEach(cb => cb.checked = false); render(); }
+function resetZoom()   { chart.dispatchAction({ type: 'dataZoom', start: 0, end: 100 }); }
+
+window.addEventListener('resize', () => chart.resize());
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+=== shandong_px_spot_realtime_clearing_point_quantity 的 tag 值 ===
+  新能源场站                 1,172,160
+  (空)                      65,760
+
+=== power_state 值 ===
+  (空)                     849,960
+  0                       104,640
+  停机                       14,168
+  开机                      269,152
+
+=== open_status 值 ===
+  停机                       84,555
+  开机                    1,153,365
+
+=== surveillance_realtime_generation_quantity 的 type 值 ===
+  光伏                                 38,736
+  火电                                 38,736
+  风电                                 38,736
+  独立储能                               36,552
+  核电                                 24,504
+  水电                                 16,320
+  虚拟电厂调节量负荷类                         15,336
+  虚拟电厂储能类                            12,696
+  虚拟电厂全电量负荷类                          7,704
+  (空)                                 5,208
+  虚拟电厂(调节量负荷类L)                         792
+  虚拟电厂(全电量负荷类)                          768
+  虚拟电厂(分布式发电类)                          624
+  虚拟电厂(发电储能类)                           624
+  虚拟电厂(调节量负荷类D)                         624
+
+=== reliable_clearing_unit_data 的 unit_name ===
+  苏留润津(北京天润夏津一期)独立储能电站
+  苏留润津(北京天润夏津一期)独立储能电站(发电)
+  苏留润津(北京天润夏津一期)独立储能电站(用电)
+
+=== clearing_point_quantity 各 member 数据量 ===
+  82f8d9ea056548f28256b20c0d744989            142,752  2022-05-01 ~ 2026-05-26
+  4079F7C222D0F9A0315D264ABB9EB1A7            142,656  2022-05-01 ~ 2026-05-26
+  3dc896ec8a4e46a89c030b76ae5ba1c9            142,656  2022-05-01 ~ 2026-05-26
+  978E4DF99336BE8E65B102D07B4B4124            142,560  2022-05-01 ~ 2026-05-26
+  1365a79474054971918002eb7999b4a2             97,632  2023-08-13 ~ 2026-05-26
+  95FBFD4D3B346C6E5E09F62408C33457             94,368  2022-05-01 ~ 2025-01-07
+  2DDF1C16366FFE4386A8C0E6AD51CB47             94,368  2022-05-01 ~ 2025-01-07
+  24bfd775e7144088aaeb12191e879f20             90,144  2022-01-01 ~ 2024-11-23
+  aa005a416f0f49a6a2061d3c9ec05c02             73,632  2023-08-13 ~ 2025-09-18
+  03747ab2a6254e23b87d33edb15c952f             73,344  2022-05-01 ~ 2024-06-02
+  60023BBA3AF50E774D59F065FD95DBA1             50,592  2022-11-24 ~ 2024-05-08
+  6419e9a9807c4992b9ff6320fe2afd6b             47,232  2024-05-01 ~ 2025-09-04
+  ebd537b1344343c795f48d3c37ccf150             20,928  2022-05-01 ~ 2022-12-04
+  86CD55705FF4393F8945DAF614C64582             14,112  2024-05-01 ~ 2024-09-24
+  e50a63e5016f4e1d8590f411df5a1671             10,944  2022-11-24 ~ 2023-03-18
+
+=== clearing_point_quantity 最新一天样例 (2026-05-26, 前15行) ===
+  (1237441, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('330.000000'), Decimal('0.000000'), Decimal('13.768000'), Decimal('0.000000'), '开机', 1, Decimal('55.070000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237442, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('325.000000'), Decimal('0.000000'), Decimal('12.820000'), Decimal('0.000000'), '开机', 2, Decimal('51.280000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237443, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('324.757000'), Decimal('0.000000'), Decimal('11.340000'), Decimal('0.000000'), '开机', 3, Decimal('45.360000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237444, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('320.000000'), Decimal('0.000000'), Decimal('12.265000'), Decimal('0.000000'), '开机', 4, Decimal('49.060000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237445, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('314.060000'), Decimal('0.000000'), Decimal('11.063000'), Decimal('0.000000'), '开机', 5, Decimal('44.250000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237446, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('312.000000'), Decimal('0.000000'), Decimal('11.030000'), Decimal('0.000000'), '开机', 6, Decimal('44.120000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237447, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('298.273000'), Decimal('0.000000'), Decimal('10.465000'), Decimal('0.000000'), '开机', 7, Decimal('41.860000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237448, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('284.792000'), Decimal('0.000000'), Decimal('11.173000'), Decimal('0.000000'), '开机', 8, Decimal('44.690000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237449, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('272.471000'), Decimal('0.000000'), Decimal('10.570000'), Decimal('0.000000'), '开机', 9, Decimal('42.280000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237450, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('101.019000'), Decimal('0.000000'), Decimal('11.288000'), Decimal('0.000000'), '开机', 10, Decimal('45.150000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237451, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('124.895000'), Decimal('0.000000'), Decimal('11.325000'), Decimal('0.000000'), '开机', 11, Decimal('45.300000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237452, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('-2.670000'), Decimal('0.000000'), Decimal('11.743000'), Decimal('0.000000'), '开机', 12, Decimal('46.970000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237453, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('67.820000'), Decimal('0.000000'), Decimal('11.350000'), Decimal('0.000000'), '开机', 13, Decimal('45.400000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237454, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('-45.645000'), Decimal('0.000000'), Decimal('13.003000'), Decimal('0.000000'), '开机', 14, Decimal('52.010000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+  (1237455, 'PHBSD', '978E4DF99336BE8E65B102D07B4B4124', datetime.date(2026, 5, 26), '新能源场站', Decimal('-24.176000'), Decimal('0.000000'), Decimal('12.830000'), Decimal('0.000000'), '开机', 15, Decimal('51.320000'), '0', Decimal('0.000000'), '0', 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 27, 11, 22, 11), 'ShandongPXSpotRealtimeClearingPointQuantitySpider', datetime.datetime(2026, 5, 28, 6, 5, 24))
+
+=== algorithm_batch_sd_single_storage_settlement_price_forecast ===
+  id                             bigint(20) unsigned 
+  forecast_time                  date                
+  date                           date                
+  time_order                     int(11)             
+  price                          decimal(20,10)      
+  algorithm                      varchar(255)        
+  data_source                    varchar(255)        
+  creation_time                  datetime            
+  modification_time              datetime            
+  province_id                    int(11)             
+  rows: 3000, 2026-01-02 ~ 2026-05-09, province_id: 37~37

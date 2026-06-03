@@ -1,0 +1,2050 @@
+{
+  "title": "山东实时电价谷值时点关联分析 (2026年1月-5月)",
+  "update_time": "2026-05-25 15:20:51",
+  "total_days": 144,
+  "period_stats": {
+    "上午(06:00-10:00)": {
+      "count": 63,
+      "freq_pct": 43.8,
+      "avg_valley": -51.66,
+      "min_valley": -82.5,
+      "max_valley": 351.52
+    },
+    "下午(13:00-17:00)": {
+      "count": 12,
+      "freq_pct": 8.3,
+      "avg_valley": -45.75,
+      "min_valley": -85.0,
+      "max_valley": 284.96
+    },
+    "中午(10:00-13:00)": {
+      "count": 34,
+      "freq_pct": 23.6,
+      "avg_valley": -22.23,
+      "min_valley": -90.0,
+      "max_valley": 312.93
+    },
+    "凌晨(00:00-06:00)": {
+      "count": 30,
+      "freq_pct": 20.8,
+      "avg_valley": 90.11,
+      "min_valley": -82.5,
+      "max_valley": 380.55
+    },
+    "夜间(20:00-24:00)": {
+      "count": 5,
+      "freq_pct": 3.5,
+      "avg_valley": 224.14,
+      "min_valley": 51.43,
+      "max_valley": 319.41
+    }
+  },
+  "label_stats": {
+    "00:00-01:45": {
+      "count": 5,
+      "freq_pct": 3.5,
+      "avg_valley": 3.47,
+      "min_valley": -80.0,
+      "max_valley": 337.33
+    },
+    "00:15-02:00": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "01:30-03:15": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": 328.23,
+      "min_valley": 328.23,
+      "max_valley": 328.23
+    },
+    "02:30-04:15": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -6.44,
+      "min_valley": -80.0,
+      "max_valley": 214.24
+    },
+    "03:15-05:00": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "03:30-05:15": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": 298.63,
+      "min_valley": 298.63,
+      "max_valley": 298.63
+    },
+    "03:45-05:30": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -82.5,
+      "min_valley": -82.5,
+      "max_valley": -82.5
+    },
+    "05:00-06:45": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": 279.32,
+      "min_valley": 279.32,
+      "max_valley": 279.32
+    },
+    "05:15-07:00": {
+      "count": 10,
+      "freq_pct": 6.9,
+      "avg_valley": 194.04,
+      "min_valley": -80.0,
+      "max_valley": 380.55
+    },
+    "05:30-07:15": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -80.39,
+      "min_valley": -80.68,
+      "max_valley": -80.0
+    },
+    "05:45-07:30": {
+      "count": 2,
+      "freq_pct": 1.4,
+      "avg_valley": 174.43,
+      "min_valley": 80.38,
+      "max_valley": 268.48
+    },
+    "06:00-07:45": {
+      "count": 2,
+      "freq_pct": 1.4,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "06:15-08:00": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": 59.69,
+      "min_valley": -82.5,
+      "max_valley": 341.57
+    },
+    "06:30-08:15": {
+      "count": 2,
+      "freq_pct": 1.4,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "06:45-08:30": {
+      "count": 6,
+      "freq_pct": 4.2,
+      "avg_valley": -8.0,
+      "min_valley": -80.0,
+      "max_valley": 351.52
+    },
+    "07:00-08:45": {
+      "count": 5,
+      "freq_pct": 3.5,
+      "avg_valley": -80.38,
+      "min_valley": -81.89,
+      "max_valley": -80.0
+    },
+    "07:30-09:15": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -80.11,
+      "min_valley": -80.45,
+      "max_valley": -80.0
+    },
+    "07:45-09:30": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "08:00-09:45": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -80.46,
+      "min_valley": -81.39,
+      "max_valley": -80.0
+    },
+    "08:15-10:00": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "08:30-10:15": {
+      "count": 11,
+      "freq_pct": 7.6,
+      "avg_valley": -42.66,
+      "min_valley": -80.0,
+      "max_valley": 325.33
+    },
+    "08:45-10:30": {
+      "count": 6,
+      "freq_pct": 4.2,
+      "avg_valley": -74.25,
+      "min_valley": -80.43,
+      "max_valley": -45.06
+    },
+    "09:00-10:45": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -76.51,
+      "min_valley": -80.0,
+      "max_valley": -66.03
+    },
+    "09:15-11:00": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -24.93,
+      "min_valley": -80.0,
+      "max_valley": 87.57
+    },
+    "09:30-11:15": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -55.11,
+      "min_valley": -81.32,
+      "max_valley": -13.9
+    },
+    "09:45-11:30": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -18.79,
+      "min_valley": -82.5,
+      "max_valley": 106.95
+    },
+    "10:00-11:45": {
+      "count": 2,
+      "freq_pct": 1.4,
+      "avg_valley": 32.37,
+      "min_valley": -80.0,
+      "max_valley": 144.74
+    },
+    "10:15-12:00": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -80.85,
+      "min_valley": -82.54,
+      "max_valley": -80.0
+    },
+    "10:30-12:15": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -81.02,
+      "min_valley": -82.5,
+      "max_valley": -80.2
+    },
+    "10:45-12:30": {
+      "count": 2,
+      "freq_pct": 1.4,
+      "avg_valley": 5.4,
+      "min_valley": -71.18,
+      "max_valley": 81.99
+    },
+    "11:00-12:45": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": 167.78,
+      "min_valley": 167.78,
+      "max_valley": 167.78
+    },
+    "11:15-13:00": {
+      "count": 5,
+      "freq_pct": 3.5,
+      "avg_valley": -57.9,
+      "min_valley": -90.0,
+      "max_valley": 40.49
+    },
+    "11:30-13:15": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -58.52,
+      "min_valley": -73.25,
+      "max_valley": -46.38
+    },
+    "11:45-13:30": {
+      "count": 6,
+      "freq_pct": 4.2,
+      "avg_valley": 30.41,
+      "min_valley": -80.37,
+      "max_valley": 281.38
+    },
+    "12:00-13:45": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "12:15-14:00": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -80.1,
+      "min_valley": -80.22,
+      "max_valley": -80.0
+    },
+    "12:30-14:15": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": 67.53,
+      "min_valley": -59.84,
+      "max_valley": 312.93
+    },
+    "12:45-14:30": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -33.25,
+      "min_valley": -33.25,
+      "max_valley": -33.25
+    },
+    "13:00-14:45": {
+      "count": 4,
+      "freq_pct": 2.8,
+      "avg_valley": -67.45,
+      "min_valley": -85.0,
+      "max_valley": -18.0
+    },
+    "13:15-15:00": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -81.85,
+      "min_valley": -81.85,
+      "max_valley": -81.85
+    },
+    "13:30-15:15": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -80.0,
+      "min_valley": -80.0,
+      "max_valley": -80.0
+    },
+    "13:45-15:30": {
+      "count": 3,
+      "freq_pct": 2.1,
+      "avg_valley": -79.83,
+      "min_valley": -82.5,
+      "max_valley": -77.0
+    },
+    "14:00-15:45": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -82.0,
+      "min_valley": -82.0,
+      "max_valley": -82.0
+    },
+    "14:15-16:00": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": -80.85,
+      "min_valley": -80.85,
+      "max_valley": -80.85
+    },
+    "15:15-17:00": {
+      "count": 1,
+      "freq_pct": 0.7,
+      "avg_valley": 284.96,
+      "min_valley": 284.96,
+      "max_valley": 284.96
+    },
+    "22:00-23:45": {
+      "count": 5,
+      "freq_pct": 3.5,
+      "avg_valley": 224.14,
+      "min_valley": 51.43,
+      "max_valley": 319.41
+    }
+  },
+  "hourly_avg": {
+    "0": {
+      "count": 6,
+      "avg_valley": -10.45,
+      "min_valley": -80.0,
+      "max_valley": 337.33
+    },
+    "1": {
+      "count": 1,
+      "avg_valley": 328.23,
+      "min_valley": 328.23,
+      "max_valley": 328.23
+    },
+    "2": {
+      "count": 4,
+      "avg_valley": -6.44,
+      "min_valley": -80.0,
+      "max_valley": 214.24
+    },
+    "3": {
+      "count": 3,
+      "avg_valley": 45.38,
+      "min_valley": -82.5,
+      "max_valley": 298.63
+    },
+    "5": {
+      "count": 16,
+      "avg_valley": 145.46,
+      "min_valley": -80.68,
+      "max_valley": 380.55
+    },
+    "6": {
+      "count": 13,
+      "avg_valley": -14.53,
+      "min_valley": -82.5,
+      "max_valley": 351.52
+    },
+    "7": {
+      "count": 13,
+      "avg_valley": -80.18,
+      "min_valley": -81.89,
+      "max_valley": -80.0
+    },
+    "8": {
+      "count": 23,
+      "avg_valley": -60.7,
+      "min_valley": -81.39,
+      "max_valley": 325.33
+    },
+    "9": {
+      "count": 14,
+      "avg_valley": -44.82,
+      "min_valley": -82.5,
+      "max_valley": 106.95
+    },
+    "10": {
+      "count": 10,
+      "avg_valley": -41.01,
+      "min_valley": -82.54,
+      "max_valley": 144.74
+    },
+    "11": {
+      "count": 15,
+      "avg_valley": -7.66,
+      "min_valley": -90.0,
+      "max_valley": 281.38
+    },
+    "12": {
+      "count": 9,
+      "avg_valley": -25.68,
+      "min_valley": -80.22,
+      "max_valley": 312.93
+    },
+    "13": {
+      "count": 9,
+      "avg_valley": -74.57,
+      "min_valley": -85.0,
+      "max_valley": -18.0
+    },
+    "14": {
+      "count": 2,
+      "avg_valley": -81.42,
+      "min_valley": -82.0,
+      "max_valley": -80.85
+    },
+    "15": {
+      "count": 1,
+      "avg_valley": 284.96,
+      "min_valley": 284.96,
+      "max_valley": 284.96
+    },
+    "22": {
+      "count": 5,
+      "avg_valley": 224.14,
+      "min_valley": 51.43,
+      "max_valley": 319.41
+    }
+  },
+  "daily": [
+    {
+      "date": "2026-01-01",
+      "daily_avg": 166.99,
+      "valley_val": -80.0,
+      "valley_label": "09:15-11:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 492.66,
+      "spread": 572.66,
+      "weekday": 3
+    },
+    {
+      "date": "2026-01-02",
+      "daily_avg": 259.1,
+      "valley_val": -80.0,
+      "valley_label": "09:00-10:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 491.47,
+      "spread": 571.47,
+      "weekday": 4
+    },
+    {
+      "date": "2026-01-03",
+      "daily_avg": 203.12,
+      "valley_val": -80.68,
+      "valley_label": "05:30-07:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 525.71,
+      "spread": 606.39,
+      "weekday": 5
+    },
+    {
+      "date": "2026-01-04",
+      "daily_avg": 368.44,
+      "valley_val": 318.99,
+      "valley_label": "22:00-23:45",
+      "valley_period": "夜间(20:00-24:00)",
+      "valley_start_hour": 22,
+      "peak_val": 425.81,
+      "spread": 106.82,
+      "weekday": 6
+    },
+    {
+      "date": "2026-01-05",
+      "daily_avg": 277.8,
+      "valley_val": -50.51,
+      "valley_label": "12:30-14:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 413.13,
+      "spread": 463.65,
+      "weekday": 0
+    },
+    {
+      "date": "2026-01-06",
+      "daily_avg": 349.43,
+      "valley_val": 154.96,
+      "valley_label": "22:00-23:45",
+      "valley_period": "夜间(20:00-24:00)",
+      "valley_start_hour": 22,
+      "peak_val": 478.61,
+      "spread": 323.65,
+      "weekday": 1
+    },
+    {
+      "date": "2026-01-07",
+      "daily_avg": 198.76,
+      "valley_val": -85.0,
+      "valley_label": "13:00-14:45",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 472.33,
+      "spread": 557.33,
+      "weekday": 2
+    },
+    {
+      "date": "2026-01-08",
+      "daily_avg": 212.16,
+      "valley_val": -90.0,
+      "valley_label": "11:15-13:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 526.79,
+      "spread": 616.79,
+      "weekday": 3
+    },
+    {
+      "date": "2026-01-09",
+      "daily_avg": 66.69,
+      "valley_val": -82.5,
+      "valley_label": "13:45-15:30",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 457.24,
+      "spread": 539.74,
+      "weekday": 4
+    },
+    {
+      "date": "2026-01-10",
+      "daily_avg": 57.42,
+      "valley_val": -82.5,
+      "valley_label": "09:45-11:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 434.24,
+      "spread": 516.74,
+      "weekday": 5
+    },
+    {
+      "date": "2026-01-11",
+      "daily_avg": 107.64,
+      "valley_val": -80.48,
+      "valley_label": "05:30-07:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 626.73,
+      "spread": 707.21,
+      "weekday": 6
+    },
+    {
+      "date": "2026-01-12",
+      "daily_avg": 159.26,
+      "valley_val": -85.0,
+      "valley_label": "13:00-14:45",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 623.6,
+      "spread": 708.6,
+      "weekday": 0
+    },
+    {
+      "date": "2026-01-13",
+      "daily_avg": 246.86,
+      "valley_val": -80.37,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 445.03,
+      "spread": 525.4,
+      "weekday": 1
+    },
+    {
+      "date": "2026-01-14",
+      "daily_avg": 360.26,
+      "valley_val": 279.32,
+      "valley_label": "05:00-06:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 628.06,
+      "spread": 348.74,
+      "weekday": 2
+    },
+    {
+      "date": "2026-01-15",
+      "daily_avg": 132.71,
+      "valley_val": -80.0,
+      "valley_label": "11:15-13:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 478.92,
+      "spread": 558.92,
+      "weekday": 3
+    },
+    {
+      "date": "2026-01-16",
+      "daily_avg": 246.43,
+      "valley_val": -80.0,
+      "valley_label": "00:00-01:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 681.03,
+      "spread": 761.03,
+      "weekday": 4
+    },
+    {
+      "date": "2026-01-17",
+      "daily_avg": 280.91,
+      "valley_val": -13.9,
+      "valley_label": "09:30-11:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 619.15,
+      "spread": 633.05,
+      "weekday": 5
+    },
+    {
+      "date": "2026-01-18",
+      "daily_avg": 482.34,
+      "valley_val": 51.43,
+      "valley_label": "22:00-23:45",
+      "valley_period": "夜间(20:00-24:00)",
+      "valley_start_hour": 22,
+      "peak_val": 1079.34,
+      "spread": 1027.91,
+      "weekday": 6
+    },
+    {
+      "date": "2026-01-19",
+      "daily_avg": 428.93,
+      "valley_val": 80.38,
+      "valley_label": "05:45-07:30",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 639.57,
+      "spread": 559.19,
+      "weekday": 0
+    },
+    {
+      "date": "2026-01-20",
+      "daily_avg": 325.98,
+      "valley_val": 111.87,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 410.28,
+      "spread": 298.41,
+      "weekday": 1
+    },
+    {
+      "date": "2026-01-21",
+      "daily_avg": 320.67,
+      "valley_val": -80.19,
+      "valley_label": "12:15-14:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 461.25,
+      "spread": 541.45,
+      "weekday": 2
+    },
+    {
+      "date": "2026-01-22",
+      "daily_avg": 333.04,
+      "valley_val": -80.0,
+      "valley_label": "11:15-13:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 466.92,
+      "spread": 546.92,
+      "weekday": 3
+    },
+    {
+      "date": "2026-01-23",
+      "daily_avg": 346.35,
+      "valley_val": -55.94,
+      "valley_label": "11:30-13:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 545.08,
+      "spread": 601.02,
+      "weekday": 4
+    },
+    {
+      "date": "2026-01-24",
+      "daily_avg": 260.12,
+      "valley_val": -80.0,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 412.45,
+      "spread": 492.45,
+      "weekday": 5
+    },
+    {
+      "date": "2026-01-25",
+      "daily_avg": 205.41,
+      "valley_val": -80.0,
+      "valley_label": "05:30-07:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 474.26,
+      "spread": 554.26,
+      "weekday": 6
+    },
+    {
+      "date": "2026-01-26",
+      "daily_avg": 494.27,
+      "valley_val": 319.41,
+      "valley_label": "22:00-23:45",
+      "valley_period": "夜间(20:00-24:00)",
+      "valley_start_hour": 22,
+      "peak_val": 1314.75,
+      "spread": 995.34,
+      "weekday": 0
+    },
+    {
+      "date": "2026-01-27",
+      "daily_avg": 314.05,
+      "valley_val": 40.49,
+      "valley_label": "11:15-13:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 413.0,
+      "spread": 372.52,
+      "weekday": 1
+    },
+    {
+      "date": "2026-01-28",
+      "daily_avg": 324.7,
+      "valley_val": 281.38,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 360.59,
+      "spread": 79.22,
+      "weekday": 2
+    },
+    {
+      "date": "2026-01-29",
+      "daily_avg": 327.69,
+      "valley_val": 312.93,
+      "valley_label": "12:30-14:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 355.73,
+      "spread": 42.8,
+      "weekday": 3
+    },
+    {
+      "date": "2026-01-30",
+      "daily_avg": 288.63,
+      "valley_val": -80.0,
+      "valley_label": "10:15-12:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 370.31,
+      "spread": 450.31,
+      "weekday": 4
+    },
+    {
+      "date": "2026-01-31",
+      "daily_avg": 340.05,
+      "valley_val": 301.12,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 365.82,
+      "spread": 64.69,
+      "weekday": 5
+    },
+    {
+      "date": "2026-02-01",
+      "daily_avg": 393.65,
+      "valley_val": 247.95,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 467.96,
+      "spread": 220.0,
+      "weekday": 6
+    },
+    {
+      "date": "2026-02-02",
+      "daily_avg": 294.56,
+      "valley_val": -80.0,
+      "valley_label": "11:15-13:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 426.51,
+      "spread": 506.51,
+      "weekday": 0
+    },
+    {
+      "date": "2026-02-03",
+      "daily_avg": 213.74,
+      "valley_val": -80.0,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 394.83,
+      "spread": 474.83,
+      "weekday": 1
+    },
+    {
+      "date": "2026-02-04",
+      "daily_avg": 281.66,
+      "valley_val": -80.0,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 581.78,
+      "spread": 661.78,
+      "weekday": 2
+    },
+    {
+      "date": "2026-02-05",
+      "daily_avg": 243.14,
+      "valley_val": -80.0,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 535.09,
+      "spread": 615.09,
+      "weekday": 3
+    },
+    {
+      "date": "2026-02-06",
+      "daily_avg": 285.06,
+      "valley_val": -27.28,
+      "valley_label": "09:15-11:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 658.04,
+      "spread": 685.32,
+      "weekday": 4
+    },
+    {
+      "date": "2026-02-07",
+      "daily_avg": 266.79,
+      "valley_val": -82.5,
+      "valley_label": "10:30-12:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 419.64,
+      "spread": 502.14,
+      "weekday": 5
+    },
+    {
+      "date": "2026-02-08",
+      "daily_avg": 225.03,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 427.33,
+      "spread": 507.33,
+      "weekday": 6
+    },
+    {
+      "date": "2026-02-09",
+      "daily_avg": 54.98,
+      "valley_val": -80.0,
+      "valley_label": "00:15-02:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 337.4,
+      "spread": 417.4,
+      "weekday": 0
+    },
+    {
+      "date": "2026-02-10",
+      "daily_avg": 342.92,
+      "valley_val": 288.93,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 439.8,
+      "spread": 150.87,
+      "weekday": 1
+    },
+    {
+      "date": "2026-02-11",
+      "daily_avg": 234.27,
+      "valley_val": -80.0,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 428.76,
+      "spread": 508.76,
+      "weekday": 2
+    },
+    {
+      "date": "2026-02-12",
+      "daily_avg": 106.42,
+      "valley_val": -80.0,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 360.72,
+      "spread": 440.72,
+      "weekday": 3
+    },
+    {
+      "date": "2026-02-13",
+      "daily_avg": 196.73,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 407.3,
+      "spread": 487.3,
+      "weekday": 4
+    },
+    {
+      "date": "2026-02-14",
+      "daily_avg": 43.6,
+      "valley_val": -82.5,
+      "valley_label": "03:45-05:30",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 3,
+      "peak_val": 323.79,
+      "spread": 406.29,
+      "weekday": 5
+    },
+    {
+      "date": "2026-02-15",
+      "daily_avg": 99.2,
+      "valley_val": -80.0,
+      "valley_label": "02:30-04:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 2,
+      "peak_val": 405.11,
+      "spread": 485.11,
+      "weekday": 6
+    },
+    {
+      "date": "2026-02-16",
+      "daily_avg": 199.56,
+      "valley_val": -80.0,
+      "valley_label": "08:00-09:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 396.8,
+      "spread": 476.8,
+      "weekday": 0
+    },
+    {
+      "date": "2026-02-17",
+      "daily_avg": 158.96,
+      "valley_val": -80.0,
+      "valley_label": "07:45-09:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 478.5,
+      "spread": 558.5,
+      "weekday": 1
+    },
+    {
+      "date": "2026-02-18",
+      "daily_avg": 117.45,
+      "valley_val": -80.0,
+      "valley_label": "00:00-01:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 492.17,
+      "spread": 572.17,
+      "weekday": 2
+    },
+    {
+      "date": "2026-02-19",
+      "daily_avg": 123.38,
+      "valley_val": -80.0,
+      "valley_label": "02:30-04:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 2,
+      "peak_val": 550.74,
+      "spread": 630.74,
+      "weekday": 3
+    },
+    {
+      "date": "2026-02-20",
+      "daily_avg": 20.57,
+      "valley_val": -80.0,
+      "valley_label": "03:15-05:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 3,
+      "peak_val": 264.5,
+      "spread": 344.5,
+      "weekday": 4
+    },
+    {
+      "date": "2026-02-21",
+      "daily_avg": -21.5,
+      "valley_val": -80.0,
+      "valley_label": "00:00-01:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 216.44,
+      "spread": 296.44,
+      "weekday": 5
+    },
+    {
+      "date": "2026-02-22",
+      "daily_avg": 56.82,
+      "valley_val": -80.0,
+      "valley_label": "00:00-01:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 449.76,
+      "spread": 529.76,
+      "weekday": 6
+    },
+    {
+      "date": "2026-02-23",
+      "daily_avg": 311.1,
+      "valley_val": -70.0,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 529.9,
+      "spread": 599.9,
+      "weekday": 0
+    },
+    {
+      "date": "2026-02-24",
+      "daily_avg": 330.56,
+      "valley_val": 106.95,
+      "valley_label": "09:45-11:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 395.73,
+      "spread": 288.78,
+      "weekday": 1
+    },
+    {
+      "date": "2026-02-25",
+      "daily_avg": 254.65,
+      "valley_val": -80.0,
+      "valley_label": "10:00-11:45",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 442.56,
+      "spread": 522.56,
+      "weekday": 2
+    },
+    {
+      "date": "2026-02-26",
+      "daily_avg": 322.1,
+      "valley_val": 284.96,
+      "valley_label": "15:15-17:00",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 15,
+      "peak_val": 419.85,
+      "spread": 134.89,
+      "weekday": 3
+    },
+    {
+      "date": "2026-02-27",
+      "daily_avg": 327.15,
+      "valley_val": -80.0,
+      "valley_label": "12:15-14:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 458.8,
+      "spread": 538.8,
+      "weekday": 4
+    },
+    {
+      "date": "2026-02-28",
+      "daily_avg": 252.26,
+      "valley_val": -46.38,
+      "valley_label": "11:30-13:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 352.38,
+      "spread": 398.76,
+      "weekday": 5
+    },
+    {
+      "date": "2026-03-01",
+      "daily_avg": 427.91,
+      "valley_val": 298.63,
+      "valley_label": "03:30-05:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 3,
+      "peak_val": 951.07,
+      "spread": 652.44,
+      "weekday": 6
+    },
+    {
+      "date": "2026-03-02",
+      "daily_avg": 371.73,
+      "valley_val": 290.7,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 526.9,
+      "spread": 236.2,
+      "weekday": 0
+    },
+    {
+      "date": "2026-03-03",
+      "daily_avg": 380.18,
+      "valley_val": 328.23,
+      "valley_label": "01:30-03:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 1,
+      "peak_val": 476.62,
+      "spread": 148.39,
+      "weekday": 1
+    },
+    {
+      "date": "2026-03-04",
+      "daily_avg": 444.23,
+      "valley_val": 300.99,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 995.41,
+      "spread": 694.42,
+      "weekday": 2
+    },
+    {
+      "date": "2026-03-05",
+      "daily_avg": 406.51,
+      "valley_val": 275.9,
+      "valley_label": "22:00-23:45",
+      "valley_period": "夜间(20:00-24:00)",
+      "valley_start_hour": 22,
+      "peak_val": 830.32,
+      "spread": 554.42,
+      "weekday": 3
+    },
+    {
+      "date": "2026-03-06",
+      "daily_avg": 216.68,
+      "valley_val": -80.0,
+      "valley_label": "02:30-04:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 2,
+      "peak_val": 689.94,
+      "spread": 769.94,
+      "weekday": 4
+    },
+    {
+      "date": "2026-03-07",
+      "daily_avg": 279.74,
+      "valley_val": -80.0,
+      "valley_label": "08:15-10:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 553.11,
+      "spread": 633.11,
+      "weekday": 5
+    },
+    {
+      "date": "2026-03-08",
+      "daily_avg": 416.08,
+      "valley_val": -18.0,
+      "valley_label": "13:00-14:45",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 634.98,
+      "spread": 652.98,
+      "weekday": 6
+    },
+    {
+      "date": "2026-03-09",
+      "daily_avg": 219.46,
+      "valley_val": -80.0,
+      "valley_label": "08:15-10:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 551.91,
+      "spread": 631.91,
+      "weekday": 0
+    },
+    {
+      "date": "2026-03-10",
+      "daily_avg": 122.68,
+      "valley_val": -80.0,
+      "valley_label": "07:00-08:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 409.35,
+      "spread": 489.35,
+      "weekday": 1
+    },
+    {
+      "date": "2026-03-11",
+      "daily_avg": 360.95,
+      "valley_val": -82.54,
+      "valley_label": "10:15-12:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 516.32,
+      "spread": 598.86,
+      "weekday": 2
+    },
+    {
+      "date": "2026-03-12",
+      "daily_avg": 309.24,
+      "valley_val": -80.0,
+      "valley_label": "09:00-10:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 559.33,
+      "spread": 639.33,
+      "weekday": 3
+    },
+    {
+      "date": "2026-03-13",
+      "daily_avg": 343.57,
+      "valley_val": -80.0,
+      "valley_label": "07:30-09:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 656.97,
+      "spread": 736.97,
+      "weekday": 4
+    },
+    {
+      "date": "2026-03-14",
+      "daily_avg": 361.37,
+      "valley_val": 325.33,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 390.94,
+      "spread": 65.61,
+      "weekday": 5
+    },
+    {
+      "date": "2026-03-15",
+      "daily_avg": 304.42,
+      "valley_val": -74.61,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 555.29,
+      "spread": 629.9,
+      "weekday": 6
+    },
+    {
+      "date": "2026-03-16",
+      "daily_avg": 398.49,
+      "valley_val": -80.0,
+      "valley_label": "12:15-14:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 643.74,
+      "spread": 723.74,
+      "weekday": 0
+    },
+    {
+      "date": "2026-03-17",
+      "daily_avg": 323.78,
+      "valley_val": -80.0,
+      "valley_label": "09:15-11:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 590.14,
+      "spread": 670.14,
+      "weekday": 1
+    },
+    {
+      "date": "2026-03-18",
+      "daily_avg": 351.9,
+      "valley_val": -81.85,
+      "valley_label": "13:15-15:00",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 513.97,
+      "spread": 595.82,
+      "weekday": 2
+    },
+    {
+      "date": "2026-03-19",
+      "daily_avg": 255.79,
+      "valley_val": -80.0,
+      "valley_label": "07:45-09:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 487.31,
+      "spread": 567.31,
+      "weekday": 3
+    },
+    {
+      "date": "2026-03-20",
+      "daily_avg": 232.51,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 469.88,
+      "spread": 549.88,
+      "weekday": 4
+    },
+    {
+      "date": "2026-03-21",
+      "daily_avg": 208.88,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 375.9,
+      "spread": 455.9,
+      "weekday": 5
+    },
+    {
+      "date": "2026-03-22",
+      "daily_avg": 439.27,
+      "valley_val": 144.74,
+      "valley_label": "10:00-11:45",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 611.13,
+      "spread": 466.39,
+      "weekday": 6
+    },
+    {
+      "date": "2026-03-23",
+      "daily_avg": 389.96,
+      "valley_val": -33.25,
+      "valley_label": "12:45-14:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 515.35,
+      "spread": 548.6,
+      "weekday": 0
+    },
+    {
+      "date": "2026-03-24",
+      "daily_avg": 354.82,
+      "valley_val": -80.0,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 499.9,
+      "spread": 579.9,
+      "weekday": 1
+    },
+    {
+      "date": "2026-03-25",
+      "daily_avg": 228.73,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 420.56,
+      "spread": 500.56,
+      "weekday": 2
+    },
+    {
+      "date": "2026-03-26",
+      "daily_avg": 308.43,
+      "valley_val": -80.0,
+      "valley_label": "13:30-15:15",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 502.69,
+      "spread": 582.7,
+      "weekday": 3
+    },
+    {
+      "date": "2026-03-27",
+      "daily_avg": 360.71,
+      "valley_val": -80.22,
+      "valley_label": "12:15-14:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 671.76,
+      "spread": 751.99,
+      "weekday": 4
+    },
+    {
+      "date": "2026-03-28",
+      "daily_avg": 378.51,
+      "valley_val": 81.99,
+      "valley_label": "10:45-12:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 518.72,
+      "spread": 436.73,
+      "weekday": 5
+    },
+    {
+      "date": "2026-03-29",
+      "daily_avg": 461.64,
+      "valley_val": 29.59,
+      "valley_label": "11:45-13:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 653.43,
+      "spread": 623.85,
+      "weekday": 6
+    },
+    {
+      "date": "2026-03-30",
+      "daily_avg": 301.3,
+      "valley_val": -73.25,
+      "valley_label": "11:30-13:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 395.25,
+      "spread": 468.5,
+      "weekday": 0
+    },
+    {
+      "date": "2026-03-31",
+      "daily_avg": 278.27,
+      "valley_val": 167.78,
+      "valley_label": "11:00-12:45",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 11,
+      "peak_val": 329.33,
+      "spread": 161.55,
+      "weekday": 1
+    },
+    {
+      "date": "2026-04-01",
+      "daily_avg": 321.3,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 533.84,
+      "spread": 613.84,
+      "weekday": 2
+    },
+    {
+      "date": "2026-04-02",
+      "daily_avg": 375.64,
+      "valley_val": -80.0,
+      "valley_label": "12:00-13:45",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 551.07,
+      "spread": 631.07,
+      "weekday": 3
+    },
+    {
+      "date": "2026-04-03",
+      "daily_avg": 350.3,
+      "valley_val": -80.0,
+      "valley_label": "07:45-09:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 732.03,
+      "spread": 812.03,
+      "weekday": 4
+    },
+    {
+      "date": "2026-04-04",
+      "daily_avg": 189.29,
+      "valley_val": -80.0,
+      "valley_label": "07:30-09:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 358.77,
+      "spread": 438.77,
+      "weekday": 5
+    },
+    {
+      "date": "2026-04-05",
+      "daily_avg": 169.84,
+      "valley_val": -80.0,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 370.78,
+      "spread": 450.78,
+      "weekday": 6
+    },
+    {
+      "date": "2026-04-06",
+      "daily_avg": 195.76,
+      "valley_val": -80.0,
+      "valley_label": "07:00-08:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 550.55,
+      "spread": 630.55,
+      "weekday": 0
+    },
+    {
+      "date": "2026-04-07",
+      "daily_avg": 187.51,
+      "valley_val": -80.0,
+      "valley_label": "07:30-09:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 358.88,
+      "spread": 438.88,
+      "weekday": 1
+    },
+    {
+      "date": "2026-04-08",
+      "daily_avg": 304.16,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 599.05,
+      "spread": 679.05,
+      "weekday": 2
+    },
+    {
+      "date": "2026-04-09",
+      "daily_avg": 480.62,
+      "valley_val": 380.55,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 875.43,
+      "spread": 494.89,
+      "weekday": 3
+    },
+    {
+      "date": "2026-04-10",
+      "daily_avg": 306.01,
+      "valley_val": -82.0,
+      "valley_label": "14:00-15:45",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 14,
+      "peak_val": 597.7,
+      "spread": 679.7,
+      "weekday": 4
+    },
+    {
+      "date": "2026-04-11",
+      "daily_avg": 348.09,
+      "valley_val": -80.0,
+      "valley_label": "08:00-09:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 632.21,
+      "spread": 712.21,
+      "weekday": 5
+    },
+    {
+      "date": "2026-04-12",
+      "daily_avg": 282.77,
+      "valley_val": -80.0,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 637.96,
+      "spread": 717.96,
+      "weekday": 6
+    },
+    {
+      "date": "2026-04-13",
+      "daily_avg": 307.12,
+      "valley_val": -81.32,
+      "valley_label": "09:30-11:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 632.32,
+      "spread": 713.64,
+      "weekday": 0
+    },
+    {
+      "date": "2026-04-14",
+      "daily_avg": 318.96,
+      "valley_val": -80.0,
+      "valley_label": "08:15-10:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 540.03,
+      "spread": 620.03,
+      "weekday": 1
+    },
+    {
+      "date": "2026-04-15",
+      "daily_avg": 317.58,
+      "valley_val": -71.18,
+      "valley_label": "10:45-12:30",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 586.64,
+      "spread": 657.81,
+      "weekday": 2
+    },
+    {
+      "date": "2026-04-16",
+      "daily_avg": 571.69,
+      "valley_val": 351.52,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 1300.0,
+      "spread": 948.48,
+      "weekday": 3
+    },
+    {
+      "date": "2026-04-17",
+      "daily_avg": 351.19,
+      "valley_val": -80.2,
+      "valley_label": "10:30-12:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 525.34,
+      "spread": 605.54,
+      "weekday": 4
+    },
+    {
+      "date": "2026-04-18",
+      "daily_avg": 301.32,
+      "valley_val": -81.89,
+      "valley_label": "07:00-08:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 996.8,
+      "spread": 1078.69,
+      "weekday": 5
+    },
+    {
+      "date": "2026-04-19",
+      "daily_avg": 296.2,
+      "valley_val": -81.39,
+      "valley_label": "08:00-09:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 1096.9,
+      "spread": 1178.29,
+      "weekday": 6
+    },
+    {
+      "date": "2026-04-20",
+      "daily_avg": 237.59,
+      "valley_val": -80.85,
+      "valley_label": "14:15-16:00",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 14,
+      "peak_val": 531.32,
+      "spread": 612.16,
+      "weekday": 0
+    },
+    {
+      "date": "2026-04-21",
+      "daily_avg": 363.25,
+      "valley_val": 341.57,
+      "valley_label": "06:15-08:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 379.29,
+      "spread": 37.72,
+      "weekday": 1
+    },
+    {
+      "date": "2026-04-22",
+      "daily_avg": 265.03,
+      "valley_val": -59.84,
+      "valley_label": "12:30-14:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 12,
+      "peak_val": 397.79,
+      "spread": 457.64,
+      "weekday": 2
+    },
+    {
+      "date": "2026-04-23",
+      "daily_avg": 250.65,
+      "valley_val": -77.0,
+      "valley_label": "13:45-15:30",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 393.96,
+      "spread": 470.96,
+      "weekday": 3
+    },
+    {
+      "date": "2026-04-24",
+      "daily_avg": 153.84,
+      "valley_val": -80.81,
+      "valley_label": "09:45-11:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 337.0,
+      "spread": 417.81,
+      "weekday": 4
+    },
+    {
+      "date": "2026-04-25",
+      "daily_avg": 177.34,
+      "valley_val": -80.0,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 364.02,
+      "spread": 444.02,
+      "weekday": 5
+    },
+    {
+      "date": "2026-04-26",
+      "daily_avg": 318.11,
+      "valley_val": -82.5,
+      "valley_label": "06:15-08:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 650.23,
+      "spread": 732.73,
+      "weekday": 6
+    },
+    {
+      "date": "2026-04-27",
+      "daily_avg": 278.71,
+      "valley_val": -81.79,
+      "valley_label": "13:00-14:45",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 790.38,
+      "spread": 872.17,
+      "weekday": 0
+    },
+    {
+      "date": "2026-04-28",
+      "daily_avg": 369.88,
+      "valley_val": -80.0,
+      "valley_label": "07:45-09:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 552.74,
+      "spread": 632.74,
+      "weekday": 1
+    },
+    {
+      "date": "2026-04-29",
+      "daily_avg": 310.75,
+      "valley_val": -80.37,
+      "valley_label": "10:30-12:15",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 587.38,
+      "spread": 667.74,
+      "weekday": 2
+    },
+    {
+      "date": "2026-04-30",
+      "daily_avg": 196.05,
+      "valley_val": -79.51,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 378.41,
+      "spread": 457.92,
+      "weekday": 3
+    },
+    {
+      "date": "2026-05-01",
+      "daily_avg": 348.14,
+      "valley_val": -80.0,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 578.63,
+      "spread": 658.63,
+      "weekday": 4
+    },
+    {
+      "date": "2026-05-02",
+      "daily_avg": 407.03,
+      "valley_val": 360.17,
+      "valley_label": "05:15-07:00",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 550.0,
+      "spread": 189.83,
+      "weekday": 5
+    },
+    {
+      "date": "2026-05-03",
+      "daily_avg": 349.52,
+      "valley_val": -80.0,
+      "valley_label": "10:15-12:00",
+      "valley_period": "中午(10:00-13:00)",
+      "valley_start_hour": 10,
+      "peak_val": 605.44,
+      "spread": 685.44,
+      "weekday": 6
+    },
+    {
+      "date": "2026-05-04",
+      "daily_avg": 248.76,
+      "valley_val": -80.0,
+      "valley_label": "06:45-08:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 548.82,
+      "spread": 628.82,
+      "weekday": 0
+    },
+    {
+      "date": "2026-05-05",
+      "daily_avg": 192.06,
+      "valley_val": -80.43,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 502.3,
+      "spread": 582.72,
+      "weekday": 1
+    },
+    {
+      "date": "2026-05-06",
+      "daily_avg": 232.69,
+      "valley_val": -80.0,
+      "valley_label": "06:00-07:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 614.04,
+      "spread": 694.04,
+      "weekday": 2
+    },
+    {
+      "date": "2026-05-07",
+      "daily_avg": 291.35,
+      "valley_val": -80.45,
+      "valley_label": "07:30-09:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 751.15,
+      "spread": 831.6,
+      "weekday": 3
+    },
+    {
+      "date": "2026-05-08",
+      "daily_avg": 252.93,
+      "valley_val": -80.0,
+      "valley_label": "06:15-08:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 597.46,
+      "spread": 677.46,
+      "weekday": 4
+    },
+    {
+      "date": "2026-05-09",
+      "daily_avg": 165.68,
+      "valley_val": -80.0,
+      "valley_label": "06:00-07:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 520.85,
+      "spread": 600.85,
+      "weekday": 5
+    },
+    {
+      "date": "2026-05-10",
+      "daily_avg": 283.93,
+      "valley_val": -80.0,
+      "valley_label": "06:30-08:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 915.27,
+      "spread": 995.27,
+      "weekday": 6
+    },
+    {
+      "date": "2026-05-11",
+      "daily_avg": 448.44,
+      "valley_val": 87.57,
+      "valley_label": "09:15-11:00",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 577.74,
+      "spread": 490.17,
+      "weekday": 0
+    },
+    {
+      "date": "2026-05-12",
+      "daily_avg": 331.57,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 605.12,
+      "spread": 685.12,
+      "weekday": 1
+    },
+    {
+      "date": "2026-05-13",
+      "daily_avg": 282.92,
+      "valley_val": -80.0,
+      "valley_label": "07:00-08:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 605.85,
+      "spread": 685.85,
+      "weekday": 2
+    },
+    {
+      "date": "2026-05-14",
+      "daily_avg": 357.85,
+      "valley_val": -45.06,
+      "valley_label": "08:45-10:30",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 589.14,
+      "spread": 634.2,
+      "weekday": 3
+    },
+    {
+      "date": "2026-05-15",
+      "daily_avg": 360.81,
+      "valley_val": -70.12,
+      "valley_label": "09:30-11:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 660.82,
+      "spread": 730.94,
+      "weekday": 4
+    },
+    {
+      "date": "2026-05-16",
+      "daily_avg": 410.7,
+      "valley_val": -80.0,
+      "valley_label": "08:30-10:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 8,
+      "peak_val": 667.33,
+      "spread": 747.33,
+      "weekday": 5
+    },
+    {
+      "date": "2026-05-17",
+      "daily_avg": 311.3,
+      "valley_val": -66.03,
+      "valley_label": "09:00-10:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 641.16,
+      "spread": 707.19,
+      "weekday": 6
+    },
+    {
+      "date": "2026-05-18",
+      "daily_avg": 399.07,
+      "valley_val": 337.33,
+      "valley_label": "00:00-01:45",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 0,
+      "peak_val": 428.75,
+      "spread": 91.42,
+      "weekday": 0
+    },
+    {
+      "date": "2026-05-19",
+      "daily_avg": 341.79,
+      "valley_val": 268.48,
+      "valley_label": "05:45-07:30",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 5,
+      "peak_val": 430.24,
+      "spread": 161.76,
+      "weekday": 1
+    },
+    {
+      "date": "2026-05-20",
+      "daily_avg": 376.17,
+      "valley_val": 214.24,
+      "valley_label": "02:30-04:15",
+      "valley_period": "凌晨(00:00-06:00)",
+      "valley_start_hour": 2,
+      "peak_val": 498.44,
+      "spread": 284.21,
+      "weekday": 2
+    },
+    {
+      "date": "2026-05-21",
+      "daily_avg": 274.42,
+      "valley_val": -80.0,
+      "valley_label": "07:00-08:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 7,
+      "peak_val": 620.03,
+      "spread": 700.03,
+      "weekday": 3
+    },
+    {
+      "date": "2026-05-22",
+      "daily_avg": 311.19,
+      "valley_val": -80.0,
+      "valley_label": "06:30-08:15",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 6,
+      "peak_val": 431.35,
+      "spread": 511.35,
+      "weekday": 4
+    },
+    {
+      "date": "2026-05-23",
+      "daily_avg": 331.37,
+      "valley_val": -80.0,
+      "valley_label": "09:00-10:45",
+      "valley_period": "上午(06:00-10:00)",
+      "valley_start_hour": 9,
+      "peak_val": 544.19,
+      "spread": 624.19,
+      "weekday": 5
+    },
+    {
+      "date": "2026-05-24",
+      "daily_avg": 298.7,
+      "valley_val": -80.0,
+      "valley_label": "13:45-15:30",
+      "valley_period": "下午(13:00-17:00)",
+      "valley_start_hour": 13,
+      "peak_val": 550.66,
+      "spread": 630.66,
+      "weekday": 6
+    }
+  ]
+}
