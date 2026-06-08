@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 关键行为规则（最高优先级）
+
+**任务完成即停止：** 任何脚本/命令执行完成后，如果输出中显示成功标志（如 `Saved:`、`done`、退出码 0），任务即为完成。立即告知用户结果并停止，**绝对禁止**以下行为：
+- 禁止运行验证命令（如 `echo "done"`、`python -c "import openpyxl..."` 等）
+- 禁止反复确认文件是否生成
+- 禁止循环检查输出内容
+- 禁止在成功后追加任何额外操作
+
+一次任务 = 一次执行 + 一次结果汇报。**没有验证环节**。脚本的输出本身就是验证。
+
 ## Project overview
 
 山东电力现货市场储能电站（德州润津储能科技有限公司）收益复盘与竞价空间分析数据管线。6 个阶段按顺序串行：
@@ -44,7 +54,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 阶段 | 脚本 | 用法 |
 |------|------|------|
-| 01 | 无（Claude 直接操作 openpyxl） | 读取负荷预测 `.xls` → 写入竞价空间模版 |
+| 01 | `01 biddingSpace_analysis/generate.py` | `python generate.py MMDD [actual] [src_path]` |
 | 02 | `02 Dayahead_Trading_Review/generate.py` | `python generate.py MMDD [src_path]`（用日期特定模版） |
 | 02 | `02 Dayahead_Trading_Review/batch_generate.py` | `python batch_generate.py`（批量处理，用固定模版 `输出模版-0505-日前机组组合收益复盘.xlsx`） |
 | 03 | 无（Claude 直接操作 openpyxl） | 读取实时交易 `.xls` → 写入实时复盘模版 |
@@ -54,8 +64,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 06 | `06 DataMining/extract_prices.py` | `python extract_prices.py` — 提取日前/实时电价 + 竞价空间 96 点数据，生成 ECharts 交互 HTML |
 | 06 | `06 DataMining/generate_analysis_html.py` | `python generate_analysis_html.py` — 生成竞价空间+电价+天气综合分析 HTML（日期范围见 `DATE_RANGE:` 标注）|
 | 06 | `06 DataMining/intraday_viz.py` | 可视化 `shandong_px_intraday_clearing_plan_result` 最近一周日内出清计划数据 |
+| 06 | `06 DataMining/extract_reserve_data.py` | 从 tianrun_new 提取备用容量数据（日前/实际正负备用），输出 `_tmp_reserve_data.json` |
+| 06 | `06 DataMining/gen_reserve_html.py` | 读取 `_tmp_reserve_data.json`，生成备用容量分析 HTML |
+| 06 | `06 DataMining/gen_powerflow_html.py` | 读取 `_tmp_powerflow_data.json`，生成潮流断面利用率分析 HTML |
+| 06 | `06 DataMining/gen_sysbackup_html.py` | 读取 `_tmp_sysbackup_data.json`，生成系统实时备用容量分析 HTML |
+| 06 | `06 DataMining/gen_thermal_backup_html.py` | 读取 `_tmp_thermal_data.json`，生成火电备用对比分析 HTML |
 
-阶段 01 和 03 无独立脚本，由 Claude 按对应 `CLAUDE.md` 中的 sheet mapping 直接操作 `openpyxl` 完成。
+阶段 03 无独立脚本，由 Claude 按对应 `CLAUDE.md` 中的 sheet mapping 直接操作 `openpyxl` 完成。
 
 **阶段 01 竞价空间分析文件命名规则（重要）：**
 
@@ -68,7 +83,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **阶段 02 `generate.py` vs `batch_generate.py`：** 前者用日期特定模版（`assets/MMDD-日前机组组合收益复盘.xlsx`），后者用固定模版 `输出模版-0505-日前机组组合收益复盘.xlsx` 且自动处理带编号后缀的源文件（如 `0509-发电侧日前交易结果查询 (1).xls`）。
 
-**阶段 04 模版（3 sheet）：** 模版为 `assets/输出模版-0504-日结算收益复盘.xlsx`，仅含 3 个 sheet：`充放测算`、`充电日清算费用`、`放电日清算费用`。生成需要三个数据源：充电结算单 `.xlsx`（→ `充电日清算费用`）、放电结算单 `.xlsx`（→ `放电日清算费用`）、实时复盘 `.xlsx`（→ J4 容量分摊系数 + I8-I14 参数）。J4 通过 `compute_J4()` 从实时复盘文件的 `容量分摊系数` 和 `报价及预中标` 加权计算得到。
+**阶段 04 模版（3 sheet）：** 模版为 `assets/输出模版-0525-日结算收益复盘.xlsx`，仅含 3 个 sheet：`充放测算`、`充电日清算费用`、`放电日清算费用`。生成需要三个数据源：充电结算单 `.xlsx`（→ `充电日清算费用`）、放电结算单 `.xlsx`（→ `放电日清算费用`）、实时复盘 `.xlsx`（→ J4 容量分摊系数 + I8-I14 参数）。J4 通过 `compute_J4()` 从实时复盘文件的 `容量分摊系数` 和 `报价及预中标` 加权计算得到。
 
 **阶段 06 `db_viewer.py`：** 通过 pymysql 连接天机数据库（`tianrun_new`），支持预设查询（`clearing_price` / `supply_demand` / `boundary`）和自定义 SQL，生成 ECharts 交互式折线图 HTML。`Peak-valley price difference analysis/` 下有峰谷价差分析 HTML。天机临时查询脚本用完需清理（如 `_tmp_query.py`）。
 
@@ -89,11 +104,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 日前/实时电价：从 `02/03 Dayahead/Real-time_Trading_Review/output/MMDD-*-复盘.xlsx` 的 `报价及预中标` sheet 读取 J 列（行 2-97）
 - 竞价空间：从 `01 biddingSpace_analysis/output/MMDD-竞价空间分析.xlsx` 的 `Sheet1` 读取行 3-6（直调负荷、联络线受电、风电总加、光伏总加），计算 `行3 - 行4 - 行5 - 行6`（行 7 是公式，`data_only=True` 读取返回 None，需手动计算）
 
-修改脚本顶部的 `DATES` 列表和 `DATE_LABELS` 字典指定日期范围。
-
 **阶段 06 策略分析文档：**
 - `电价分析操作手册.md` — 数据来源、数据结构、提取脚本用法、常见问题
 - `策略复盘结论.md` — 策略规则汇总、竞价空间锚点、多日对比验证
+
+**阶段 06 extract → gen 数据管线：** 5 个 `extract_*.py` / `gen_*.html.py` 配对脚本遵循统一模式：extract 从数据库查询数据写入项目根目录 `_tmp_*.json`，gen 读取 JSON 生成 ECharts HTML。修改日期范围只需编辑 extract 脚本顶部的 `START_DATE`/`END_DATE`，然后重新运行 extract + gen 即可。
 
 **阶段 05 增量更新机制：** `process_data.py` 以上一轮 `output/` 中的文件为基础进行增量更新。带 filter 的单类型更新不会覆盖其他类型已写入的数据。首次运行需从 `assets/` 的模版开始。
 

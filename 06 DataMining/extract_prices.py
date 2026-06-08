@@ -1,5 +1,5 @@
 """
-提取 5月18-24日 日前/实时 电价数据，生成交互式 ECharts HTML。
+提取 5月18-6月3日 日前/实时 电价数据，生成交互式 ECharts HTML。
 用法: python extract_prices.py
 """
 
@@ -7,22 +7,34 @@ import json
 import openpyxl
 from pathlib import Path
 
-DATES = ["0518", "0519", "0520", "0521", "0522", "0523", "0524"]
+DATES = ["0518", "0519", "0520", "0521", "0522", "0523", "0524",
+        "0525", "0526", "0527", "0528", "0529", "0530", "0531",
+        "0601", "0602", "0603"]
 DATE_LABELS = {
-    "0518": "5月18日(周日)",
-    "0519": "5月19日(周一)",
-    "0520": "5月20日(周二)",
-    "0521": "5月21日(周三)",
-    "0522": "5月22日(周四)",
-    "0523": "5月23日(周五)",
-    "0524": "5月24日(周六)",
+    "0518": "5月18日(周一)",
+    "0519": "5月19日(周二)",
+    "0520": "5月20日(周三)",
+    "0521": "5月21日(周四)",
+    "0522": "5月22日(周五)",
+    "0523": "5月23日(周六)",
+    "0524": "5月24日(周日)",
+    "0525": "5月25日(周一)",
+    "0526": "5月26日(周二)",
+    "0527": "5月27日(周三)",
+    "0528": "5月28日(周四)",
+    "0529": "5月29日(周五)",
+    "0530": "5月30日(周六)",
+    "0531": "5月31日(周日)",
+    "0601": "6月1日(周一)",
+    "0602": "6月2日(周二)",
+    "0603": "6月3日(周三)",
 }
 
 BASE = Path(__file__).resolve().parent.parent  # project root
 DA_DIR = BASE / "02 Dayahead_Trading_Review" / "output"
 RT_DIR = BASE / "03 Real-time_Trading_Review" / "output"
 BS_DIR = BASE / "01 biddingSpace_analysis" / "output"
-OUTPUT = BASE / "06 DataMining" / "电价对比_0518-0524.html"
+OUTPUT = BASE / "06 DataMining" / "电价对比_0518-0603.html"
 
 SHEET_NAME = "报价及预中标"
 PRICE_COL = 10  # column J (1-indexed)
@@ -145,7 +157,7 @@ def generate_html(data: dict):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>电价对比 5月18日-24日 (96点)</title>
+<title>电价对比 5月18日-6月3日 (96点)</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 <style>
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
@@ -184,7 +196,7 @@ def generate_html(data: dict):
 </head>
 <body>
 <div class="header">
-  <h1>⚡ 储能电站电价对比 — 5月18日 ~ 24日</h1>
+  <h1>⚡ 储能电站电价对比 — 5月18日 ~ 6月3日</h1>
   <p>德州润津储能科技有限公司 · 日前 vs 实时 · 每日96点（15分钟间隔）</p>
 </div>
 
@@ -452,7 +464,7 @@ window.addEventListener('resize', () => chart.resize());
 
 
 if __name__ == "__main__":
-    print("=== 提取电价数据 (5月18-24日) ===\n")
+    print("=== 提取电价数据 (5月18-6月3日) ===\n")
     data = collect_all()
     print("\n=== 生成 HTML ===")
     generate_html(data)

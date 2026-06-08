@@ -8,7 +8,7 @@ Daily settlement review (阶段 04) — consolidates charge/discharge settlement
 
 ## Template
 
-`assets/输出模版-0504-日结算收益复盘.xlsx` — 3 sheets only:
+`assets/输出模版-0525-日结算收益复盘.xlsx` — 3 sheets only:
 
 | Sheet | Source | Description |
 |-------|--------|-------------|

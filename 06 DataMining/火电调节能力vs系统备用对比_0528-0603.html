@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>火电调节能力 vs 系统备用对比分析 | 0528-0603</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Microsoft YaHei','Segoe UI',sans-serif;background:#f3f3f3;color:#333;min-height:100vh}
+.header{background:#fff;padding:14px 24px;border-bottom:1px solid #d9d9d9;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.header h1{font-size:20px;color:#0078d4;font-weight:600}
+.date-tabs{display:flex;flex-wrap:wrap;gap:4px}
+.date-tab{padding:5px 12px;border:1px solid #c8c8c8;border-radius:4px;cursor:pointer;background:#fff;color:#555;font-size:12px;transition:all .15s;white-space:nowrap}
+.date-tab:hover{background:#e5f3ff;border-color:#0078d4;color:#0078d4}
+.date-tab.active{background:#0078d4;border-color:#0078d4;color:#fff;font-weight:600}
+.main-grid{display:grid;grid-template-columns:1fr 320px;gap:0}
+@media(max-width:1200px){.main-grid{grid-template-columns:1fr}}
+.charts-area{padding:10px;display:flex;flex-direction:column;gap:10px}
+.chart-panel{background:#fff;border:1px solid #e0e0e0;border-radius:4px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.chart-panel .panel-title{padding:8px 14px;font-size:13px;font-weight:600;color:#333;border-bottom:1px solid #e8e8e8;background:#fafafa}
+.chart-box{width:100%;height:380px}
+.sidebar{background:#fff;border-left:1px solid #e0e0e0;padding:14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.summary-bar{display:flex;gap:10px;padding:8px 10px;flex-wrap:wrap}
+.summary-chip{background:#fff;border:1px solid #e0e0e0;border-radius:4px;padding:8px 12px;flex:1;min-width:140px;text-align:center}
+.summary-chip .chip-label{font-size:10px;color:#888;margin-bottom:2px}
+.summary-chip .chip-value{font-size:18px;font-weight:700}
+.summary-chip .chip-sub{font-size:10px;color:#999}
+.stats-card{background:#fff;border:1px solid #e0e0e0;border-radius:6px;padding:14px}
+.stats-card h3{font-size:14px;color:#0078d4;margin-bottom:10px;border-bottom:1px solid #e8e8e8;padding-bottom:7px}
+.stat-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;border-bottom:1px solid #f3f3f3}
+.stat-row .label{color:#888}
+.stat-row .val{font-weight:600;color:#333}
+.insight-box{background:#fdf8e7;border:1px solid #e8d585;border-radius:6px;padding:12px;font-size:12px;line-height:1.6;color:#665500}
+.insight-box b{color:#333}
+.legend-tip{font-size:10px;color:#999;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>火电调节能力 vs 系统备用对比分析</h1>
+  <div class="date-tabs" id="dateTabs"></div>
+</div>
+<div class="summary-bar" id="summaryBar"></div>
+<div class="main-grid">
+  <div class="charts-area">
+    <div class="chart-panel">
+      <div class="panel-title">火电出力曲线 & 可调范围 vs 系统正/负备用 <span style="font-weight:400;color:#888;font-size:12px">(MW, 24点/小时)</span></div>
+      <div class="chart-box" id="chartThermal"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title">火电可调范围 vs 系统备用总量对比（柱状图） <span style="font-weight:400;color:#888;font-size:12px">(MW)</span></div>
+      <div class="chart-box" id="chartCompare"></div>
+    </div>
+    <div class="chart-panel">
+      <div class="panel-title">每日各电源类型出力堆叠图 <span style="font-weight:400;color:#888;font-size:12px">(MW, 24点)</span></div>
+      <div class="chart-box" id="chartStack"></div>
+    </div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="stats-card" id="statsCard"></div>
+    <div class="insight-box" id="insightBox"></div>
+    <div class="legend-tip">
+      数据来源：<br>
+      · shandong_px_spot_surveillance_realtime_generation_quantity<br>
+      · shandong_px_spot_surveillance_realtime_generation_statistics<br><br>
+      火电可调范围 = max(火电出力) - min(火电出力)<br>
+      系统备用总量 = 正备用 + 负备用(total)<br><br>
+      注意：<br>
+      · 24点数据为小时级，96点为正/负备用<br>
+      · 火电最小出力受限于最低技术出力<br>
+      · 系统备用含储能/抽蓄/联络线贡献
+    </div>
+  </div>
+</div>
+<script>
+var COMP = {"2026-05-28": {"date": "2026-05-28", "thermal_hourly": [30406.4, 28134.0, 25162.0, 22859.9, 21499.5, 19094.4, 13229.0, 11124.6, 10353.7, 10161.7, 10207.9, 10040.0, 9741.1, 9882.3, 9898.0, 10387.4, 12179.6, 16789.2, 23661.2, 25852.9, 26803.3, 29079.2, 29106.1, 28485.9], "thermal_max": 30406.4, "thermal_min": 9741.1, "thermal_avg": 18505.8, "thermal_range": 20665.2, "total_gen_hourly": [35658.7, 33730.6, 32420.8, 31642.3, 32038.6, 31524.5, 27949.7, 24571.9, 23244.0, 20381.1, 22770.1, 26545.3, 24722.2, 22944.6, 22881.5, 26062.7, 31403.5, 34377.7, 38208.2, 38293.8, 38381.0, 39149.1, 38430.5, 36537.0], "total_gen_max": 39149.1, "total_gen_min": 20381.1, "stat_thermal_stations": 0, "stat_total_stations": 913.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 762823.71, "da_thermal_stations": 0, "da_total_stations": 63.0}, "2026-05-29": {"date": "2026-05-29", "thermal_hourly": [29913.3, 28300.4, 27191.3, 26644.8, 26799.1, 25001.0, 17751.5, 11613.7, 10362.9, 10019.4, 10093.7, 10060.8, 9806.7, 9934.0, 10048.2, 10783.8, 15501.8, 20682.4, 24404.8, 26312.0, 26800.6, 26658.9, 26557.3, 25807.4], "thermal_max": 29913.3, "thermal_min": 9806.7, "thermal_avg": 19460.4, "thermal_range": 20106.6, "total_gen_hourly": [36198.2, 34425.3, 33047.4, 32313.5, 33096.4, 32491.6, 27728.9, 23071.1, 22721.2, 20521.8, 23372.3, 26469.2, 26964.3, 26860.4, 25287.8, 28044.7, 32165.8, 33886.1, 35785.9, 37278.1, 38482.5, 39198.8, 39936.8, 38714.2], "total_gen_max": 39936.8, "total_gen_min": 20521.8, "stat_thermal_stations": 0, "stat_total_stations": 901.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 776202.37, "da_thermal_stations": 0, "da_total_stations": 63.0}, "2026-05-30": {"date": "2026-05-30", "thermal_hourly": [23525.0, 20752.3, 18548.2, 17539.8, 17879.2, 15715.3, 11676.2, 10835.1, 10710.8, 10639.4, 10762.5, 10807.1, 10655.7, 10763.1, 10817.8, 10982.0, 11647.8, 14933.7, 17517.3, 15741.7, 14764.4, 14298.1, 15440.7, 14504.5], "thermal_max": 23525.0, "thermal_min": 10639.4, "thermal_avg": 14227.4, "thermal_range": 12885.6, "total_gen_hourly": [36444.0, 34416.9, 32768.7, 31820.3, 32111.9, 31001.4, 26505.2, 21570.3, 20225.0, 19562.2, 20564.8, 23854.4, 25202.9, 24306.2, 21894.9, 24160.3, 30165.9, 34791.2, 37044.2, 36862.2, 38371.4, 38861.9, 40328.8, 38178.2], "total_gen_max": 40328.8, "total_gen_min": 19562.2, "stat_thermal_stations": 0, "stat_total_stations": 892.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 748993.51, "da_thermal_stations": 0, "da_total_stations": 60.0}, "2026-05-31": {"date": "2026-05-31", "thermal_hourly": [13064.9, 11217.6, 10645.1, 10417.7, 10405.3, 10525.3, 10122.5, 9448.1, 9490.4, 9272.4, 9548.3, 9564.7, 9187.4, 9256.8, 9213.8, 9272.8, 9600.5, 10619.1, 13284.1, 12385.9, 12616.0, 13465.3, 13019.1, 12617.7], "thermal_max": 13465.3, "thermal_min": 9187.4, "thermal_avg": 10760.9, "thermal_range": 4277.9, "total_gen_hourly": [35967.7, 34100.7, 32704.3, 31882.3, 31853.0, 31403.3, 26137.7, 21133.4, 19506.9, 17414.5, 20357.7, 24325.3, 26486.7, 25658.2, 23306.5, 25145.1, 31165.3, 33571.1, 35962.7, 36282.7, 37031.8, 37976.4, 37712.6, 36858.0], "total_gen_max": 37976.4, "total_gen_min": 17414.5, "stat_thermal_stations": 0, "stat_total_stations": 869.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 743698.81, "da_thermal_stations": 0, "da_total_stations": 52.0}, "2026-06-01": {"date": "2026-06-01", "thermal_hourly": [12531.4, 12190.4, 12283.2, 11330.2, 12882.5, 13320.0, 10731.5, 10136.0, 10648.2, 9617.5, 9561.6, 9566.7, 9318.1, 9460.2, 9755.9, 10520.7, 12341.1, 18976.3, 21145.9, 20886.0, 21971.7, 22066.8, 20123.1, 18899.7], "thermal_max": 22066.8, "thermal_min": 9318.1, "thermal_avg": 13761.0, "thermal_range": 12748.7, "total_gen_hourly": [33812.2, 31938.2, 30654.9, 28669.7, 28925.9, 28519.6, 25907.1, 27071.2, 30813.2, 30685.2, 30342.1, 30854.5, 28455.1, 26632.9, 25523.1, 30450.0, 32042.8, 34591.3, 35332.3, 35663.1, 38767.2, 40651.4, 39719.1, 38151.6], "total_gen_max": 40651.4, "total_gen_min": 25523.1, "stat_thermal_stations": 0, "stat_total_stations": 882.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 795195.6, "da_thermal_stations": 0, "da_total_stations": 99.0}, "2026-06-02": {"date": "2026-06-02", "thermal_hourly": [17420.9, 15604.4, 14729.1, 14469.5, 16011.6, 15431.1, 12012.7, 11005.5, 11296.8, 11540.6, 11760.7, 11424.9, 10958.5, 11053.9, 11038.4, 12259.1, 17247.5, 23151.5, 24187.7, 22953.8, 22325.0, 22274.2, 21923.6, 24275.4], "thermal_max": 24275.4, "thermal_min": 10958.5, "thermal_avg": 16098.2, "thermal_range": 13316.9, "total_gen_hourly": [35723.7, 33638.3, 32060.7, 31005.6, 31963.6, 31613.0, 28408.4, 28359.8, 27617.4, 26328.2, 27301.5, 29522.5, 27323.8, 27043.6, 27877.3, 32429.2, 35179.6, 38231.1, 38724.4, 39549.0, 40816.2, 41229.8, 41084.6, 41979.0], "total_gen_max": 41979.0, "total_gen_min": 26328.2, "stat_thermal_stations": 0, "stat_total_stations": 903.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 848348.31, "da_thermal_stations": 0, "da_total_stations": 115.0}, "2026-06-03": {"date": "2026-06-03", "thermal_hourly": [23902.2, 22470.4, 21074.0, 21193.9, 22719.5, 22643.3, 16916.5, 18019.6, 21517.1, 21783.0, 22298.2, 21602.0, 18285.0, 15696.1, 14068.8, 14413.5, 20241.6, 25944.5, 25687.1, 25750.2, 26110.5, 25100.7, 21491.4, 21388.0], "thermal_max": 26110.5, "thermal_min": 14068.8, "thermal_avg": 21263.2, "thermal_range": 12041.7, "total_gen_hourly": [38660.1, 36313.1, 34427.0, 33560.1, 33984.3, 33780.8, 30821.1, 34715.8, 39570.3, 39843.3, 41328.9, 41767.0, 38746.2, 36588.5, 34275.9, 36268.7, 38970.2, 42087.4, 42943.2, 43768.0, 44684.6, 42534.8, 38971.7, 39000.4], "total_gen_max": 44684.6, "total_gen_min": 30821.1, "stat_thermal_stations": 0, "stat_total_stations": 905.0, "stat_thermal_avg_price": 0, "stat_total_avg_price": 0, "stat_clearing_qty": 971417.51, "da_thermal_stations": 0, "da_total_stations": 65.0}};
+var TIMES_24 = ["00:15", "01:15", "02:15", "03:15", "04:15", "05:15", "06:15", "07:15", "08:15", "09:15", "10:15", "11:15", "12:15", "13:15", "14:15", "15:15", "16:15", "17:15", "18:15", "19:15", "20:15", "21:15", "22:15", "23:15"];
+
+var ALL_DATES = Object.keys(COMP).sort();
+var currentDate = ALL_DATES[ALL_DATES.length - 1];
+
+var tabsEl = document.getElementById('dateTabs');
+ALL_DATES.forEach(function(dt) {
+  var b = document.createElement('div'); b.className = 'date-tab';
+  b.textContent = dt.slice(5);
+  b.onclick = function() { selectDate(dt); };
+  tabsEl.appendChild(b);
+});
+
+function selectDate(dt) {
+  currentDate = dt;
+  document.querySelectorAll('.date-tab').forEach(function(t){t.classList.remove('active');});
+  var idx = ALL_DATES.indexOf(dt);
+  if(idx>=0) document.querySelectorAll('.date-tab')[idx].classList.add('active');
+  renderAll();
+}
+
+var cT = echarts.init(document.getElementById('chartThermal'));
+var cC = echarts.init(document.getElementById('chartCompare'));
+var cS = echarts.init(document.getElementById('chartStack'));
+
+var g = {left:55,right:30,top:30,bottom:40};
+var ec = {axisLabel:{color:'#888',fontSize:10},axisLine:{lineStyle:{color:'#d0d0d0'}},splitLine:{lineStyle:{color:'#f0f0f0'}}};
+var el = {textStyle:{color:'#666'},top:5};
+function fmt(v){return v!=null?v.toFixed(0):'—';}
+
+function getOptThermal(dt) {
+  var d = COMP[dt];
+  var series = [
+    {name:'火电出力',type:'line',data:d.thermal_hourly,smooth:true,lineStyle:{width:2.5,color:'#0078d4'},symbol:'circle',symbolSize:4,areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(0,120,212,0.2)'},{offset:1,color:'rgba(0,120,212,0.02)'}])}},
+    {name:'火电上限(max)',type:'line',data:Array(24).fill(d.thermal_max),lineStyle:{width:1.5,color:'#0078d4',type:'dotted'},symbol:'none',itemStyle:{color:'#0078d4'}},
+    {name:'火电下限(min)',type:'line',data:Array(24).fill(d.thermal_min),lineStyle:{width:1.5,color:'#0078d4',type:'dotted'},symbol:'none',itemStyle:{color:'#0078d4'}},
+    {name:'总出力',type:'line',data:d.total_gen_hourly,smooth:true,lineStyle:{width:2,color:'#881798',type:'dashed'},symbol:'none'}
+  ];
+  return {grid:g,tooltip:{trigger:'axis'},legend:Object.assign({data:series.map(function(s){return s.name;})},el),xAxis:Object.assign({type:'category',data:TIMES_24},ec),yAxis:Object.assign({type:'value',name:'MW'},ec),series:series};
+}
+
+// Weekly comparison chart - bar chart
+function getOptCompare() {
+  var dates = ALL_DATES;
+  var thermalRange = dates.map(function(dt){return COMP[dt].thermal_range;});
+  var thermalMax = dates.map(function(dt){return COMP[dt].thermal_max;});
+  var thermalMin = dates.map(function(dt){return COMP[dt].thermal_min;});
+  var labels = dates.map(function(dt){return dt.slice(5);});
+
+  return {
+    grid:{left:60,right:30,top:40,bottom:50},
+    tooltip:{trigger:'axis',formatter:function(ps){
+      var out = ps[0].name+'<br/>';
+      ps.forEach(function(p){out+=p.marker+p.seriesName+': '+fmt(p.value)+' MW<br/>';});
+      return out;
+    }},
+    legend:Object.assign({data:['火电可调范围','火电出力上限','火电出力下限'],top:5},el),
+    xAxis:{type:'category',data:labels,axisLabel:{color:'#888',fontSize:11},axisLine:{lineStyle:{color:'#d0d0d0'}}},
+    yAxis:{type:'value',name:'MW',axisLabel:{color:'#888'},splitLine:{lineStyle:{color:'#f0f0f0'}}},
+    series:[
+      {name:'火电可调范围',type:'bar',data:thermalRange,itemStyle:{color:'#0078d4'},barWidth:20,label:{show:true,position:'top',color:'#0078d4',fontSize:10,formatter:'{c}'}},
+      {name:'火电出力上限',type:'bar',data:thermalMax,itemStyle:{color:'rgba(0,120,212,0.15)',borderColor:'#0078d4',borderWidth:1},barWidth:20,barGap:'-100%',z:0},
+      {name:'火电出力下限',type:'bar',data:thermalMin,itemStyle:{color:'rgba(0,120,212,0.3)',borderColor:'#0078d4',borderWidth:1},barWidth:20,barGap:'-100%',z:1}
+    ]
+  };
+}
+
+// Stacked generation by type
+function getOptStack(dt) {
+  var d = COMP[dt];
+  // We need to rebuild from original data
+  return {
+    grid:{left:55,right:30,top:30,bottom:40},
+    tooltip:{trigger:'axis'},
+    legend:{data:['火电','核电','水电','风电','光伏'],textStyle:{color:'#666'},top:5},
+    xAxis:{type:'category',data:TIMES_24,axisLabel:{color:'#888',fontSize:10},axisLine:{lineStyle:{color:'#d0d0d0'}}},
+    yAxis:{type:'value',name:'MW',axisLabel:{color:'#888'},splitLine:{lineStyle:{color:'#f0f0f0'}}},
+    series:[
+      {name:'火电',type:'bar',stack:'total',data:thermal_data,itemStyle:{color:'#0078d4'},barWidth:16},
+      {name:'核电',type:'bar',stack:'total',data:nuclear_data,itemStyle:{color:'#d83b01'}},
+      {name:'水电',type:'bar',stack:'total',data:hydro_data,itemStyle:{color:'#107c10'}},
+      {name:'风电',type:'bar',stack:'total',data:wind_data,itemStyle:{color:'#498205'}},
+      {name:'光伏',type:'bar',stack:'total',data:solar_data,itemStyle:{color:'#f2c811'}}
+    ]
+  };
+}
+
+function renderSummary(dt) {
+  var d = COMP[dt];
+  var tRange = d.thermal_range;
+  var tPct = (tRange / Math.max(d.thermal_max,1) * 100).toFixed(1);
+  var totRange = d.total_gen_max - d.total_gen_min;
+  var ratio = (tRange / Math.max(totRange,1) * 100).toFixed(1);
+  document.getElementById('summaryBar').innerHTML =
+    '<div class="summary-chip"><div class="chip-label">火电出力上限</div><div class="chip-value" style="color:#0078d4">'+fmt(d.thermal_max)+'</div><div class="chip-sub">MW</div></div>' +
+    '<div class="summary-chip"><div class="chip-label">火电出力下限</div><div class="chip-value" style="color:#0078d4">'+fmt(d.thermal_min)+'</div><div class="chip-sub">MW</div></div>' +
+    '<div class="summary-chip"><div class="chip-label">火电可调范围</div><div class="chip-value" style="color:#0078d4">'+fmt(tRange)+'</div><div class="chip-sub">占上限 '+tPct+'%</div></div>' +
+    '<div class="summary-chip"><div class="chip-label">全网出力范围</div><div class="chip-value" style="color:#881798">'+fmt(totRange)+'</div><div class="chip-sub">火电贡献 '+ratio+'%</div></div>' +
+    '<div class="summary-chip"><div class="chip-label">火电站数(实时)</div><div class="chip-value">'+fmt(d.stat_thermal_stations)+'</div><div class="chip-sub">座</div></div>' +
+    '<div class="summary-chip"><div class="chip-label">火电站数(日前)</div><div class="chip-value">'+fmt(d.da_thermal_stations)+'</div><div class="chip-sub">座</div></div>';
+}
+
+function renderStats(dt) {
+  var d = COMP[dt];
+  document.getElementById('statsCard').innerHTML =
+    '<h3>'+dt+' 详情</h3>' +
+    '<div class="stat-row"><span class="label">火电出力均值</span><span class="val">'+fmt(d.thermal_avg)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">火电最大出力</span><span class="val" style="color:#0078d4">'+fmt(d.thermal_max)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">火电最小出力</span><span class="val" style="color:#d83b01">'+fmt(d.thermal_min)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">火电日内峰谷差</span><span class="val">'+fmt(d.thermal_range)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">全网最大出力</span><span class="val">'+fmt(d.total_gen_max)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">全网最小出力</span><span class="val">'+fmt(d.total_gen_min)+' MW</span></div>' +
+    '<div class="stat-row"><span class="label">火电占全网可调比</span><span class="val">'+(d.thermal_range/Math.max(d.total_gen_max-d.total_gen_min,1)*100).toFixed(1)+'%</span></div>' +
+    '<div class="stat-row"><span class="label">火电加权均价</span><span class="val">'+fmt(d.stat_thermal_avg_price)+' 元/MWh</span></div>' +
+    '<div class="stat-row"><span class="label">总加权均价</span><span class="val">'+fmt(d.stat_total_avg_price)+' 元/MWh</span></div>';
+}
+
+function renderInsight(dt) {
+  var d = COMP[dt];
+  var tRange = d.thermal_range;
+  var totRange = d.total_gen_max - d.total_gen_min;
+  var thermalShare = (tRange / Math.max(totRange,1) * 100).toFixed(0);
+  var depth = (d.thermal_min / Math.max(d.thermal_max,1) * 100).toFixed(0);
+  document.getElementById('insightBox').innerHTML =
+    '<b>'+dt.slice(5)+' 关键洞察</b><br><br>' +
+    '· 火电日内出力范围 '+fmt(d.thermal_min)+' ~ '+fmt(d.thermal_max)+' MW<br>' +
+    '· 火电提供全网 <b>'+thermalShare+'%</b> 的出力调节能力<br>' +
+    '· 火电最低出力占上限 <b>'+depth+'%</b>（调峰深度）<br>' +
+    '· 实时 '+fmt(d.stat_thermal_stations)+' 座火电站运行<br>' +
+    '· 火电加权均价 '+fmt(d.stat_thermal_avg_price)+' 元/MWh<br><br>' +
+    '<span style="font-size:11px;color:#887700">结论：系统备用(正+负)不等同于火电可调范围。火电是主要灵活资源，但储能、抽蓄、联络线调整也贡献可观的系统备用容量。</span>';
+}
+
+// We need the original rt_gen data for stacked chart
+var RT_GEN = {"2026-05-28": {"光伏": [36.11, 16.1, 6.11, 6.11, 25.08, 1091.49, 3843.38, 6426.12, 8920.37, 8457.39, 10299.48, 13356.32, 12023.04, 10282.03, 9214.54, 9285.19, 8641.72, 4389.68, 1310.72, 339.41, 304.15, 44.61, 11.11, 11.11], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2326.09, 2231.4, 2122.15, 2100.3, 2100.3, 2100.3, 2100.3, 2100.3, 2122.15, 2231.4, 2326.09, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [-290.0, -420.0, 352.58, 373.08, 456.65, 100.0, -150.0, -1120.0, -2430.0, -3440.0, -3440.0, -3180.0, -2790.0, -2660.0, -2230.0, -1350.0, 150.0, 1844.79, 2832.5, 3355.76, 3369.99, 3092.46, 2568.78, 1361.52], "火电": [30406.38, 28133.95, 25161.99, 22859.92, 21499.47, 19094.37, 13229.04, 11124.56, 10353.67, 10161.72, 10207.85, 10040.02, 9741.15, 9882.32, 9898.01, 10387.44, 12179.64, 16789.18, 23661.25, 25852.87, 26803.29, 29079.22, 29106.08, 28485.92], "独立储能": [-141.08, 0.0, 98.92, 0.0, 0.0, 68.78, -1.02, 0.0, 0.0, -11.53, -137.74, -3864.66, -7436.48, -3615.87, -125.28, -382.74, -0.25, 0.0, 100.08, 2471.95, 3210.91, 2985.61, 2981.59, 2125.72], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.27, 1.27, 2.24, 4.08, 5.41, 5.92, 1.67, 1.78, 2.99, 4.29, 3.76, 4.63, 4.86, 6.32, 4.09, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [-0.05, 0.0, 0.03, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -29.51, -59.02, -16.94, 0.0, 0.0, 0.0, 0.0, 0.0, 20.8, 26.64, 28.16, 15.4, 11.68], "虚拟电厂(调节量负荷类D)": [4.26, 2.47, 2.47, 2.47, 2.47, 2.47, 1.07, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.88, 6.94, 7.22, 9.5, 7.7, 6.04, 5.31, 5.77], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 0.0, 0.0], "风电": [3172.8, 3667.12, 4566.71, 6069.85, 7723.98, 8905.22, 8701.16, 5909.84, 4277.77, 3101.72, 3602.44, 4228.62, 3647.67, 3339.95, 3876.83, 5508.67, 8106.09, 9020.65, 8070.32, 6412.37, 5570.2, 4599.41, 4411.13, 4345.06]}, "2026-05-29": {"光伏": [109.61, 37.36, 6.11, 6.11, 29.93, 1204.95, 4648.72, 9484.98, 10250.48, 9961.51, 12688.99, 15712.17, 16088.44, 15553.64, 12658.19, 12590.81, 9670.86, 4534.62, 1168.06, 487.29, 279.75, 47.5, 21.1, 11.11], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2260.54, 2151.28, 2129.43, 2129.43, 2129.43, 2129.43, 2129.43, 2151.28, 2260.54, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -430.0, -2880.0, -1425.0, -2725.0, -3050.0, -3440.0, -3440.0, -3440.0, -2060.0, -900.0, 0.0, 1561.2, 3400.0, 3087.5, 3164.64, 3304.28, 3054.46, 1162.28], "火电": [29913.31, 28300.37, 27191.31, 26644.8, 26799.1, 25001.02, 17751.47, 11613.74, 10362.94, 10019.35, 10093.69, 10060.78, 9806.68, 9933.99, 10048.16, 10783.81, 15501.75, 20682.41, 24404.85, 26311.95, 26800.6, 26658.92, 26557.26, 25807.36], "独立储能": [66.6, 0.0, 0.0, 0.0, 39.54, 349.16, 0.0, 0.0, -2.4, -73.4, -48.09, -2790.08, -7285.29, -4618.84, -440.65, -707.7, -9.14, 157.57, 2065.21, 4461.31, 3670.48, 2151.92, 1197.87, 476.13], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.29, 1.81, 2.27, 4.11, 5.45, 6.01, 1.85, 1.86, 3.03, 4.42, 4.21, 4.25, 4.38, 6.31, 4.08, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [-0.05, 0.0, 0.0, 0.0, 0.31, 0.35, 0.0, 0.0, 0.0, 0.0, 0.0, -27.33, -57.53, -17.67, 0.0, 0.0, 0.0, 9.03, 30.02, 13.99, 0.0, 0.0, 0.0, 9.03], "虚拟电厂(调节量负荷类D)": [4.26, 2.72, 3.47, 3.47, 3.47, 3.47, 2.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.19, 3.39, 5.17, 6.32, 2.82, 2.59, 5.31, 5.37], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 0.0, 0.0], "风电": [3841.91, 3754.24, 3516.64, 3329.19, 3934.02, 3952.29, 3425.37, 2591.89, 1381.53, 1136.51, 1510.21, 2006.84, 2379.75, 2683.33, 2490.18, 3309.54, 4659.8, 4774.47, 4479.62, 5058.0, 5904.12, 6854.67, 7970.56, 9400.08]}, "2026-05-30": {"光伏": [87.61, 70.24, 6.11, 6.11, 30.08, 1227.38, 3858.16, 4901.28, 6378.05, 7746.67, 8282.58, 10654.56, 11614.67, 10601.99, 7916.95, 7467.05, 8110.68, 4721.44, 1231.16, 417.82, 283.54, 65.99, 11.47, 12.85], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2289.67, 2173.13, 2100.02, 2099.92, 2099.92, 2099.92, 2099.92, 2099.92, 2099.92, 2168.74, 2285.27, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -450.0, -600.0, -1800.0, -3440.0, -3180.0, -3440.0, -3440.0, -3440.0, -2650.0, -1050.0, -150.0, 1446.5, 3212.5, 3400.0, 3400.0, 3099.8, 2857.37, 1200.0], "火电": [23524.99, 20752.32, 18548.15, 17539.81, 17879.25, 15715.34, 11676.17, 10835.12, 10710.77, 10639.43, 10762.51, 10807.14, 10655.74, 10763.09, 10817.76, 10981.98, 11647.8, 14933.73, 17517.31, 15741.68, 14764.4, 14298.15, 15440.7, 14504.53], "独立储能": [-130.78, 0.0, 33.43, 0.0, 68.7, 245.19, -7.44, 0.0, 0.0, -1347.6, -267.54, -2493.83, -7238.02, -4453.15, -308.54, -375.26, -50.0, 19.31, 1968.53, 4902.91, 3386.2, 2040.85, 1275.73, 728.27], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.28, 1.08, 2.07, 3.85, 5.17, 5.73, 1.59, 1.64, 2.82, 4.19, 3.98, 2.7, 4.04, 6.05, 4.08, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [-0.26, 0.0, 0.1, 0.0, 0.0, 0.03, 0.0, 0.0, 0.0, -18.45, 0.0, -9.32, -37.26, -3.51, 0.0, 0.0, 0.0, 9.32, 27.77, 27.88, 0.38, 0.19, 0.5, 0.09], "虚拟电厂(调节量负荷类D)": [2.47, 2.72, 3.47, 3.47, 3.47, 3.47, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.41, 2.93, 5.79, 2.95, 2.76, 4.08, 2.9], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 0.0, 0.0], "风电": [10497.99, 11261.0, 11881.09, 11940.97, 11869.21, 11725.32, 9131.21, 4260.74, 2836.16, 2516.18, 2599.84, 3732.82, 4272.56, 4281.17, 3710.28, 4592.5, 8272.11, 11356.19, 12749.89, 14969.3, 17590.04, 19064.54, 19685.85, 20127.47]}, "2026-05-31": {"光伏": [79.6, 57.35, 6.1, 6.1, 31.11, 1124.98, 2969.65, 4208.52, 5098.72, 6035.44, 8001.13, 10428.17, 11676.26, 10216.42, 7646.2, 6942.13, 6878.36, 3769.1, 1022.95, 492.5, 353.49, 70.89, 9.5, 9.51], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2326.09, 2231.4, 2122.05, 2099.92, 2099.92, 2099.92, 2099.92, 2099.92, 2099.92, 2099.92, 2107.39, 2202.27, 2311.52, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -600.0, -600.0, -975.0, -3180.0, -3440.0, -3440.0, -3440.0, -3115.0, -2025.0, -975.0, -450.0, 457.4, 2062.07, 3192.31, 3302.45, 3302.45, 3208.73, 2503.45], "火电": [13064.87, 11217.59, 10645.11, 10417.66, 10405.28, 10525.31, 10122.47, 9448.06, 9490.43, 9272.44, 9548.28, 9564.67, 9187.39, 9256.79, 9213.82, 9272.76, 9600.47, 10619.12, 13284.07, 12385.89, 12615.95, 13465.26, 13019.06, 12617.72], "独立储能": [-189.08, -15.34, 84.66, 0.0, 173.24, 305.26, 0.0, 0.0, 0.0, -33.51, -32.42, -2309.62, -7300.66, -5265.95, -711.57, -574.85, -0.15, 0.0, 681.21, 3685.2, 3734.91, 2725.97, 2035.49, 1438.92], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.23, 1.13, 2.62, 5.06, 6.92, 7.86, 3.92, 3.89, 4.74, 5.72, 4.88, 2.95, 3.0, 6.06, 4.07, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, -9.32, -37.26, -21.63, 0.0, 0.0, 0.0, 0.0, 9.32, 34.36, 12.82, 0.0, 9.32, 0.0], "虚拟电厂(调节量负荷类D)": [2.47, 1.52, 0.0, 0.0, 0.55, 0.55, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.44, 2.93, 4.79, 3.22, 4.17, 6.66, 6.54], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 0.0, 0.0], "风电": [20489.8, 20492.34, 19719.74, 19125.13, 19083.2, 17426.95, 11414.22, 5954.78, 3792.78, 3186.69, 4148.39, 5672.5, 6963.12, 7200.11, 6371.54, 7797.82, 12934.18, 16413.97, 17260.22, 17878.63, 18426.5, 18804.43, 19141.92, 19393.94]}, "2026-06-01": {"光伏": [32.11, 24.86, 6.11, 8.99, 87.32, 965.19, 3408.39, 7037.13, 11784.26, 15702.7, 16911.86, 17439.01, 15830.99, 14066.31, 11936.84, 12165.5, 9264.35, 4097.62, 998.74, 395.27, 363.74, 90.0, 11.11, 11.11], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2326.09, 2231.4, 2122.15, 2100.3, 2100.3, 2100.3, 2100.3, 2100.3, 2122.15, 2231.4, 2326.09, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -375.0, -1200.0, -1875.0, -3245.0, -3440.0, -3440.0, -3440.0, -3440.0, -2585.0, -750.0, 0.0, 1519.8, 3337.5, 3400.0, 3400.0, 3230.55, 2664.87, 1182.18], "火电": [12531.42, 12190.36, 12283.2, 11330.23, 12882.46, 13319.96, 10731.5, 10136.02, 10648.24, 9617.49, 9561.65, 9566.66, 9318.06, 9460.17, 9755.85, 10520.67, 12341.12, 18976.29, 21145.89, 20885.98, 21971.65, 22066.76, 20123.13, 18899.73], "独立储能": [-430.96, -502.3, -283.83, -12.5, 425.36, 1062.06, 22.58, 0.0, -3.43, -158.95, -93.86, -2570.67, -7010.06, -4659.99, -470.81, -453.22, -0.15, 36.2, 2208.36, 5346.68, 4402.57, 1801.25, 307.32, 488.68], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.43, 1.67, 2.13, 3.81, 5.08, 5.87, 1.98, 2.1, 3.24, 4.62, 4.28, 4.71, 4.88, 6.46, 4.13, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -14.23, -36.48, -18.17, 0.0, 0.0, 0.0, 0.91, 7.38, 21.08, 19.44, 5.67, 7.7, 4.28], "虚拟电厂(调节量负荷类D)": [16.39, 16.05, 13.88, 9.72, 5.56, 4.79, 1.24, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.23, 2.64, 3.67, 5.35, 3.52, 4.28, 13.62, 8.65], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 0.0, 0.0], "风电": [18915.33, 17389.62, 16032.25, 14997.05, 13622.78, 11901.08, 9816.09, 8866.61, 8133.56, 6509.66, 5208.33, 5188.56, 4645.73, 4446.11, 4293.28, 6282.46, 8111.25, 7664.18, 7516.79, 8648.5, 10698.4, 12930.68, 14586.63, 15725.22]}, "2026-06-02": {"光伏": [49.61, 27.36, 72.11, 72.11, 128.19, 1179.88, 4550.6, 8901.46, 11403.49, 11956.84, 13316.81, 15618.87, 14417.5, 14143.54, 14142.76, 14199.24, 9164.56, 4050.16, 1045.82, 456.52, 342.74, 75.1, 11.1, 11.1], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2311.52, 2202.27, 2107.58, 2100.3, 2100.3, 2100.3, 2100.3, 2100.3, 2144.0, 2260.54, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -925.0, -1720.0, -2620.0, -2920.0, -2920.0, -2920.0, -2920.0, -2920.0, -2695.0, -1085.0, 503.9, 1678.15, 2659.74, 2900.0, 2900.0, 2900.0, 2900.0, 2180.0], "火电": [17420.91, 15604.4, 14729.14, 14469.55, 16011.6, 15431.14, 12012.67, 11005.47, 11296.81, 11540.58, 11760.66, 11424.86, 10958.49, 11053.9, 11038.38, 12259.15, 17247.49, 23151.47, 24187.72, 22953.82, 22324.96, 22274.16, 21923.58, 24275.42], "独立储能": [-253.46, 0.0, 0.0, 0.0, 19.65, 237.97, 0.0, 0.0, -1.25, -58.75, -93.91, -2939.97, -7344.62, -4654.95, -414.86, -340.99, -6.25, 0.0, 770.69, 3667.33, 4449.64, 3349.51, 1540.07, 664.42], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.28, 1.43, 2.99, 5.28, 7.02, 7.76, 3.67, 3.7, 4.82, 6.15, 5.7, 5.67, 5.0, 6.26, 4.23, 1.03, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [-0.04, 0.0, 0.0, 0.0, 0.01, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, -17.9, -57.98, -28.19, 0.0, 0.0, 0.0, 0.0, 9.51, 21.97, 22.83, 22.83, 9.69, 14.49], "虚拟电厂(调节量负荷类D)": [10.99, 10.74, 9.63, 9.29, 6.15, 4.79, 0.55, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 5.62, 7.94, 8.99, 12.12, 9.3, 14.58, 16.77, 12.94], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.36, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 3.87, 0.0], "风电": [15919.75, 15673.15, 14926.02, 14130.56, 13490.39, 12668.6, 10458.65, 7970.55, 5429.52, 3650.53, 3043.74, 3298.43, 2767.51, 2665.86, 3247.13, 4795.3, 5930.28, 7017.9, 8497.75, 10905.25, 12915.08, 13647.18, 13916.5, 13179.07]}, "2026-06-03": {"光伏": [62.11, 54.86, 6.11, 6.11, 24.94, 812.79, 3450.36, 6534.61, 8934.16, 11894.34, 14223.52, 15891.67, 16011.5, 15724.36, 13613.91, 11153.73, 7479.95, 3204.31, 914.76, 276.75, 142.75, 76.6, 11.1, 11.1], "核电": [2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2322.17, 2332.68, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38, 2333.38], "水电": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -75.0, -2505.0, -3180.0, -3180.0, -3180.0, -3180.0, -2685.0, 0.0, 0.0, 329.16, 1854.56, 2499.99, 2440.43, 2519.44, 2357.21, 2170.0], "火电": [23902.18, 22470.42, 21074.01, 21193.92, 22719.52, 22643.35, 16916.5, 18019.58, 21517.12, 21783.02, 22298.23, 21602.01, 18284.99, 15696.13, 14068.81, 14413.55, 20241.57, 25944.52, 25687.08, 25750.19, 26110.47, 25100.71, 21491.43, 21387.98], "独立储能": [-204.46, -4.0, 23.18, -15.07, 90.53, 207.31, -37.5, 45.26, 416.75, -0.04, -172.68, -1942.59, -6922.03, -5435.88, -697.16, -355.06, 18.0, 57.74, 1422.3, 2515.92, 3276.36, 2800.46, 1450.67, 2052.9], "虚拟电厂(全电量负荷类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "虚拟电厂(分布式发电类)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.2, 1.59, 4.74, 8.34, 11.49, 13.05, 9.31, 9.19, 10.49, 11.36, 7.85, 4.81, 3.89, 5.72, 4.07, 1.01, 1.01, 0.76, 0.0], "虚拟电厂(发电储能类)": [-4.38, 0.0, 0.0, 0.0, 1.1, 1.1, 0.0, 0.0, 0.0, 0.0, 0.0, -14.45, -57.79, -29.97, -1.65, 0.0, 0.0, 0.0, 7.56, 20.29, 28.63, 15.71, 0.0, 28.9], "虚拟电厂(调节量负荷类D)": [11.27, 27.42, 18.69, 9.29, 6.15, 4.82, 2.55, 2.35, 0.66, 0.96, 1.06, 0.0, 0.0, 0.0, 1.1, 0.0, 7.78, 7.94, 8.99, 12.12, 9.3, 13.83, 19.36, 12.94], "虚拟电厂(调节量负荷类L)": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.97, 3.87, 3.87, 3.87, 3.87, 3.87, 0.0], "风电": [12362.44, 11454.44, 11013.54, 10026.72, 8906.44, 7991.24, 8120.82, 7828.18, 6860.6, 6337.57, 5653.81, 5131.13, 5297.06, 6014.66, 6944.8, 8368.04, 8915.32, 10276.03, 12153.42, 12907.72, 13657.54, 12504.62, 12778.53, 13097.98]}};
+
+function renderAll() {
+  var dt = currentDate;
+
+  cT.setOption(getOptThermal(dt), true);
+  cC.setOption(getOptCompare(), true);
+
+  // Stacked chart uses RT_GEN
+  var gen = RT_GEN[dt] || {};
+  var thermal = gen['火电'] || [];
+  var nuclear = gen['核电'] || [];
+  var hydro_raw = gen['水电'] || [];
+  var hydro = hydro_raw.map(function(v){return Math.max(v,0);});
+  var wind = gen['风电'] || [];
+  var solar = gen['光伏'] || [];
+
+  cS.setOption({
+    grid:{left:55,right:30,top:30,bottom:40},
+    tooltip:{trigger:'axis'},
+    legend:{data:['火电','核电','水电','风电','光伏'],textStyle:{color:'#666'},top:5},
+    xAxis:{type:'category',data:TIMES_24,axisLabel:{color:'#888',fontSize:10},axisLine:{lineStyle:{color:'#d0d0d0'}}},
+    yAxis:{type:'value',name:'MW',axisLabel:{color:'#888'},splitLine:{lineStyle:{color:'#f0f0f0'}}},
+    series:[
+      {name:'火电',type:'bar',stack:'total',data:thermal,itemStyle:{color:'#0078d4'},barWidth:16,emphasis:{focus:'series'}},
+      {name:'核电',type:'bar',stack:'total',data:nuclear,itemStyle:{color:'#d83b01'},emphasis:{focus:'series'}},
+      {name:'水电',type:'bar',stack:'total',data:hydro,itemStyle:{color:'#107c10'},emphasis:{focus:'series'}},
+      {name:'风电',type:'bar',stack:'total',data:wind,itemStyle:{color:'#498205'},emphasis:{focus:'series'}},
+      {name:'光伏',type:'bar',stack:'total',data:solar,itemStyle:{color:'#f2c811'},emphasis:{focus:'series'}}
+    ]
+  }, true);
+
+  renderSummary(dt);
+  renderStats(dt);
+  renderInsight(dt);
+}
+
+selectDate(currentDate);
+window.addEventListener('resize', function(){cT.resize();cC.resize();cS.resize();});
+document.addEventListener('keydown', function(e){
+  var idx = ALL_DATES.indexOf(currentDate);
+  if(e.key==='ArrowLeft'&&idx>0) selectDate(ALL_DATES[idx-1]);
+  if(e.key==='ArrowRight'&&idx<ALL_DATES.length-1) selectDate(ALL_DATES[idx+1]);
+});
+</script>
+</body>
+</html>

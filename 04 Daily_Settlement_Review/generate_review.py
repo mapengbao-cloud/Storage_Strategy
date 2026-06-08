@@ -7,9 +7,8 @@ ASSETS = os.path.join(BASE, 'assets')
 OUTPUT = os.path.join(BASE, 'output')
 os.makedirs(OUTPUT, exist_ok=True)
 
-TEMPLATE_PATH = os.path.join(ASSETS, '输出模版-0504-日结算收益复盘.xlsx')
-DATES = ['0504', '0511', '0512', '0513', '0514', '0515', '0516', '0517',
-         '0519', '0520', '0521']
+TEMPLATE_PATH = os.path.join(ASSETS, '输出模版-0525-日结算收益复盘.xlsx')
+DATES = ['0526', '0527', '0528', '0529', '0530', '0531', '0601', '0602', '0603', '0604']
 
 
 def _is_merged(cell):
@@ -93,8 +92,9 @@ def generate_review(date_mmdd):
     """Generate daily settlement review from template, replacing only data cells.
     Template has 3 sheets: 充放测算, 充电日清算费用, 放电日清算费用.
     J4 comes from the corresponding RT review file."""
+    month = date_mmdd[:2]
     day = date_mmdd[2:4]
-    date_iso = f'2026-05-{day}'
+    date_iso = f'2026-{month}-{day}'
 
     charge_stmt = os.path.join(ASSETS, f'6052-{date_iso}德州润津储能科技有限公司结算单-充电.xlsx')
     discharge_stmt = os.path.join(ASSETS, f'6052-{date_iso}德州润津储能科技有限公司结算单-放电.xlsx')

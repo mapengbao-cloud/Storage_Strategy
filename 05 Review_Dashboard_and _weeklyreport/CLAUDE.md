@@ -61,3 +61,14 @@ This is DIFFERENT from compute_summary_values() because the 日结算 file's `�
 ## Dependencies
 
 openpyxl (read/write .xlsx files)
+
+## 手动更新日结算数据规则
+
+当用户要求更新某一天的日结算收益复盘数据时：
+
+1. 从 `04 Daily_Settlement_Review/output/MMDD-日结算收益复盘.xlsx` 的 `充放测算` sheet Row 4 A-T 列读取 20 个值
+2. 找到目标文件中对应日期的行号（A 列为 Excel 序列号）
+3. 将 20 个值写入目标行 AJ-BC 列（col 36-55）
+4. **只做数据拷贝，不做任何多余操作**：不格式化、不取整、不验证、不对比、不修改其他行/列
+
+**数据格式参考上一行** — 上一行已有的数值格式即为正确格式，新写入的数据保持与源数据一致即可。
