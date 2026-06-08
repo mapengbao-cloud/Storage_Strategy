@@ -263,6 +263,12 @@ if __name__ == '__main__':
     real_time_filter = parse_range_arg(args.real_time) if args.real_time else None
     settlement_filter = parse_range_arg(args.settlement) if args.settlement else None
 
+    # If any filter is active, only process those types; otherwise process all
+    any_filter = day_ahead_filter or real_time_filter or settlement_filter
+    process_day_ahead = bool(day_ahead_filter) or not any_filter
+    process_real_time = bool(real_time_filter) or not any_filter
+    process_settlement = bool(settlement_filter) or not any_filter
+
     if day_ahead_filter:
         print(f"日前 filter: {args.day_ahead}")
     if real_time_filter:
@@ -335,7 +341,7 @@ if __name__ == '__main__':
               f"-> target row {target_row}")
 
         # Process 日前机组组合收益复盘
-        if 'day_ahead' in files and in_range(month, day, day_ahead_filter):
+        if 'day_ahead' in files and process_day_ahead and in_range(month, day, day_ahead_filter):
             fname = files['day_ahead']
             print(f"  - 日前: {fname}")
             src_fpath = os.path.join(ASSETS_DIR, fname)
@@ -346,7 +352,7 @@ if __name__ == '__main__':
                 cell.value = clean_value(val, target_col)
 
         # Process 实时机组组合收益复盘
-        if 'real_time' in files and in_range(month, day, real_time_filter):
+        if 'real_time' in files and process_real_time and in_range(month, day, real_time_filter):
             fname = files['real_time']
             print(f"  - 实时: {fname}")
             src_fpath = os.path.join(ASSETS_DIR, fname)
@@ -357,7 +363,7 @@ if __name__ == '__main__':
                 cell.value = clean_value(val, target_col)
 
         # Process 日结算收益复盘
-        if 'settlement' in files and in_range(month, day, settlement_filter):
+        if 'settlement' in files and process_settlement and in_range(month, day, settlement_filter):
             fname = files['settlement']
             print(f"  - 日结算: {fname}")
             src_fpath = os.path.join(ASSETS_DIR, fname)
