@@ -1,0 +1,74 @@
+# 项目主配置
+# 密钥类信息通过 ${ENV_VAR} 引用，存入 .env（不入库）
+
+project:
+  name: "润津储能交易策略与复盘"
+  data_root: "data"
+  output_root: "output"
+  template_root: "assets/templates"
+
+database:
+  tianrun:
+    host: "${DB_TIANJI_HOST}"
+    port: "${DB_TIANJI_PORT}"
+    user: "${DB_TIANJI_USER}"
+    password: "${DB_TIANJI_PASSWORD}"
+    database: "${DB_TIANJI_DATABASE}"
+    charset: "utf8mb4"
+  ads:
+    host: "${DB_ADS_HOST}"
+    port: "${DB_ADS_PORT}"
+    user: "${DB_ADS_USER}"
+    password: "${DB_ADS_PASSWORD}"
+    database: "${DB_ADS_DATABASE}"
+    charset: "utf8mb4"
+
+station:
+  name: "苏留润津独立储能电站"
+  member_id: "b9e64e64a713458eba94c9af05c0a757"
+  company_name: "德州润津储能科技有限公司"
+  company_code: "6052"
+
+# 容量分摊系数 sheet: 每月对应的列号
+monthly_columns:
+  1: 6    # 1月
+  2: 7    # 2月
+  3: 8    # 3月
+  4: 9    # 4月
+  5: 10   # 5月
+  6: 11   # 6月
+  7: 12   # 7月
+  8: 13   # 8月
+  9: 14   # 9月
+  10: 15  # 10月
+  11: 16  # 11月
+  12: 17  # 12月
+
+excel:
+  time_points: 96
+  time_interval_minutes: 15
+
+# 结算单 sheet 关键单元格引用
+settlement_cells:
+  charge:
+    sheet: "充电日清算费用"
+    price_row: 29
+    price_col: 29     # AC29 充电价
+    volume_row: 29
+    volume_col: 28    # -AB29 充电量
+    revenue_row: 29
+    revenue_col: 30   # -AD29 充电收入
+  discharge:
+    sheet: "放电日清算费用"
+    price_row: 101
+    price_col: 16     # P101 放电价
+    volume_row: 101
+    volume_col: 41    # AO101 放电量
+    revenue_row: 101
+    revenue_col: 17   # Q101 放电收入
+
+weather:
+  api: "https://api.open-meteo.com/v1/forecast"
+  latitude: 37.45
+  longitude: 116.30
+  timezone: "Asia/Shanghai"

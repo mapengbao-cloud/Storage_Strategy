@@ -1,0 +1,10 @@
+1、输出html格式做可视化；
+2、最上面是可以选择的日期，可以选择一个或多个日期，下面的图表中对应显示选中的日期的数据；
+3、来自shandong_px_dayahead_clearing_quantity_number的数据为电量值，单位为MWH，需要转换成MW，即要乘以4.
+4、表1：供需情况对比。对比预测和实际数据，包含全网负荷、直调负荷、新能源（光伏+风电）、光伏。预测数据来自shandong_px_spot_dayahead_load_info；实际运行数据来自shandong_px_spot_actual_load_info
+5、表2：竞价空间、火电空间与价格关系。展示数据为预测和实际竞价空间、火电日前出清，火电实际出清，日前电价，实时电价。竞价空间计算方式为直调负荷-联络线负荷-风电-光伏-核电。火电日前出清数据来自shandong_px_dayahead_clearing_quantity_number；火电实际出清计算方式：实际出清的（直调负荷-联络线负荷-风电-光伏-核电-抽蓄-地方公用电厂）-日前出清的储能（转成MW）。
+6、表3充放情况及价格：每天的润津储能电站的充放功率和日前电价和实时电价。
+6、表4：日前出清全景叠加图。各类电源的出清情况，转换成MW。数据来源为shandong_px_dayahead_clearing_quantity_number。
+7、表5：全省的火电出清电力 + 台数 + 日前电价。转换成MW。数据来源为shandong_px_dayahead_clearing_quantity_number。
+8、表6：全省抽蓄 + 独立储能出清。转换成MW。数据来源为shandong_px_dayahead_clearing_quantity_number。
+9、表7：全省新能源日前出清对比全省新能源实际运行出力。全省新能源日前出清转换成MW。

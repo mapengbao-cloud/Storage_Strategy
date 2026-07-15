@@ -1,0 +1,81 @@
+# 业务参数 — 可随策略调整独立修改，不混入 settings.yaml
+
+cost:
+  capacity_cost_yuan_per_kw_month: 70.5  # 容量分摊 元/kW·月
+
+strategy:
+  bidding_space:
+    # 竞价空间 2h 滑动窗口峰谷差阈值 (MW)
+    peak_valley_diff_threshold_mw: 23000
+    # 谷值时段必须在午间（光伏驱动型谷值）
+    valley_window_start: "08:45"
+    valley_window_end: "14:00"
+    sliding_window_hours: 2  # 滑动窗口 = 8 个 15min 时点
+
+  price_spread:
+    # 日前价差最低阈值 (元/MWh)
+    day_ahead_spread_threshold: 200
+
+  # ── 风险控制 ──────────────────────────────────────────────────
+  risk:
+    enabled: true
+
+    # DA-RT (日前-实时) 电价偏差阈值 (元/MWh)
+    # 充电时段: RT > DA = 成本超预期; 放电时段: RT < DA = 收入低预期
+    max_acceptable_deviation_charge: 50     # 充电时段最大可接受正偏差
+    max_acceptable_deviation_discharge: 50  # 放电时段最大可接受负偏差（绝对值）
+
+    # 历史偏差分析参数
+    lookback_days: 60               # 回看天数
+    min_similar_weather_days: 5     # 最少相似天气样本数
+
+    # 气象风险阈值 — 基于太阳辐照度 (W/m²)
+    # 辐照度直接决定光伏出力，是DA-RT偏差的核心驱动因素
+    # 云量预测不准确，不使用云量作为主分类指标
+    weather_risk:
+      strong_radiation_threshold: 800       # > 800 W/m² = 强辐照，光伏可预测，低风险
+      moderate_radiation_threshold: 400     # 400-800 = 中等辐照，可能多云，中等风险
+      weak_radiation_threshold: 200         # 200-400 = 弱辐照，阴天，高风险
+      # < 200 = 几乎无辐照，无光伏谷值，极高风险
+      radiation_variability_threshold: 200  # 辐照度标准差 > 200 → 极度多变，加风险分
+
+    # 风险评分权重
+    risk_weights:
+      weather: 0.4                  # 气象风险权重
+      historical_deviation: 0.4     # 历史偏差风险权重
+      bidding_space_error: 0.2      # 竞价空间预测误差权重
+
+    # VaR 置信水平
+    confidence_level: 0.95
+
+    # 风险评分阈值
+    max_risk_score_trade: 60        # > 60 分 → 不建议交易
+
+    # 操作建议参数 — 按风险等级
+    operation_by_risk:
+      low:
+        power_factor: 1.0           # 满功率申报
+        charge_time_factor: 1.0     # 正常时长
+        description: "正常申报，风险可控"
+      medium:
+        power_factor: 0.7           # 7成功率
+        charge_time_factor: 1.3     # 延长30%充电时间分散风险
+        description: "降低申报功率，延长充电时间，避开价格跳变时段"
+      high:
+        power_factor: 0.4           # 4成功率
+        charge_time_factor: 1.5     # 延长50%
+        description: "大幅降低功率，价格跳变风险较高"
+      extreme:
+        power_factor: 0.0           # 不申报
+        charge_time_factor: 0.0
+        description: "风险过高，建议跳过今日交易"
+
+market:
+  price_ceiling: 1500       # 元/MWh 价格上限
+  price_floor: -80          # 元/MWh 价格下限
+  theoretical_max_spread: 1580  # 元/MWh 理论最大价差
+
+# 数值精度
+precision:
+  monetary_round: 2         # 金额保留2位小数（综合效率除外）
+  efficiency_round: null    # 综合效率保留全精度
