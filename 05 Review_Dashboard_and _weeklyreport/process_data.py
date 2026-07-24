@@ -183,12 +183,12 @@ def compute_settlement_values(source_path):
     the dependent values (D-Q) using the same formula logic as 充放测算 row 4.
 
     充放测算 row 4 formula sources:
-      A4 = 充电日清算费用!AA29    (col 27)
-      B4 = -充电日清算费用!Z29     (col 26) → negated
-      C4 = -充电日清算费用!AB29    (col 28) → negated
+      A4 = 充电日清算费用!AC29    (col 29)
+      B4 = -充电日清算费用!AB29    (col 28) → negated
+      C4 = -充电日清算费用!AD29    (col 30) → negated
       L4 = 放电日清算费用!P101     (col 16)
-      M4 = 放电日清算费用!AJ101    (col 36)
-      N4 = 放电日清算费用!AK101    (col 37)
+      M4 = 放电日清算费用!AO101    (col 41)
+      N4 = 放电日清算费用!Q101     (col 17)
       O6 = N4 + C4
 
     Returns (list_of_17_values, o6_value)."""
@@ -199,12 +199,12 @@ def compute_settlement_values(source_path):
     ws_discharge = wb['放电日清算费用']
 
     # Base values from settlement sheets
-    A = float(ws_charge.cell(row=29, column=27).value or 0)      # AA29 充电价
-    B = -float(ws_charge.cell(row=29, column=26).value or 0)     # Z29 → 充电量
-    C = -float(ws_charge.cell(row=29, column=28).value or 0)     # AB29 → 充电收入
+    A = float(ws_charge.cell(row=29, column=29).value or 0)      # AC29 充电价
+    B = -float(ws_charge.cell(row=29, column=28).value or 0)     # -AB29 → 充电量
+    C = -float(ws_charge.cell(row=29, column=30).value or 0)     # -AD29 → 充电收入
     L = float(ws_discharge.cell(row=101, column=16).value or 0)  # P101 放电价
-    M_val = float(ws_discharge.cell(row=101, column=36).value or 0)  # AJ101 放电量
-    N_val = float(ws_discharge.cell(row=101, column=37).value or 0)  # AK101 放电收入
+    M_val = float(ws_discharge.cell(row=101, column=41).value or 0)  # AO101 放电量
+    N_val = float(ws_discharge.cell(row=101, column=17).value or 0)  # Q101 放电收入
 
     # Parameters from 充放测算
     I8 = float(ws_cf.cell(row=8, column=9).value or 0)

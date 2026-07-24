@@ -363,6 +363,205 @@ def generate_html(
 
 # ==================== 快捷查询预设 ====================
 PRESET_QUERIES = {
+    # === 润津（储能电站） ===
+    "rj_dayahead": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                price
+            FROM shandong_px_reliable_clearing_unit_data
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "润津日前出清电价",
+        "x_field": "datetime",
+        "y_fields": ["price"],
+        "series_names": {"price": "日前电价(元/MWh)"},
+    },
+    "rj_realtime": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                price
+            FROM shandong_px_realtime_clearing_results_query
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "润津实时出清电价",
+        "x_field": "datetime",
+        "y_fields": ["price"],
+        "series_names": {"price": "实时电价(元/MWh)"},
+    },
+    "rj_intraday": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_point_index-1)*900)) AS datetime,
+                power, cq_type
+            FROM shandong_px_intraday_clearing_plan_result
+            WHERE unit_name LIKE '%润津%' AND date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "润津日内充放电计划",
+        "x_field": "datetime",
+        "y_fields": ["power"],
+        "series_names": {"power": "计划出力(MW)"},
+    },
+    "rj_settlement": {
+        "sql": """
+            SELECT date, current_unit,
+                   SUM(CAST(JSON_EXTRACT(analysis_field, '$.f14') AS DECIMAL(20,2))) AS f14,
+                   SUM(CAST(JSON_EXTRACT(analysis_field, '$.f36') AS DECIMAL(20,2))) AS f36
+            FROM shandong_px_statement_spot_daily_v3
+            WHERE date >= '2026-05-01'
+            GROUP BY date, current_unit
+            ORDER BY date
+            LIMIT 500
+        """,
+        "title": "润津日结算数据",
+        "x_field": "date",
+        "y_fields": ["f14", "f36"],
+        "series_names": {"f14": "日前电量(MWh)", "f36": "结算金额(元)"},
+    },
+
+    # === 全省电价 ===
+    "unify_price": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order_index-1)*900)) AS datetime,
+                price96, price24
+            FROM shandong_px_unify_settle_accounts_price
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "统一结算电价",
+        "x_field": "datetime",
+        "y_fields": ["price96", "price24"],
+        "series_names": {"price96": "96点价格", "price24": "24时段均价"},
+    },
+    "gen_price": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                max_clearing_price, avg_clearing_price, min_clearing_price
+            FROM shandong_px_spot_surveillance_dayahead_generation_price_v2
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "发电侧日前出清电价(96点)",
+        "x_field": "datetime",
+        "y_fields": ["max_clearing_price", "avg_clearing_price", "min_clearing_price"],
+        "series_names": {
+            "max_clearing_price": "最高价",
+            "avg_clearing_price": "均价",
+            "min_clearing_price": "最低价",
+        },
+    },
+
+    # === 负荷 & 新能源 ===
+    "dayahead_load": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                dispatched_load_forecast, wind_power_forecast,
+                photovoltaic_power_forecast, tie_line_load_forecast
+            FROM shandong_px_spot_dayahead_load_info
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "日前负荷预测(96点)",
+        "x_field": "datetime",
+        "y_fields": ["dispatched_load_forecast", "wind_power_forecast",
+                      "photovoltaic_power_forecast", "tie_line_load_forecast"],
+        "series_names": {
+            "dispatched_load_forecast": "直调负荷",
+            "wind_power_forecast": "风电预测",
+            "photovoltaic_power_forecast": "光伏预测",
+            "tie_line_load_forecast": "联络线",
+        },
+    },
+    "actual_load": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                actual_dispatched_load, actual_wind_power,
+                actual_photovoltaic_power, actual_tie_line_load
+            FROM shandong_px_spot_actual_load_info
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "实际负荷(96点)",
+        "x_field": "datetime",
+        "y_fields": ["actual_dispatched_load", "actual_wind_power",
+                      "actual_photovoltaic_power", "actual_tie_line_load"],
+        "series_names": {
+            "actual_dispatched_load": "直调负荷",
+            "actual_wind_power": "风电",
+            "actual_photovoltaic_power": "光伏",
+            "actual_tie_line_load": "联络线",
+        },
+    },
+    "new_energy_rt": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                realtime_photovoltaic_power, realtime_wind_power,
+                realtime_new_energy_power
+            FROM shandong_px_release_operation_new_energy_realtime_power
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime
+            LIMIT 10000
+        """,
+        "title": "实时新能源出力(96点)",
+        "x_field": "datetime",
+        "y_fields": ["realtime_photovoltaic_power", "realtime_wind_power",
+                      "realtime_new_energy_power"],
+        "series_names": {
+            "realtime_photovoltaic_power": "实时光伏",
+            "realtime_wind_power": "实时风电",
+            "realtime_new_energy_power": "新能源总出力",
+        },
+    },
+
+    # === 备用容量 ===
+    "reserve": {
+        "sql": """
+            SELECT
+                ADDTIME(CONCAT(date, ' 00:00:00'), SEC_TO_TIME((time_order-1)*900)) AS datetime,
+                type, reserve_capacity
+            FROM shandong_px_spot_actual_reserve_capacity_info
+            WHERE date >= '2026-05-01'
+            ORDER BY datetime, type
+            LIMIT 10000
+        """,
+        "title": "实际备用容量(96点)",
+        "x_field": "datetime",
+        "y_fields": ["reserve_capacity"],
+        "series_names": {"reserve_capacity": "备用容量(MW)"},
+    },
+
+    # === 供需预测 ===
+    "supply_demand": {
+        "sql": """
+            SELECT datetime, fore_value, fore_type, area_type
+            FROM all_province_supply_and_demand_forecast
+            WHERE province_id = 14
+            ORDER BY datetime DESC
+            LIMIT 5000
+        """,
+        "title": "供需预测",
+        "x_field": "datetime",
+        "y_fields": ["fore_value"],
+        "series_names": {"fore_value": "预测值"},
+    },
+
+    # === 出清价格预测 ===
     "clearing_price": {
         "sql": """
             SELECT
@@ -382,22 +581,13 @@ PRESET_QUERIES = {
             "fore_price_adjusted": "调整后预测价",
         },
     },
-    "supply_demand": {
-        "sql": """
-            SELECT datetime, fore_value, fore_type, area_type
-            FROM all_province_supply_and_demand_forecast
-            ORDER BY datetime DESC
-            LIMIT 5000
-        """,
-        "title": "供需预测",
-        "x_field": "datetime",
-        "y_fields": ["fore_value"],
-        "series_names": {"fore_value": "预测值"},
-    },
+
+    # === 边界数据 ===
     "boundary": {
         "sql": """
             SELECT date, hour, data, data_type, area_type
             FROM all_province_boundary_data_mtl_forecast
+            WHERE province_id = 14
             ORDER BY date DESC, hour
             LIMIT 5000
         """,
@@ -405,6 +595,22 @@ PRESET_QUERIES = {
         "x_field": "date",
         "y_fields": ["data"],
         "series_names": {"data": "边界数据"},
+    },
+
+    # === 交易约束 ===
+    "trade_constraint": {
+        "sql": """
+            SELECT date, parameter_name, parameter_value
+            FROM shandong_px_spot_trade_constraint
+            WHERE date >= '2026-05-01'
+              AND parameter_name LIKE '%限价%'
+            ORDER BY date
+            LIMIT 500
+        """,
+        "title": "现货交易约束（报价限价）",
+        "x_field": "date",
+        "y_fields": ["parameter_value"],
+        "series_names": {"parameter_value": "参数值"},
     },
 }
 
@@ -453,18 +659,38 @@ if __name__ == "__main__":
             out = sys.argv[4] if len(sys.argv) > 4 else "view_custom.html"
             run_custom(sql, title, out)
         elif cmd == "list":
-            print("预设查询:")
-            for k, v in PRESET_QUERIES.items():
-                print(f"  {k:20s} - {v['title']}")
-            print("\n用法:")
-            print(f"  python {sys.argv[0]} <preset_name>  # 运行预设查询")
-            print(f"  python {sys.argv[0]} custom \"<SQL>\" \"<title>\" [output.html]")
+            print("预设查询（按业务分组）:")
+            print("  【润津储能】")
+            for k in ["rj_dayahead", "rj_realtime", "rj_intraday", "rj_settlement"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print("  【全省电价】")
+            for k in ["unify_price", "gen_price"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print("  【负荷 & 新能源】")
+            for k in ["dayahead_load", "actual_load", "new_energy_rt"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print("  【备用】")
+            for k in ["reserve"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print("  【预测 & 供需】")
+            for k in ["clearing_price", "supply_demand", "boundary"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print("  【其他】")
+            for k in ["trade_constraint"]:
+                if k in PRESET_QUERIES:
+                    print(f"    {k:20s} - {PRESET_QUERIES[k]['title']}")
+            print(f"\n用法: python {sys.argv[0]} <preset_name>")
+            print(f"      python {sys.argv[0]} custom \"<SQL>\" \"<title>\" [output.html]")
         else:
             print(f"未知命令: {cmd}")
-            print(f"用法: python {sys.argv[0]} [list|clearing_price|supply_demand|boundary|custom]")
+            print(f"用法: python {sys.argv[0]} [list|preset_name|custom]")
     else:
-        # 默认：打开出清价格预测
         print("未指定查询，使用默认预设 'clearing_price'")
-        print("可用预设: clearing_price, supply_demand, boundary")
+        print(f"共有 {len(PRESET_QUERIES)} 个预设可用，运行 'python {sys.argv[0]} list' 查看全部")
         print(f"用法: python {sys.argv[0]} [list|preset_name]")
         run_preset("clearing_price")

@@ -33,7 +33,8 @@ if count == 0:
 # 2. Sync bidding_space_forecast
 print(f'[{__import__("datetime").datetime.now().strftime("%H:%M:%S")}] Syncing {TARGET_DATE} {count} rows...')
 cur.execute(f"""SELECT date, time_order, dispatched_load_forecast, tie_line_load_forecast,
-    wind_power_forecast, photovoltaic_power_forecast
+    wind_power_forecast, photovoltaic_power_forecast, nuclear_power_forecast,
+    local_power_forecast, self_power_forecast
     FROM shandong_px_spot_dayahead_load_info WHERE date='{TARGET_DATE}' ORDER BY time_order""")
 rows = cur.fetchall()
 cur.close()
@@ -43,10 +44,11 @@ db = sqlite3.connect(DB_PATH)
 cur = db.cursor()
 cur.execute(f"DELETE FROM bidding_space_forecast WHERE date='{TARGET_DATE}'")
 for r in rows:
-    d, to, dl, tl, wp, pv = r
-    bs = float(dl or 0) - float(tl or 0) - float(wp or 0) - float(pv or 0)
-    cur.execute('INSERT INTO bidding_space_forecast VALUES (?,?,?,?,?,?,?,?)',
-                 (str(d), int(to), float(dl or 0), float(tl or 0), float(wp or 0), float(pv or 0), 0.0, bs))
+    d, to, dl, tl, wp, pv, nuc, loc, slf = r
+    # bidding_space = 直调 - 联络线 - 风 - 光 - 核 - 地方 - 自备
+    bs = float(dl or 0) - float(tl or 0) - float(wp or 0) - float(pv or 0) - float(nuc or 0) - float(loc or 0) - float(slf or 0)
+    cur.execute('INSERT INTO bidding_space_forecast (date, time_order, dispatched_load, tie_line_load, wind_power, photovoltaic_power, nuclear_power, local_power, self_power, bidding_space) VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+                 (str(d), int(to), float(dl or 0), float(tl or 0), float(wp or 0), float(pv or 0), float(nuc or 0), float(loc or 0), float(slf or 0), bs))
 db.commit()
 db.close()
 print(f'Synced {len(rows)} rows to bidding_space_forecast')

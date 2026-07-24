@@ -1,10 +1,10 @@
-"""Build _tmp_html_data.json for 0629-0708 from local DB + 天机 + Open-Meteo weather."""
+"""Build _tmp_html_data.json for 0713-0719 from local DB + 天机 + Open-Meteo weather."""
 import json, os, sqlite3, pymysql, urllib.request, time
 from datetime import datetime
 
 ROOT = r'E:\DataWork\Storage_Strategy'
 DB_PATH = os.path.join(ROOT, 'data', 'cache', 'local.db')
-DATES = ['2026-06-29','2026-06-30','2026-07-01','2026-07-02','2026-07-03','2026-07-04','2026-07-05','2026-07-06','2026-07-07','2026-07-08']
+DATES = ['2026-07-13','2026-07-14','2026-07-15','2026-07-16','2026-07-17','2026-07-18','2026-07-19']
 TIMES = [f'{h:02d}:{m:02d}' for h in range(24) for m in (0,15,30,45)]
 
 db = sqlite3.connect(DB_PATH)
@@ -58,7 +58,11 @@ cur2.close(); conn.close()
 # Use Dezhou coordinates
 LAT, LON = 37.45, 116.36
 def get_weather(date_str):
-    url = f'https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&daily=weather_code,temperature_2m_max,temperature_2m_min,shortwave_radiation_sum,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_sum,relative_humidity_2m_mean,sunshine_duration,cloud_cover_mean&timezone=Asia/Shanghai&start_date={date_str}&end_date={date_str}'
+    # Use archive API for historical dates (before 2026)
+    if date_str < '2026-01-01':
+        url = f'https://archive-api.open-meteo.com/v1/archive?latitude={LAT}&longitude={LON}&start_date={date_str}&end_date={date_str}&daily=weather_code,temperature_2m_max,temperature_2m_min,shortwave_radiation_sum,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_sum,relative_humidity_2m_mean,sunshine_duration,cloud_cover_mean&timezone=Asia/Shanghai'
+    else:
+        url = f'https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&daily=weather_code,temperature_2m_max,temperature_2m_min,shortwave_radiation_sum,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_sum,relative_humidity_2m_mean,sunshine_duration,cloud_cover_mean&timezone=Asia/Shanghai&start_date={date_str}&end_date={date_str}'
     try:
         req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         with urllib.request.urlopen(req, timeout=15) as resp:

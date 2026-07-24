@@ -28,7 +28,8 @@ for d in DATES:
 ac = {}
 for d in DATES:
     cur.execute('''SELECT actual_dispatched_load, actual_tie_line_load, actual_wind_power,
-        actual_photovoltaic_power, actual_nuclear_power, actual_pumped_storage_power, actual_local_power
+        actual_photovoltaic_power, actual_nuclear_power, actual_pumped_storage_power,
+        actual_local_power, actual_self_power
         FROM shandong_px_spot_actual_load_info WHERE date=%s ORDER BY time_order''', (d,))
     rows = cur.fetchall()
     if rows:
@@ -40,6 +41,7 @@ for d in DATES:
             'nuclear': [float(r[4] or 0) for r in rows],
             'pumped': [float(r[5] or 0) for r in rows],
             'local': [float(r[6] or 0) for r in rows],
+            'self': [float(r[7] or 0) for r in rows],
         }
 
 # ── 4. 日前储能出清 ──
@@ -58,14 +60,14 @@ for d in DATES:
 
 cur.close(); conn.close()
 
-# ── 6. Compute 火电实际出清 ──
+# ── 6. Compute 火电实际出清 = 实际(直调-联络-风-光-核-抽蓄-地方-自备) - 日前储能 ──
 th_actual = {}
 for d in DATES:
     if d in ac and d in es_da:
         th_actual[d] = [
             ac[d]['dispatched'][i] - ac[d]['tie_line'][i] - ac[d]['wind'][i]
             - ac[d]['pv'][i] - ac[d]['nuclear'][i]
-            - ac[d]['pumped'][i] - ac[d]['local'][i]
+            - ac[d]['pumped'][i] - ac[d]['local'][i] - ac[d]['self'][i]
             - es_da[d][i]
             for i in range(96)
         ]

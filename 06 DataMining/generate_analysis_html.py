@@ -23,7 +23,7 @@ html = '''<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>竞价空间 & 电价 & 天气综合分析 | 0517-0601</title>  <!-- DATE_RANGE: 修改这里和下面文件名中的日期范围 -->
+<title>竞价空间 & 电价 & 天气综合分析 | 2026年7月</title>  <!-- DATE_RANGE: 修改这里和下面文件名中的日期范围 -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -323,7 +323,7 @@ document.addEventListener('keydown', function(e) {
 </body>
 </html>'''
 
-out_path = os.path.join(BASE, '竞价空间_电价_天气综合分析_0517-0601.html')  # DATE_RANGE: 修改这里的日期范围
+out_path = os.path.join(ROOT, 'output', '竞价空间_电价_天气综合分析_202507.html')  # DATE_RANGE: 修改这里的日期范围
 with open(out_path, 'w', encoding='utf-8') as f:
     f.write(html)
 

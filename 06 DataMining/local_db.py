@@ -46,6 +46,8 @@ TABLES = {
             'wind_power_forecast',
             'photovoltaic_power_forecast',
             'nuclear_power_forecast',
+            'local_power_forecast',   # 地方电厂发电总加，预留用于分布式光伏=全网负荷-直调-地方电厂，不参与bs计算
+            'self_power_forecast',
         ],
         'create': '''
             CREATE TABLE IF NOT EXISTS bidding_space_forecast (
@@ -56,7 +58,9 @@ TABLES = {
                 wind_power          REAL,
                 photovoltaic_power  REAL,
                 nuclear_power       REAL,
-                bidding_space       REAL,
+                local_power         REAL,   -- 地方电厂发电总加，预留(分布式光伏用)，不参与bs
+                self_power          REAL,
+                bidding_space       REAL,   -- 直调-(联络+风+光+核+自备)
                 PRIMARY KEY (date, time_order)
             )
         ''',
@@ -70,6 +74,8 @@ TABLES = {
             'actual_wind_power',
             'actual_photovoltaic_power',
             'actual_nuclear_power',
+            'actual_local_power',   # 地方电厂发电总加，预留，不参与bs
+            'actual_self_power',
         ],
         'create': '''
             CREATE TABLE IF NOT EXISTS bidding_space_actual (
@@ -80,7 +86,9 @@ TABLES = {
                 wind_power          REAL,
                 photovoltaic_power  REAL,
                 nuclear_power       REAL,
-                bidding_space       REAL,
+                local_power         REAL,   -- 地方电厂发电总加，预留(分布式光伏用)，不参与bs
+                self_power          REAL,
+                bidding_space       REAL,   -- 直调-(联络+风+光+核+自备)
                 PRIMARY KEY (date, time_order)
             )
         ''',
@@ -155,14 +163,38 @@ def _get_conn() -> sqlite3.Connection:
 
 
 def init_db():
-    """Create all tables if they don't exist."""
+    """Create all tables if they don't exist. Auto-migrate missing columns."""
     conn = _get_conn()
     for name, cfg in TABLES.items():
         conn.execute(cfg['create'])
         conn.execute(f'CREATE INDEX IF NOT EXISTS idx_{name}_date ON {cfg["local"]}(date)')
+        # Auto-migrate: add columns present in CREATE SQL but missing in existing table
+        existing = {r[1] for r in conn.execute(f'PRAGMA table_info({cfg["local"]})')}
+        for col in _extract_col_names(cfg['create']):
+            if col not in existing and col not in ('date', 'time_order'):
+                # default REAL type (read from CREATE via regex would be cleaner; use REAL)
+                conn.execute(f'ALTER TABLE {cfg["local"]} ADD COLUMN {col} REAL')
     conn.commit()
     conn.close()
     print(f'Initialized: {DB_PATH}')
+
+
+def _extract_col_names(create_sql: str) -> list[str]:
+    """Extract column names from a CREATE TABLE SQL string."""
+    import re
+    # Strip the part inside parentheses
+    m = re.search(r'\((.*)\)', create_sql, re.S)
+    if not m:
+        return []
+    body = m.group(1)
+    cols = []
+    for line in body.split('\n'):
+        line = line.strip().rstrip(',')
+        if not line or line.startswith('PRIMARY') or line.startswith('FOREIGN'):
+            continue
+        col = line.split()[0]
+        cols.append(col)
+    return cols
 
 
 def _remote_query(sql: str, params: tuple = ()) -> list[tuple]:
@@ -196,16 +228,19 @@ def _sync_bidding_space(conn: sqlite3.Connection, table_key: str, start: str, en
     insert_sql = f'''
         INSERT OR REPLACE INTO {local_name}
             (date, time_order, dispatched_load, tie_line_load, wind_power,
-             photovoltaic_power, nuclear_power, bidding_space)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             photovoltaic_power, nuclear_power, local_power, self_power,
+             bidding_space)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     '''
     count = 0
     for row in rows:
         d = str(row[0])
         to = int(row[1])
         vals = [float(v) if v is not None else 0.0 for v in row[2:]]
-        # bidding_space = dispatched - tie_line - wind - pv - nuclear
-        bs = vals[0] - vals[1] - vals[2] - vals[3] - vals[4]
+        # bidding_space = 直调负荷 - (联络线受电 + 风电 + 光伏 + 核电 + 自备)
+        # 注：local_power(地方电厂发电总加)不参与bs，预留用于分布式光伏=全网负荷-直调-地方电厂
+        # vals: [dispatched, tie_line, wind, pv, nuclear, local, self]
+        bs = vals[0] - vals[1] - vals[2] - vals[3] - vals[4] - vals[6]
         conn.execute(insert_sql, (d, to, *vals, bs))
         count += 1
         if count % 1000 == 0:
@@ -570,7 +605,8 @@ def query_bidding_space(start: str, end: str,
     conn = _get_conn()
     sql = f'''
         SELECT date, time_order, dispatched_load, tie_line_load,
-               wind_power, photovoltaic_power, nuclear_power, bidding_space
+               wind_power, photovoltaic_power, nuclear_power,
+               local_power, self_power, bidding_space
         FROM {table}
         WHERE date >= ? AND date <= ?
         ORDER BY date, time_order
@@ -579,13 +615,15 @@ def query_bidding_space(start: str, end: str,
     conn.close()
 
     data = defaultdict(lambda: defaultdict(list))
-    for d, to, dl, tl, wp, pv, nu, bs in rows:
+    for d, to, dl, tl, wp, pv, nu, loc, slf, bs in rows:
         ds = d
         data[ds]['直调负荷'].append(dl or 0)
         data[ds]['联络线受电'].append(tl or 0)
         data[ds]['风电总加'].append(wp or 0)
         data[ds]['光伏总加'].append(pv or 0)
         data[ds]['核电总加'].append(nu or 0)
+        data[ds]['地方电厂'].append(loc or 0)   # 地方电厂发电总加，预留(分布式光伏用)，不参与bs
+        data[ds]['自备机组'].append(slf or 0)
         data[ds]['竞价空间'].append(bs or 0)
 
     return dict(data)

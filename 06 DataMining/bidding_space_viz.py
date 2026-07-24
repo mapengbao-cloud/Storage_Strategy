@@ -1,7 +1,8 @@
 """Generate bidding space visualization from tianrun_new database.
 
-预测竞价空间 = 直调负荷 - 联络线受电负荷 - 风电总加 - 光伏总加 - 核电总加
+预测竞价空间 = 直调负荷 - 联络线受电 - 风电总加 - 光伏总加 - 核电总加 - 自备机组
 真实竞价空间 = 同上公式，使用实际运行数据
+注：地方电厂(local_power)是地方电厂发电总加，不属竞价空间，预留用于分布式光伏=全网负荷-直调-地方电厂
 
 Usage:
     python bidding_space_viz.py                              # 预测 (默认)
@@ -64,6 +65,8 @@ TABLE_CONFIG = {
             '风电总加': 'wind_power_forecast',
             '光伏总加': 'photovoltaic_power_forecast',
             '核电总加': 'nuclear_power_forecast',
+            '地方电厂': 'local_power_forecast',   # 地方电厂发电总加，预留(分布式光伏用)，不参与bs
+            '自备机组': 'self_power_forecast',
         },
         'label': '预测',
         'info': '数据来源: shandong_px_spot_dayahead_load_info',
@@ -78,6 +81,8 @@ TABLE_CONFIG = {
             '风电总加': 'actual_wind_power',
             '光伏总加': 'actual_photovoltaic_power',
             '核电总加': 'actual_nuclear_power',
+            '地方电厂': 'actual_local_power',   # 地方电厂发电总加，预留，不参与bs
+            '自备机组': 'actual_self_power',
         },
         'label': '真实',
         'info': '数据来源: shandong_px_spot_actual_load_info',
@@ -117,13 +122,15 @@ def fetch_data(start_date: str, end_date: str, mode: str) -> dict[str, dict]:
             label = rev[col_name]
             v = float(vals[i]) if vals[i] is not None else 0
             data[ds][label].append(v)
-        # 竞价空间 = 直调 - 联络线 - 风电 - 光伏 - 核电
+        # 竞价空间 = 直调负荷 - (联络线受电 + 风电 + 光伏 + 核电 + 自备)
+        # 注：地方电厂(local_power)不参与bs，预留用于分布式光伏
         bs = (
             data[ds]['直调负荷'][-1]
             - data[ds]['联络线受电'][-1]
             - data[ds]['风电总加'][-1]
             - data[ds]['光伏总加'][-1]
             - data[ds]['核电总加'][-1]
+            - data[ds]['自备机组'][-1]
         )
         data[ds]['竞价空间'].append(bs)
 
@@ -207,7 +214,8 @@ def fetch_data_local(start_date: str, end_date: str, mode: str) -> dict[str, dic
     conn = sqlite3.connect(LOCAL_DB_PATH)
     sql = f'''
         SELECT date, time_order, dispatched_load, tie_line_load,
-               wind_power, photovoltaic_power, nuclear_power, bidding_space
+               wind_power, photovoltaic_power, nuclear_power,
+               local_power, self_power, bidding_space
         FROM {table}
         WHERE date >= ? AND date <= ?
         ORDER BY date, time_order
@@ -216,12 +224,14 @@ def fetch_data_local(start_date: str, end_date: str, mode: str) -> dict[str, dic
     conn.close()
 
     data = defaultdict(lambda: defaultdict(list))
-    for d, to, dl, tl, wp, pv, nu, bs in rows:
+    for d, to, dl, tl, wp, pv, nu, loc, slf, bs in rows:
         data[d]['直调负荷'].append(dl or 0)
         data[d]['联络线受电'].append(tl or 0)
         data[d]['风电总加'].append(wp or 0)
         data[d]['光伏总加'].append(pv or 0)
         data[d]['核电总加'].append(nu or 0)
+        data[d]['地方电厂'].append(loc or 0)   # 地方电厂发电总加，预留(分布式光伏用)，不参与bs
+        data[d]['自备机组'].append(slf or 0)
         data[d]['竞价空间'].append(bs or 0)
 
     return dict(data)
@@ -233,7 +243,7 @@ def fetch_both_data_local(start_date: str, end_date: str) -> dict[str, dict]:
     ac = fetch_data_local(start_date, end_date, 'actual')
 
     common_dates = sorted(set(fg.keys()) & set(ac.keys()))
-    fields = ['直调负荷', '联络线受电', '风电总加', '光伏总加', '核电总加', '竞价空间']
+    fields = ['直调负荷', '联络线受电', '风电总加', '光伏总加', '核电总加', '地方电厂', '自备机组', '竞价空间']
 
     merged = {}
     for d in common_dates:
@@ -301,7 +311,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
 <div class="header">
   <div>
     <h1>{cfg["label"]}竞价空间分析</h1>
-    <div class="info">{cfg['info']} | 公式: 直调负荷 - 联络线受电 - 风电 - 光伏 - 核电</div>
+    <div class="info">{cfg['info']} | 公式: 直调负荷 - 联络线受电 - 风电 - 光伏 - 核电 - 自备 (地方电厂不参与bs)</div>
   </div>
   <div class="date-tabs" id="dateTabs"></div>
 </div>
@@ -323,7 +333,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
       数据来源：<br>
       · {cfg['source_desc']}<br>
       · 96点{cfg['data_type']}<br>
-      · 竞价空间 = 直调负荷 - 联络线 - 风电 - 光伏 - 核电<br>
+      · 竞价空间 = 直调负荷 - 联络线 - 风电 - 光伏 - 核电 - 自备<br>
       · {price_label}：{price_source}<br>
       · 键盘 ← → 切换日期<br>
       · 图例选择在切换日期后保持不变
@@ -452,8 +462,8 @@ function renderSummary(dd) {{
 function renderStats(dd) {{
   var d = DATA[dd];
   var h = '<h3>'+dd+' 详细数据</h3>';
-  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','竞价空间'];
-  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4','#0078d4'];
+  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','地方电厂','自备机组','竞价空间'];
+  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4','#0078d4','#91cc75','#fa541c'];
   fields.forEach(function(f,i) {{
     var arr = d[f];
     var avg = arr.reduce(function(a,b){{return a+b;}},0)/96;
@@ -495,7 +505,7 @@ def fetch_both_data(start_date: str, end_date: str) -> dict[str, dict]:
 
     # Merge by common dates
     common_dates = sorted(set(fg.keys()) & set(ac.keys()))
-    fields = ['直调负荷', '联络线受电', '风电总加', '光伏总加', '核电总加', '竞价空间']
+    fields = ['直调负荷', '联络线受电', '风电总加', '光伏总加', '核电总加', '地方电厂', '自备机组', '竞价空间']
 
     merged = {}
     for d in common_dates:
@@ -574,7 +584,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
 <div class="header">
   <div>
     <h1>预测 vs 实际 竞价空间对比</h1>
-    <div class="info">数据来源: shandong_px_spot_dayahead_load_info + shandong_px_spot_actual_load_info | 公式: 直调负荷 - 联络线受电 - 风电 - 光伏 - 核电</div>
+    <div class="info">数据来源: shandong_px_spot_dayahead_load_info + shandong_px_spot_actual_load_info | 公式: 直调负荷 - 联络线受电 - 风电 - 光伏 - 核电 - 自备 (地方电厂不参与bs)</div>
   </div>
   <div class="date-tabs" id="dateTabs"></div>
 </div>
@@ -601,7 +611,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
       数据来源：<br>
       · 预测: shandong_px_spot_dayahead_load_info<br>
       · 实际: shandong_px_spot_actual_load_info<br>
-      · 竞价空间 = 直调负荷 - 联络线 - 风电 - 光伏 - 核电<br>
+      · 竞价空间 = 直调负荷 - 联络线 - 风电 - 光伏 - 核电 - 自备<br>
       · 偏差 = 实际值 - 预测值<br>
       · 键盘 ← → 切换日期<br>
       · 图例选择在切换日期后保持不变
@@ -677,8 +687,8 @@ function getOptBS(dd) {{
 // Chart 2: 各分项偏差 (实际 - 预测)
 function getOptDev(dd) {{
   var d = DATA[dd];
-  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加'];
-  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4'];
+  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','地方电厂','自备机组'];
+  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4','#0078d4','#91cc75'];
   var s = [];
   fields.forEach(function(f,i) {{
     var dev = [];
@@ -701,6 +711,8 @@ var COMP_PAIRS = [
   {{key:'风电总加',label:'风电总加',colorF:'#107c10',colorA:'#60d060'}},
   {{key:'光伏总加',label:'光伏总加',colorF:'#f2a900',colorA:'#f0d060'}},
   {{key:'核电总加',label:'核电总加',colorF:'#9a60b4',colorA:'#d0a0f0'}},
+  {{key:'地方电厂',label:'地方电厂',colorF:'#0078d4',colorA:'#80b4f0'}},
+  {{key:'自备机组',label:'自备机组',colorF:'#91cc75',colorA:'#c0e0a0'}},
 ];
 
 function getOptComp(dd) {{
@@ -738,8 +750,8 @@ function renderSummary(dd) {{
 function renderStats(dd) {{
   var d = DATA[dd];
   var h = '<h3>'+dd+' 分项均值对比</h3>';
-  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','竞价空间'];
-  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4','#0078d4'];
+  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','地方电厂','自备机组','竞价空间'];
+  var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4','#0078d4','#91cc75','#fa541c'];
   fields.forEach(function(f,i) {{
     var fg = d[f]['预测'];
     var ac = d[f]['实际'];
@@ -757,7 +769,7 @@ function renderStats(dd) {{
 // Deviation contribution bar chart
 function renderDevBar(dd) {{
   var d = DATA[dd];
-  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加'];
+  var fields = ['直调负荷','联络线受电','风电总加','光伏总加','核电总加','地方电厂','自备机组'];
   var colors = ['#5470c6','#d83b01','#107c10','#f2a900','#9a60b4'];
   // Compute RMSE per component
   var devs = [];

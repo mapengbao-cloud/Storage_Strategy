@@ -238,33 +238,239 @@ def load_features() -> dict[str, dict]:
         return json.load(f)
 
 
-def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[dict]:
+# ── 储能充放推荐逻辑 ────────────────────────────────────────────
+# 基于历史 384 天回归（2025-07 ~ 2026-07）：
+#   bs_peak  → 火电峰值台数  peak_units  = 0.0019 × bs_peak + 13.12   (R²=0.65)
+#   bs_valley→ 火电谷值台数  valley_units= 0.0011 × bs_valley + 79.88 (R²=0.55)
+# 谷段储能充电功率（负=充电）随谷值深度分档；峰段放电功率（正=放电）随峰值台数分档。
+PEAK_UNITS_A = 0.0019
+PEAK_UNITS_B = 13.12
+VALLEY_UNITS_A = 0.0011
+VALLEY_UNITS_B = 79.88
+
+# 谷段充电推荐： (valley_min, valley_max, charge_mw, label)
+CHARGE_BINS = [
+    (-999999, 0,      -9000, '极强'),
+    (0,       5000,   -9600, '强'),
+    (5000,    10000,  -8400, '中强'),
+    (10000,   15000,  -7700, '中'),
+    (15000,   20000,  -6500, '弱中'),
+    (20000,   999999, -3000, '弱'),
+]
+
+# 峰段放电推荐： (peak_units_min, peak_units_max, discharge_mw)
+DISCHARGE_BINS = [
+    (0,   75,    5000),
+    (75,  90,    4700),
+    (90,  100,   4500),
+    (100, 999999, 4000),
+]
+
+# ── 双变量判据：bs谷值 × 火电峰值台数 → 触地板概率（历史统计）──
+# 关键规律：峰值台数决定谷段最小出力地板线（开停机有费用，为保峰值供应少停机→
+# 峰值台数越多→谷段最小出力被抬高→火电压不到地板→触地板概率下降）。
+# 谷值 < 0 时无论台数多少 100% 触地板；谷值 > 20GW 且台数 >90 仅 29-34% 触地板。
+# 峰值台数 → 谷段最小出力地板线（回归）：<60→7856, 70-80→11193, 80-90→12733, 90-100→17035, >100→22421 MW
+MIN_OUTPUT_BY_UNITS = [
+    (0,   60,  7856),
+    (60,  70,  9573),
+    (70,  80,  11193),
+    (80,  90,  12733),
+    (90,  100, 17035),
+    (100, 9999, 22421),
+]
+
+# 触地板概率矩阵（行=bs谷值, 列=峰值台数），用于 floor_prob 估算
+# 值为 0-1，来自历史 773 天日级统计，分保供季(7-8/12-2月)与非保供季
+# 关键修正：0722 实测反例（7月保供季, 谷值5217, 台数104, 未触地板）暴露
+# 原矩阵在保供季中间区(5-15GW)被高估。保供季用单独矩阵（样本少+负荷高→
+# 火电难压到最小出力，触地板概率低于非保供季）。
+FLOOR_PROB_MATRIX = {
+    'valley_bins': [(-999999, 0), (0, 5000), (5000, 10000), (10000, 15000), (15000, 20000), (20000, 999999)],
+    'unit_bins': [(0, 70), (70, 80), (80, 90), (90, 100), (100, 9999)],
+    # 非保供季矩阵（3-6/9-11月，过渡季样本充足）
+    'prob_nonpeak': [
+        [1.00, 1.00, 1.00, 1.00, 1.00],  # 谷值<0
+        [None, 1.00, 1.00, 1.00, 1.00],  # 0-5
+        [None, 1.00, 1.00, 1.00, 1.00],  # 5-10
+        [None, None, 0.88, 0.81, 0.90],  # 10-15
+        [None, 0.00, 0.75, 0.68, 0.78],  # 15-20
+        [None, 0.00, 0.00, 0.30, 0.25],  # >20
+    ],
+    # 保供季矩阵（7-8/12-2月，负荷高→火电难压到最小出力→概率降低）
+    # 0722 实测反例：7月谷值5217(5-10档)×回归台数95(90-100档)，模型预测100%触地板，
+    # 实际火电最小出清17266MW（接近地板线17035但未完全压到）+电价最低180（未触-80）+储能仅-5051MW。
+    # 教训：保供季①回归台数有±9台误差（实际104落入>100档）②火电难完全压到最小出力③电价不一定触地板。
+    # 故保供季90-100台档的5-15GW行适度下调（小样本+误差风险）。
+    'prob_peak': [
+        [None, None, 1.00, 1.00, 1.00],  # 谷值<0
+        [None, None, 0.50, 0.50, 0.90],  # 0-5
+        [None, None, 1.00, 0.90, 0.85],  # 5-10 (0722反例：回归95台落此格→实际未触地板)
+        [None, None, None, 0.90, 0.90],  # 10-15
+        [None, None, None, 1.00, 0.86],  # 15-20
+        [None, None, 1.00, 0.25, 0.40],  # >20
+    ],
+}
+
+
+def _bin_index(value, bins):
+    """Find which bin a value falls into."""
+    for i, (lo, hi) in enumerate(bins):
+        if lo <= value < hi:
+            return i
+    return None
+
+
+def _floor_prob(valley, peak_units, is_peak_season=False):
+    """Estimate floor-price probability from valley × peak_units matrix.
+
+    Args:
+        valley: bs 2h valley (MW).
+        peak_units: predicted peak thermal unit count.
+        is_peak_season: True for 7-8/12-2月 (保供季), False otherwise.
+    """
+    vi = _bin_index(valley, FLOOR_PROB_MATRIX['valley_bins'])
+    ui = _bin_index(peak_units, FLOOR_PROB_MATRIX['unit_bins'])
+    if vi is None or ui is None:
+        return None
+    matrix = FLOOR_PROB_MATRIX['prob_peak'] if is_peak_season else FLOOR_PROB_MATRIX['prob_nonpeak']
+    p = matrix[vi][ui]
+    return p
+
+
+def _min_output_floor(peak_units):
+    """Estimate thermal minimum output floor (MW) from peak unit count."""
+    for lo, hi, mw in MIN_OUTPUT_BY_UNITS:
+        if lo <= peak_units < hi:
+            return mw
+    return 22421
+
+
+def compute_storage_recommendation(peak: float, valley: float, date_str: str = "") -> dict:
+    """Compute storage charge/discharge recommendation from bs peak/valley.
+
+    双变量判据逻辑：
+      主判据：bs 2h谷值（谷值越低→触地板概率越高→储能充电越强）
+      辅判据：火电峰值台数（决定谷段最小出力地板线高度）
+        - 开停机有费用，为保峰值供应少停机 → 峰值台数越多
+        - 谷段时即使全部压到最小出力，总最小出力也高 → 火电压不到地板
+        - 峰值台数 70-80：谷段最小出力 11193 MW，触地板 96%
+        - 峰值台数 >100：谷段最小出力 22421 MW，触地板 56%
+      谷值<0：无论台数多少 100% 触地板（光伏淹没负荷太深）
+      谷值>20GW 且台数>90：仅 29-34% 触地板（保供日压不下去）
+
+    Args:
+        peak: 2h 峰值均值 (MW).
+        valley: 2h 谷值均值 (MW).
+
+    Returns:
+        dict with peak_units, valley_units, min_output_floor, floor_prob,
+        charge_mw, charge_label, charge_mwh, discharge_mw, discharge_mwh, rationale.
+    """
+    peak_units = round(PEAK_UNITS_A * peak + PEAK_UNITS_B)
+    valley_units = round(VALLEY_UNITS_A * valley + VALLEY_UNITS_B)
+
+    # 谷段最小出力地板线（由峰值台数决定）
+    min_output = _min_output_floor(peak_units)
+
+    # 触地板概率（双变量矩阵，区分保供季）
+    # 优先用日期月份判断保供季（7-8/12-2月），无日期则用峰值水平近似
+    if date_str:
+        try:
+            m = int(date_str.split('-')[1])
+            is_peak_season = m in (7, 8, 12, 1, 2)
+        except (ValueError, IndexError):
+            is_peak_season = peak >= 40000 or valley >= 20000
+    else:
+        is_peak_season = peak >= 40000 or valley >= 20000
+    floor_prob = _floor_prob(valley, peak_units, is_peak_season=is_peak_season)
+
+    # 谷段充电推荐（基础档由谷值决定）
+    charge_mw = -3000
+    charge_label = '弱'
+    for lo, hi, mw, lbl in CHARGE_BINS:
+        if lo <= valley < hi:
+            charge_mw = mw
+            charge_label = lbl
+            break
+
+    # 双变量修正：中间区间（10-20GW）用触地板概率（而非机械台数）调整
+    # 逻辑自洽：floor_prob 高→确实会触地板→储能强投充电（地板价套利明确）
+    #          floor_prob 低→保供日压不下去→降档
+    # 注：放电受峰值台数挤占（保供日放电空间小），但充电在谷段，只要触地板就该强投
+    if 10000 <= valley < 20000 and floor_prob is not None:
+        if floor_prob >= 0.80:
+            # 触地板概率高，谷值<地板线，火电必压到最小出力 → 升档强投
+            charge_mw = -8400
+            charge_label = '中强'
+        elif floor_prob < 0.50:
+            # 保供日压不下去，触地板概率低 → 降档
+            charge_mw = -3000
+            charge_label = '弱中'
+        # 50-80% 保持基础档
+
+    # 峰段放电推荐
+    discharge_mw = 4000
+    for lo, hi, mw in DISCHARGE_BINS:
+        if lo <= peak_units < hi:
+            discharge_mw = mw
+            break
+
+    # 2h 能量估算（充放窗 2h = 8 个 15min 点）
+    charge_mwh = round(abs(charge_mw) * 2, 0)         # 充电能量 MWh
+    discharge_mwh = round(charge_mwh * 0.89, 0)       # 按综合效率 0.89 推放电
+
+    # 判定语
+    if valley < 0:
+        floor_verdict = '极强（谷值<0，光伏淹没负荷，100%触地板）'
+    elif valley >= 20000 and peak_units >= 90:
+        floor_verdict = '弱（保供日+高谷值，火电压不下去）'
+    elif floor_prob is not None and floor_prob >= 0.8:
+        floor_verdict = f'强（触地板概率{floor_prob*100:.0f}%）'
+    elif floor_prob is not None and floor_prob >= 0.5:
+        floor_verdict = f'中（触地板概率{floor_prob*100:.0f}%）'
+    else:
+        floor_verdict = f'弱（触地板概率{floor_prob*100:.0f}%' if floor_prob else '弱'
+
+    return {
+        'peak_units': int(peak_units),
+        'valley_units': int(valley_units),
+        'min_output_floor': int(min_output),
+        'floor_prob': round(floor_prob * 100, 0) if floor_prob is not None else None,
+        'floor_verdict': floor_verdict,
+        'charge_mw': charge_mw,
+        'charge_label': charge_label,
+        'charge_mwh': charge_mwh,
+        'discharge_mw': discharge_mw,
+        'discharge_mwh': discharge_mwh,
+    }
+
+
+
+def compute_similarity(target: str, candidates: dict, top_n: int = 10,
+                       prices: dict = None) -> list[dict]:
     """Compute similarity scores for all candidates vs target.
 
-    Seasonal bonus rules（电力系统季节特性）:
-    季节划分:
-      - 夏季: 6-8月（7-8月为空调尖峰保供）
-      - 供暖季: 11月15日 ~ 次年3月15日（12-2月为供暖尖峰保供）
-      - 春季: 3月16日 ~ 5月31日
-      - 秋季: 9月1日 ~ 11月14日
+    6 维度加权相似度排名算法（寻找峰谷/形状/时间最相似的日）：
+      - 2h谷值 28%：谷值越接近，储能充电需求越一致
+      - 2h峰值 23%：峰值越接近，保供水平越一致
+      - 谷值时段 12%：谷值窗口中心时点连续距离（非分档，跨边界不硬切）
+      - 峰值时段 8%：峰值窗口中心时点连续距离
+      - 曲线形状 19%：Pearson 相关系数，96点形态拟合度
+      - 时间近邻 10%：越近越可靠（2周内最近→1.0，30天→0.5，去年→0.2）
+    另有「谷段现货负价」作为充电可能性参考维度，仅展示不参与排名
+    （负价判断的是充电机会，不是日期相似性，不应影响相似日排名）。
 
-    保供尖峰月份 (7-8月, 12-2月):
-      1. 去年同保供尖峰月份 → +0.12（最高）
-      2. 本年同季节非保供月份 → +0.08
-      3. 去年同季节非保供月份 → +0.06
-      4. 本年30日内（非本季节）→ +0.04
-      其他日期全部排除
-
-    非保供季节 (6月, 3月16日-5月, 9月-11月14日):
-      1. 去年同季节 → +0.08
-      2. 本年同季节30日内 → +0.06
-      3. 本年30日内 → +0.04
+    季节 Bonus（保供/非保供区分）：
+      保供季(7-8/12-2月)：本年同保供30日内+0.12、去年保供+0.10、本年同季非保供+0.08、去年同季+0.06、本年30日+0.04
+      非保供季：去年同季+0.08、本年同季30日内+0.06、本年30日+0.04
       其他日期全部排除
 
     Args:
         target: target date string.
         candidates: {date: feature_dict} — must include 'values' key.
         top_n: number of top results to return.
+        prices: {date: {'dayahead': [96], 'realtime': [96]}} — for price reference display only.
 
     Returns:
         Sorted list of {date, score, scores: {dim: score}, ...}, best first.
@@ -298,16 +504,9 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
     def is_heating_season(m, d):
         return (m == 11 and d >= 15) or m == 12 or m in (1, 2) or (m == 3 and d <= 15)
 
-    # 供暖尖峰保供: 12-2月
-    # 夏季: 6-8月
-    # 空调尖峰保供: 7-8月
-
     def is_target_peak_season(m):
         """Check if target month is a peak supply-guarantee month."""
         return m in (7, 8, 12, 1, 2)
-
-    def is_target_heating(m, d):
-        return is_heating_season(m, d)
 
     def is_target_summer(m):
         return m in (6, 7, 8)
@@ -335,6 +534,9 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
     target_season_type, target_season_months = get_season_type(target_month, target_day)
     target_is_peak = target_season_type in ('summer_peak', 'heating_peak')
 
+    da_prices = prices.get('dayahead', {}) if prices else {}
+    rt_prices = prices.get('realtime', {}) if prices else {}  # 保留供图表展示用，实时价差维度已取消
+
     for d, c in candidates.items():
         if d == target:
             continue
@@ -349,6 +551,7 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
         c_year = int(d.split('-')[0]) if '-' in d else 0
         c_month = int(d.split('-')[1]) if '-' in d else 0
         c_dt = datetime.strptime(d, '%Y-%m-%d')
+        days_diff = abs((c_dt - target_dt).days)
 
         # ── Seasonal filtering ──
         bonus = 0.0
@@ -356,37 +559,31 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
 
         if target_is_peak:
             # 保供尖峰月份 (7-8月, 12-2月)
-            # 1. 本年同保供月份30日内 +0.12（最高）
-            if c_year == target_year and c_month in target_season_months and abs((c_dt - target_dt).days) <= 30:
+            if c_year == target_year and c_month in target_season_months and days_diff <= 30:
                 bonus = 0.12
                 bonus_label = ' [本年保供]'
-            # 2. 去年同保供月份 +0.10
             elif c_year == target_year - 1 and c_month in target_season_months:
                 bonus = 0.10
                 bonus_label = ' [去年保供]'
-            # 3. 本年同季节非保供月份 +0.08
             elif c_year == target_year and (
                 (target_season_type == 'summer_peak' and c_month == 6) or
                 (target_season_type == 'heating_peak' and is_heating_season(c_month, c_dt.day) and c_month not in (12, 1, 2))
             ):
                 bonus = 0.08
                 bonus_label = ' [本年同季]'
-            # 4. 去年同季节非保供月份 +0.06
             elif c_year == target_year - 1 and (
                 (target_season_type == 'summer_peak' and c_month == 6) or
                 (target_season_type == 'heating_peak' and is_heating_season(c_month, c_dt.day) and c_month not in (12, 1, 2))
             ):
                 bonus = 0.06
                 bonus_label = ' [去年同季]'
-            # 5. 本年30日内（非本季节） +0.04
-            elif c_year == target_year and abs((c_dt - target_dt).days) <= 30:
+            elif c_year == target_year and days_diff <= 30:
                 bonus = 0.04
                 bonus_label = ' [本年30日]'
             else:
                 continue
         else:
             # 非保供季节 (6月, 春季, 秋季)
-            # 1. 去年同季节 +0.08
             if c_year == target_year - 1 and (
                 (target_season_type == 'summer_nonpeak' and c_month in (6, 7, 8)) or
                 (target_season_type == 'spring' and c_month in (3, 4, 5)) or
@@ -395,8 +592,7 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
             ):
                 bonus = 0.08
                 bonus_label = ' [去年同季]'
-            # 2. 本年同季节30日内 +0.06
-            elif c_year == target_year and abs((c_dt - target_dt).days) <= 30 and (
+            elif c_year == target_year and days_diff <= 30 and (
                 (target_season_type == 'summer_nonpeak' and c_month in (6, 7, 8)) or
                 (target_season_type == 'spring' and c_month in (3, 4, 5)) or
                 (target_season_type == 'autumn' and c_month in (9, 10, 11)) or
@@ -404,42 +600,64 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
             ):
                 bonus = 0.06
                 bonus_label = ' [本年同季]'
-            # 3. 本年30日内 +0.04
-            elif c_year == target_year and abs((c_dt - target_dt).days) <= 30:
+            elif c_year == target_year and days_diff <= 30:
                 bonus = 0.04
                 bonus_label = ' [本年30日]'
             else:
                 continue
 
-        # ── Dimension scores ──
+        # ── Dimension scores (6维参与排名) ──
         valley_score = max(0, 1 - abs(c_valley - t_valley) / max_valley)
         peak_score = max(0, 1 - abs(c_peak - t_peak) / max_peak)
 
-        vp_dist = abs(PERIOD_NAMES.index(c_valley_period) - PERIOD_NAMES.index(t_valley_period))
-        if vp_dist == 0:
-            valley_period_score = 1.0
-        elif vp_dist == 1:
-            valley_period_score = 0.5
-        else:
-            valley_period_score = 0.0
+        # 时段相似度：用窗口中心 idx 的连续距离打分，而非分档跳变。
+        # 原分档方案在跨段边界（如 0724 idx48=中午 / 0723 idx46=上午）时直接判 0.5，
+        # 但实际只差 2 时点(30min)，应接近 1.0。改为按 idx 差线性衰减：
+        # 中心差 0 → 1.0；差 N → 1 - N/48（差半个表(48点=12h)→0）。
+        c_valley_idx = c.get('valley_idx', 48)
+        t_valley_idx = t.get('valley_idx', 48)
+        vp_diff = abs(c_valley_idx - t_valley_idx)
+        valley_period_score = max(0.0, 1.0 - vp_diff / 48)
 
-        pp_dist = abs(PERIOD_NAMES.index(c_peak_period) - PERIOD_NAMES.index(t_peak_period))
-        if pp_dist == 0:
-            peak_period_score = 1.0
-        elif pp_dist == 1:
-            peak_period_score = 0.5
-        else:
-            peak_period_score = 0.0
+        c_peak_idx = c.get('peak_idx', 48)
+        t_peak_idx = t.get('peak_idx', 48)
+        pp_diff = abs(c_peak_idx - t_peak_idx)
+        peak_period_score = max(0.0, 1.0 - pp_diff / 48)
 
         corr = pearson_correlation(t_vals, c_vals)
         shape_score = max(0, corr)
 
+        # ── 时间近邻分数 (10%) ──
+        # 2周内(14天)→1.0，15-30天→线性衰减到0.5，31-60天→0.3，去年同季→0.2
+        if days_diff <= 14:
+            proximity_score = 1.0
+        elif days_diff <= 30:
+            proximity_score = 0.5 + 0.5 * (30 - days_diff) / 16  # 0.5→1.0
+        elif days_diff <= 60:
+            proximity_score = 0.3
+        else:
+            proximity_score = 0.2
+
+        # ── 谷段现货负价（充电可能性参考，不参与排名）──
+        # 候选日谷值时段2h（8点）的日前电价<0比例 → 负价越多充电机会越好。
+        # 仅作为推荐参考，不计入 score（负价判断充电机会，不是日期相似性）。
+        neg_price_score = 0.0
+        if d in da_prices and da_prices[d]:
+            valley_idx = c.get('valley_idx', 48)
+            valley_start = max(0, valley_idx - 4)
+            valley_end = min(96, valley_idx + 4)
+            valley_prices = da_prices[d][valley_start:valley_end]
+            if valley_prices:
+                neg_ratio = sum(1 for p in valley_prices if p < 0) / len(valley_prices)
+                neg_price_score = neg_ratio  # 0-1
+
         score = (
-            0.30 * valley_score
-            + 0.25 * peak_score
-            + 0.15 * valley_period_score
-            + 0.10 * peak_period_score
-            + 0.20 * shape_score
+            0.28 * valley_score
+            + 0.23 * peak_score
+            + 0.12 * valley_period_score
+            + 0.08 * peak_period_score
+            + 0.19 * shape_score
+            + 0.10 * proximity_score
         ) + bonus
 
         results.append({
@@ -451,6 +669,8 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
                 '谷值时段': round(valley_period_score, 4),
                 '峰值时段': round(peak_period_score, 4),
                 '曲线形状': round(shape_score, 4),
+                '时间近邻': round(proximity_score, 4),
+                '谷段负价': round(neg_price_score, 4),
             },
             'diff': round(c_peak - c_valley, 0),
             'diff_pct': round(((c_peak - c_valley) - (t_peak - t_valley)) / (t_peak - t_valley) * 100, 1) if (t_peak - t_valley) else 0,
@@ -462,10 +682,13 @@ def compute_similarity(target: str, candidates: dict, top_n: int = 10) -> list[d
             'valley_time': c['valley_time'],
             'correlation': round(corr, 4),
             'bonus': bonus_label,
+            'days_diff': days_diff,
+            'neg_price_ratio': round(neg_price_score, 3),
         })
 
     results.sort(key=lambda x: x['score'], reverse=True)
     return results[:top_n]
+
 
 
 def generate_html(target_date: str, similar_days: list[dict],
@@ -506,11 +729,23 @@ def generate_html(target_date: str, similar_days: list[dict],
             'realtime': rt.get(d, []),
         }
 
+    # ── 储能充放推荐（基于目标日 bs 谷值/峰值 → 火电台数回归）──
+    t_feat = features.get(target_date, {})
+    t_peak = t_feat.get('peak', 0)
+    t_valley = t_feat.get('valley', 0)
+    storage_rec = compute_storage_recommendation(t_peak, t_valley, date_str=target_date)
+    # 各相似日推荐（用于对比表）
+    sim_recs = {}
+    for s in similar_days:
+        sim_recs[s['date']] = compute_storage_recommendation(s.get('peak', 0), s.get('valley', 0), date_str=s.get('date', ''))
+
     time_labels_json = json.dumps(TIME_LABELS, ensure_ascii=False)
     embed_json = json.dumps(embed_data, ensure_ascii=False)
     embed_prices_json = json.dumps(embed_prices, ensure_ascii=False)
     similar_json = json.dumps(similar_days, ensure_ascii=False)
     all_dates_json = json.dumps(all_dates, ensure_ascii=False)
+    storage_rec_json = json.dumps(storage_rec, ensure_ascii=False)
+    sim_recs_json = json.dumps(sim_recs, ensure_ascii=False)
 
     # Build similar day table rows
     table_rows = ''
@@ -571,6 +806,14 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
 .summary-chip .chip-label{{font-size:10px;color:#888;margin-bottom:2px}}
 .summary-chip .chip-value{{font-size:18px;font-weight:700;color:#0078d4}}
 .summary-chip .chip-sub{{font-size:10px;color:#999}}
+.rec-panel{{margin:0 8px 6px 8px;background:linear-gradient(135deg,#f0f7ff,#e8f5e9);border:1px solid #b3d4f4;border-radius:6px;padding:12px 16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}}
+.rec-panel h2{{font-size:15px;color:#0078d4;margin-bottom:8px;border-bottom:1px solid #cce5ff;padding-bottom:4px}}
+.rec-grid{{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}}
+.rec-card{{flex:1;min-width:130px;background:#fff;border-radius:4px;padding:8px 10px;text-align:center;border:1px solid #e0e0e0}}
+.rec-card .rc-label{{font-size:10px;color:#888;margin-bottom:2px}}
+.rec-card .rc-value{{font-size:17px;font-weight:700}}
+.rec-card .rc-sub{{font-size:10px;color:#999;margin-top:1px}}
+.rec-note{{font-size:11px;color:#666;line-height:1.6;margin-top:8px;padding:6px 8px;background:rgba(255,255,255,.6);border-radius:3px}}
 .footer{{text-align:center;padding:8px;font-size:10px;color:#aaa}}
 </style>
 </head>
@@ -578,7 +821,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
 <div class="header">
   <div>
     <h1>竞价空间相似日分析</h1>
-    <div class="info">目标日期: {target_date} | 算法: 2h谷值(30%) + 2h峰值(25%) + 谷值时段(15%) + 峰值时段(10%) + 曲线形状(20%)</div>
+    <div class="info">目标日期: {target_date} | 6维算法: 谷值28%+峰值23%+谷时段12%+峰时段8%+曲线19%+时间近邻10%（谷段负价仅参考不排名）</div>
   </div>
   <div class="date-picker">
     <span>跳转日期:</span>
@@ -587,6 +830,7 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
   </div>
 </div>
 <div class="summary-bar" id="summaryBar"></div>
+<div class="rec-panel" id="storageRec"></div>
 <div class="main-grid">
   <div class="charts-area">
     <div class="chart-panel">
@@ -617,13 +861,15 @@ body{{font-family:"Microsoft YaHei","Segoe UI",sans-serif;background:#f3f3f3;col
       </table>
     </div>
     <div class="legend-tip">
-      算法说明：<br>
-      · 2h谷值(30%)：2h最低均值窗口的MW值<br>
-      · 2h峰值(25%)：2h最高均值窗口的MW值<br>
-      · 谷值时段(15%)：谷值窗口在哪个时段<br>
-      · 峰值时段(10%)：峰值窗口在哪个时段<br>
-      · 曲线形状(20%)：Pearson相关系数<br>
-      · 2h均值权重55%，时段25%，曲线20%
+      6维算法说明（寻找相似日）：<br>
+      · 2h谷值(28%)：2h最低均值窗口的MW值<br>
+      · 2h峰值(23%)：2h最高均值窗口的MW值<br>
+      · 谷值时段(12%)：谷值窗中心时点连续距离（跨边界不硬切）<br>
+      · 峰值时段(8%)：峰值窗中心时点连续距离<br>
+      · 曲线形状(19%)：Pearson相关系数<br>
+      · 时间近邻(10%)：2周内1.0，30天0.5，去年0.2<br>
+      · 谷段负价(参考)：候选日谷段日前价&lt;0比例（负价=充电机会，仅参考不排名）<br>
+      + 季节Bonus（保供季+0.04~0.12）
     </div>
   </div>
 </div>
@@ -636,6 +882,8 @@ var SIMILAR = {similar_json};
 var TIMES = {time_labels_json};
 var ALL_DATES = {all_dates_json};
 var TARGET = '{target_date}';
+var STORAGE_REC = {storage_rec_json};
+var SIM_RECS = {sim_recs_json};
 
 // ── Date selector ──
 var sel = document.getElementById('dateSelect');
@@ -774,12 +1022,12 @@ function getCompareOpt() {{
 
 // Chart 3: Radar
 function getRadarOpt() {{
-  var dims = ['2h谷值','2h峰值','谷值时段','峰值时段','曲线形状'];
+  var dims = ['2h谷值','2h峰值','谷值时段','峰值时段','曲线形状','时间近邻','谷段负价'];
   var indicator = dims.map(function(d){{return {{name:d, max:1}};}});
   var series = [];
   series.push({{
     name:TARGET, type:'radar',
-    data:[{{value:[1,1,1,1,1], name:TARGET+' (目标)'}}],
+    data:[{{value:[1,1,1,1,1,1,1], name:TARGET+' (目标)'}}],
     lineStyle:{{color:'#0078d4',width:2}}, itemStyle:{{color:'#0078d4'}},
     areaStyle:{{color:'rgba(0,120,212,0.1)'}}, symbol:'none'
   }});
@@ -787,13 +1035,13 @@ function getRadarOpt() {{
     var sc = sim.scores;
     series.push({{
       name:sim.date, type:'radar',
-      data:[{{value:[sc['2h谷值'],sc['2h峰值'],sc['谷值时段'],sc['峰值时段'],sc['曲线形状']],name:sim.date+' ('+sim.score.toFixed(4)+')'}}],
+      data:[{{value:[sc['2h谷值'],sc['2h峰值'],sc['谷值时段'],sc['峰值时段'],sc['曲线形状'],sc['时间近邻'],sc['谷段负价']],name:sim.date+' ('+sim.score.toFixed(4)+')'}}],
       lineStyle:{{color:COLORS[(i+1)%COLORS.length],width:1}}, itemStyle:{{color:COLORS[(i+1)%COLORS.length]}},
       symbol:'none'
     }});
   }});
   return {{
-    radar:{{indicator:indicator,center:['50%','55%'],radius:'65%'}},
+    radar:{{indicator:indicator,center:['50%','55%'],radius:'62%'}},
     legend:{{show:false}},
     series:series
   }};
@@ -861,11 +1109,45 @@ function renderSummary() {{
   document.getElementById('summaryBar').innerHTML = html;
 }}
 
+// ── 储能充放推荐 ──
+function renderStorageRec() {{
+  var r = STORAGE_REC;
+  var d = DATA[TARGET];
+  var sr = SIM_RECS[SIMILAR[0]?SIMILAR[0].date:''] || {{}};
+  var probStr = r.floor_prob!=null ? r.floor_prob+'%' : '—';
+  var probColor = r.floor_prob!=null ? (r.floor_prob>=80?'#52c41a':r.floor_prob>=50?'#faad14':'#f5222d') : '#888';
+  var html = '';
+  html += '<h2>★ 储能充放推荐值（双变量判据：bs谷值 × 火电峰值台数）</h2>';
+  html += '<div class="rec-grid">';
+  html += '<div class="rec-card"><div class="rc-label">2h谷值</div><div class="rc-value" style="color:#d13438">'+fmt(d.valley)+' MW</div><div class="rc-sub">'+d.valley_period+' '+d.valley_time+'</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">谷段火电台数(预测)</div><div class="rc-value" style="color:#0078d4">'+r.valley_units+'台</div><div class="rc-sub">最小出力运行</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">★ 谷段充电推荐</div><div class="rc-value" style="color:#52c41a">'+fmt(r.charge_mw)+' MW</div><div class="rc-sub">'+r.charge_label+'意愿 | '+r.charge_mwh+' MWh(2h)</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">2h峰值</div><div class="rc-value" style="color:#107c10">'+fmt(d.peak)+' MW</div><div class="rc-sub">'+d.peak_period+' '+d.peak_time+'</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">峰段火电台数(预测)</div><div class="rc-value" style="color:#0078d4">'+r.peak_units+'台</div><div class="rc-sub">保供水平</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">★ 峰段放电推荐</div><div class="rc-value" style="color:#f5222d">+'+fmt(r.discharge_mw)+' MW</div><div class="rc-sub">'+r.discharge_mwh+' MWh(2h)</div></div>';
+  html += '</div>';
+  // 双变量判据行
+  html += '<div class="rec-grid" style="margin-top:6px">';
+  html += '<div class="rec-card" style="border-color:'+probColor+'"><div class="rc-label">触地板概率</div><div class="rc-value" style="color:'+probColor+'">'+probStr+'</div><div class="rc-sub">'+r.floor_verdict+'</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">谷段最小出力地板线</div><div class="rc-value" style="color:#9a60b4">'+fmt(r.min_output_floor)+' MW</div><div class="rc-sub">峰值'+r.peak_units+'台对应</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">谷值 vs 地板线</div><div class="rc-value" style="color:'+(d.valley<r.min_output_floor?'#52c41a':'#f5222d')+'">'+(d.valley<r.min_output_floor?'谷值<地板→必压到最低':'谷值>地板→压不下去')+'</div><div class="rc-sub">差 '+(d.valley-r.min_output_floor)+' MW</div></div>';
+  html += '</div>';
+  var simRef = sr.charge_mw!=null ? (SIMILAR[0].date+' 谷充'+fmt(sr.charge_mw)+'MW/峰放+'+fmt(sr.discharge_mw)+'MW/概率'+(sr.floor_prob!=null?sr.floor_prob+'%':'—')) : '—';
+  html += '<div class="rec-note"><b>双变量逻辑：</b>主判据bs谷值（谷值越低→触地板概率越高→储能充电越强）；辅判据火电峰值台数（决定谷段最小出力地板线高度）。'
+    +'<br><b>机制：</b>开停机有费用→为保峰值供应少停机→峰值台数越多→谷段最小出力被抬高（<60台=7856MW，>100台=22421MW）→火电压不到地板→触地板概率下降'
+    +'<br><b>规律：</b>谷值<0无论台数100%触地板；谷值>20GW且台数>90仅29-34%触地板；中间区间10-20GW靠峰值台数修正；保供季(7-8/12-2月)单独矩阵'
+    +'<br><b>电价参考：</b>谷段现货价<0=优先充电机会（负价套利）；实时峰谷价差>300=充放套利空间大。Top相似日电价信号纳入7维打分'
+    +'<br><b>回归：</b>峰值台数≈0.0019×bs_peak+13.12(R²=0.65)；谷值台数≈0.0011×bs_valley+79.88(R²=0.55)'
+    +'<br><b>最佳相似日参考：</b>'+simRef+' · 充放效率0.89</div>';
+  document.getElementById('storageRec').innerHTML = html;
+}}
+
 function renderAll() {{
   cTarget.setOption(getTargetOpt(), true);
   cCompare.setOption(getCompareOpt(), true);
   cRadar.setOption(getRadarOpt(), true);
   renderSummary();
+  renderStorageRec();
   renderTable();
 }}
 
@@ -914,8 +1196,8 @@ def main(target_date: str = None, top_n: int = 10, recompute: bool = False):
         print(f'Target date {target_date} not found. Available: {all_dates[0]} ~ {all_dates[-1]}')
         return
 
-    # Compute similarity
-    similar = compute_similarity(target_date, features, top_n)
+    # Compute similarity (传入prices用于电价信号打分)
+    similar = compute_similarity(target_date, features, top_n, prices=prices)
 
     if not similar:
         print('No similar days found.')

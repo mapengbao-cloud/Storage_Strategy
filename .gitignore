@@ -4,6 +4,8 @@
 # Python
 __pycache__/
 *.pyc
+.venv/
+venv/
 
 # IDE
 .vscode/
@@ -11,3 +13,36 @@ __pycache__/
 
 # Claude local settings
 .claude/
+
+# Secrets (database passwords, API keys)
+.env
+
+# Generated output (large, regeneratable)
+output/
+data/raw/
+data/cache/
+
+# Intermediate JSON files from extract scripts
+_tmp_*.json
+
+# Excel source files in old stage directories (migrated to data/raw/)
+01 biddingSpace_analysis/assets/*.xls
+01 biddingSpace_analysis/assets/*.xlsx
+01 biddingSpace_analysis/output/
+02 Dayahead_Trading_Review/assets/*.xls
+02 Dayahead_Trading_Review/output/
+03 Real-time_Trading_Review/assets/
+*/output/
+03 Real-time_Trading_Review/output/
+04 Daily_Settlement_Review/assets/*.xls
+04 Daily_Settlement_Review/assets/*.xlsx
+04 Daily_Settlement_Review/output/
+05 Review_Dashboard_and _weeklyreport/assets/*.xls
+05 Review_Dashboard_and _weeklyreport/assets/*.xlsx
+05 Review_Dashboard_and _weeklyreport/output/
+06 DataMining/*.html
+06 DataMining/output/
+
+# Keep templates and CLAUDE.md files
+!**/输出模版-*.xlsx
+!assets/templates/

@@ -89,9 +89,6 @@ tr:hover{{background:#fafafa}}
 <div class="card"><div class="v" id="v-tpat">{len(init_tpat)}</div><div class="l">火电调度模式数</div></div>
 </div>
 
-<div class="sec">火电全列表 — 按峰值降序</div>
-<div style="overflow-x:auto"><table><thead><tr><th>排名</th><th>机组名称</th><th>峰值(MW)</th><th>均值(MW)</th><th>谷值(MW)</th><th>CV(%)</th><th>分型</th></tr></thead><tbody id="thermalTable"></tbody></table></div>
-
 <div class="sec">火电调度模式分布</div>
 <div class="grid">
 <div class="box"><h4>火电调度模式分布</h4><div id="c-tpie" class="chart"></div></div>
@@ -100,6 +97,9 @@ tr:hover{{background:#fafafa}}
 
 <div class="sec">火电 — 按调度模式分组 96点出力曲线</div>
 <div id="thermal-patterns"></div>
+
+<div class="sec">火电全列表 — 按峰值降序</div>
+<div style="overflow-x:auto"><table><thead><tr><th>排名</th><th>机组名称</th><th>峰值(MW)</th><th>均值(MW)</th><th>谷值(MW)</th><th>CV(%)</th><th>分型</th></tr></thead><tbody id="thermalTable"></tbody></table></div>
 
 <!-- ====== STORAGE SECTION ====== -->
 <h2>二、储能机组</h2>
@@ -111,9 +111,6 @@ tr:hover{{background:#fafafa}}
 <div class="card"><div class="v" id="v-spat">{len(init_spat)}</div><div class="l">储能调度模式数</div></div>
 </div>
 
-<div class="sec">储能充放统计 — 全部机组</div>
-<div style="overflow-x:auto"><table><thead><tr><th>排名</th><th>机组名称</th><th>充电功率均值(MW)</th><th>充电电量(MWh)</th><th>放电功率均值(MW)</th><th>放电电量(MWh)</th><th>充放效率</th><th>调度模式</th></tr></thead><tbody id="storageTable"></tbody></table></div>
-
 <div class="sec">储能调度模式分布 & 充放电量对比</div>
 <div class="grid">
 <div class="box"><h4>储能调度模式分布</h4><div id="c-spie" class="chart"></div></div>
@@ -123,13 +120,16 @@ tr:hover{{background:#fafafa}}
 <div class="sec">储能 — 按调度模式分组 96点出力曲线</div>
 <div id="storage-patterns"></div>
 
+<div class="sec">储能充放统计 — 全部机组</div>
+<div style="overflow-x:auto"><table><thead><tr><th>排名</th><th>机组名称</th><th>充电功率均值(MW)</th><th>充电电量(MWh)</th><th>放电功率均值(MW)</th><th>放电电量(MWh)</th><th>充放效率</th><th>调度模式</th></tr></thead><tbody id="storageTable"></tbody></table></div>
+
 <div class="notes">
 <b>表:</b> shandong_px_provincial_prescheduling_results — 山东省级日前预调度结果<br>
 <b>字段:</b> date / generator_name / time_order(1-96) / declaration_power(MW)<br>
 <b>火电分型说明:</b><br>
   &bull; <b>一充一放型(抽蓄)</b>: 含负值出力，名称含"机"/"#"的抽水蓄能 &bull; <b>纯充电型</b>: 仅负值出力<br>
   &bull; <b>日内启机</b>: 前6h接近零出力→后续启动 &bull; <b>日内停机</b>: 前中段出力→后6h降至零<br>
-  &bull; <b>全天直线型</b>: 恒定出力(CV=0%) &bull; <b>基本平稳</b>: CV &lt; 5%<br>
+  &bull; <b>平稳/直线型</b>: CV &lt; 5%（含恒定出力全天直线型）<br>
   &bull; <b>午间调峰机组</b>: 早晚负荷高、中午负荷低的调峰火电（其余非零出力火电均归此类）<br>
   &bull; <b>零出力</b>: 全天96点出力均为0
 </div>
@@ -226,7 +226,7 @@ function renderAll(d) {{
     var tpat={{}}, spat={{}};
     th.forEach(function(t){{ if(!tpat[t.pattern]) tpat[t.pattern]=[]; tpat[t.pattern].push(t); }});
     st.forEach(function(s){{ if(!spat[s.pattern]) spat[s.pattern]=[]; spat[s.pattern].push(s); }});
-    var THERMAL_ORDER = ['午间调峰机组','全天直线型','基本平稳','日内启机','日内停机','一充一放型(抽蓄)','纯充电型','零出力'];
+    var THERMAL_ORDER = ['午间调峰机组','平稳/直线型','日内启机','日内停机','一充一放型(抽蓄)','纯充电型','零出力'];
     var tpatKeys = Object.keys(tpat).sort(function(a,b){{
         var ai=THERMAL_ORDER.indexOf(a), bi=THERMAL_ORDER.indexOf(b);
         if(ai>=0 && bi>=0) return ai-bi; if(ai>=0) return -1; if(bi>=0) return 1;

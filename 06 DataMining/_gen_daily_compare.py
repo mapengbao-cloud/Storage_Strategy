@@ -15,10 +15,11 @@ conn = pymysql.connect(host='rm-2zej7q7186wi4eds5no.mysql.rds.aliyuncs.com', por
 cur = conn.cursor()
 
 # ── 1. Load forecast data ──
-fc = {}  # {date: {all_load, dispatched_load, tie_line, wind, pv, nuclear}}
+fc = {}  # {date: {all_load, dispatched_load, tie_line, wind, pv, nuclear, local, self}}
 for d in DATES:
     cur.execute('''SELECT all_load_forecast, dispatched_load_forecast, tie_line_load_forecast,
-        wind_power_forecast, photovoltaic_power_forecast, nuclear_power_forecast
+        wind_power_forecast, photovoltaic_power_forecast, nuclear_power_forecast,
+        local_power_forecast, self_power_forecast
         FROM shandong_px_spot_dayahead_load_info WHERE date=%s ORDER BY time_order''', (d,))
     rows = cur.fetchall()
     if rows:
@@ -29,16 +30,19 @@ for d in DATES:
             'wind': [float(r[3] or 0) for r in rows],
             'pv': [float(r[4] or 0) for r in rows],
             'nuclear': [float(r[5] or 0) for r in rows],
+            'local': [float(r[6] or 0) for r in rows],
+            'self': [float(r[7] or 0) for r in rows],
         }
         fc[d]['new_energy'] = [fc[d]['wind'][i] + fc[d]['pv'][i] for i in range(96)]
-        fc[d]['bidding_space'] = [fc[d]['dispatched'][i] - fc[d]['tie_line'][i] - fc[d]['wind'][i] - fc[d]['pv'][i] - fc[d]['nuclear'][i] for i in range(96)]
+        # 竞价空间 = 直调 - 联络线 - 风 - 光 - 核 - 自备 (地方电厂不参与bs)
+        fc[d]['bidding_space'] = [fc[d]['dispatched'][i] - fc[d]['tie_line'][i] - fc[d]['wind'][i] - fc[d]['pv'][i] - fc[d]['nuclear'][i] - fc[d]['self'][i] for i in range(96)]
 
 # ── 2. Load actual data ──
 ac = {}
 for d in DATES:
     cur.execute('''SELECT actual_all_load, actual_dispatched_load, actual_tie_line_load,
         actual_wind_power, actual_photovoltaic_power, actual_nuclear_power,
-        actual_pumped_storage_power, actual_local_power
+        actual_pumped_storage_power, actual_local_power, actual_self_power
         FROM shandong_px_spot_actual_load_info WHERE date=%s ORDER BY time_order''', (d,))
     rows = cur.fetchall()
     if rows:
@@ -51,9 +55,11 @@ for d in DATES:
             'nuclear': [float(r[5] or 0) for r in rows],
             'pumped_storage': [float(r[6] or 0) for r in rows],
             'local_power': [float(r[7] or 0) for r in rows],
+            'self': [float(r[8] or 0) for r in rows],
         }
         ac[d]['new_energy'] = [ac[d]['wind'][i] + ac[d]['pv'][i] for i in range(96)]
-        ac[d]['bidding_space'] = [ac[d]['dispatched'][i] - ac[d]['tie_line'][i] - ac[d]['wind'][i] - ac[d]['pv'][i] - ac[d]['nuclear'][i] for i in range(96)]
+        # 竞价空间 = 直调 - 联络线 - 风 - 光 - 核 - 自备 (地方电厂不参与bs)
+        ac[d]['bidding_space'] = [ac[d]['dispatched'][i] - ac[d]['tie_line'][i] - ac[d]['wind'][i] - ac[d]['pv'][i] - ac[d]['nuclear'][i] - ac[d]['self'][i] for i in range(96)]
 
 # ── 3. Load clearing quantity (MWh→MW ×4) ──
 clr = {}
@@ -72,12 +78,12 @@ for d in DATES:
             'draw': [float(r[6] or 0) * 4 for r in rows],
             'virtual': [float(r[7] or 0) * 4 for r in rows],
         }
-        # 火电实际出清 = 实际(直调 - 联络线 - 风电 - 光伏 - 核电 - 抽蓄 - 地方公用电厂) - 日前出清储能(独立储能×4)
+        # 火电实际出清 = 实际(直调 - 联络线 - 风 - 光 - 核 - 抽蓄 - 地方 - 自备) - 日前出清储能(独立储能×4)
         if d in ac:
             clr[d]['thermal_actual'] = [
                 ac[d]['dispatched'][i] - ac[d]['tie_line'][i] - ac[d]['wind'][i]
                 - ac[d]['pv'][i] - ac[d]['nuclear'][i]
-                - ac[d]['pumped_storage'][i] - ac[d]['local_power'][i]
+                - ac[d]['pumped_storage'][i] - ac[d]['local_power'][i] - ac[d]['self'][i]
                 - clr[d]['independent'][i]
                 for i in range(96)
             ]

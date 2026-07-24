@@ -60,7 +60,7 @@ def classify(vals, name=""):
             return "日内停机", cv
 
     if cv < 5:
-        return "全天直线型" if peak == trough else "基本平稳", cv
+        return "平稳/直线型", cv
 
     # 其余所有非零出力火电 → 午间调峰机组
     return "午间调峰机组", cv

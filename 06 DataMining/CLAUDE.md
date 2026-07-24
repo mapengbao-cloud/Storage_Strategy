@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | 脚本 | 用法 | 说明 |
 |------|------|------|
-| `db_viewer.py` | `python db_viewer.py [list\|preset_name\|custom]` | 通用数据库查询 → ECharts HTML。预设：`clearing_price` / `supply_demand` / `boundary` |
+| `db_viewer.py` | `python db_viewer.py [list\|preset_name\|custom]` | 通用数据库查询 → ECharts HTML。预设按业务分组：润津储能(`rj_*`)、全省电价(`unify_price`/`gen_price`)、负荷新能源(`dayahead_load`/`actual_load`/`new_energy_rt`)、备用(`reserve`)、预测(`clearing_price`/`supply_demand`/`boundary`)、约束(`trade_constraint`) |
 
 ### 电价与竞价空间
 
@@ -76,7 +76,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **储能机组** — `generator_name` 包含 `储能` 二字
 - **其他** — 不满足以上两条的（风电、光伏、核电等）
 
-连接信息硬编码在脚本中（`tianrun_new` @ RDS）。关键表见根 CLAUDE.md 中的天机数据库结构。
+连接信息硬编码在脚本中（`tianrun_new` @ RDS）。关键表见根 `CLAUDE.md` 中的天机数据库结构，以及 `天机数据库_常用表速查.md`（A-F 工作流分组速查）。
 
 ## 关键数据文件
 

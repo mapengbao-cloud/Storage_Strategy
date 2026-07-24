@@ -42,7 +42,7 @@
 ### 业务层 (`src/business/`)
 - `revenue.py` — `compute_revenue()` 单一入口，17 个收益值计算
 - `capacity.py` — `compute_J_val()` 容量分摊系数加权平均
-- `bidding_space.py` — 竞价空间 = 直调 - 联络线 - 风电 - 光伏
+- `bidding_space.py` — 竞价空间 = 直调 - 联络线 - 风电 - 光伏 - 核电 - 自备
 - `strategy.py` — 3 条件策略评估 + 竞价空间形态分类
 - `validation.py` — Excel 交叉验证 + Golden File 生成
 

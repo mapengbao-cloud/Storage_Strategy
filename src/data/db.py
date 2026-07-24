@@ -225,34 +225,56 @@ def query_price_forecast(
 def query_load_info(
     date_str: str, data_type: str = "actual"
 ) -> dict[str, list[float]]:
-    """Query 96-point load info (dispatched, tie-line, wind, solar).
+    """Query 96-point load info for bidding space computation.
+
+    竞价空间 = 直调负荷 - 联络线受电 - 风电 - 光伏 - 核电 - 自备
+    注：local_power 是地方电厂发电总加，不属竞价空间，预留用于分布式光伏=全网负荷-直调-地方电厂
 
     Args:
         date_str: ISO date string.
         data_type: 'actual' or 'dayahead'.
 
     Returns:
-        {'dispatched': [96], 'tie_line': [96], 'wind': [96], 'solar': [96]}
+        {'dispatched': [96], 'tie_line': [96], 'wind': [96], 'solar': [96],
+         'nuclear': [96], 'local': [96], 'self': [96], 'bidding_space': [96]}
     """
     table = (
         "shandong_px_spot_actual_load_info"
         if data_type == "actual"
         else "shandong_px_spot_dayahead_load_info"
     )
+    # actual table uses 'actual_' prefix; dayahead uses '_forecast' suffix
+    if data_type == "actual":
+        cols = ("actual_dispatched_load", "actual_tie_line_load",
+                "actual_wind_power", "actual_photovoltaic_power",
+                "actual_nuclear_power", "actual_local_power", "actual_self_power")
+    else:
+        cols = ("dispatched_load_forecast", "tie_line_load_forecast",
+                "wind_power_forecast", "photovoltaic_power_forecast",
+                "nuclear_power_forecast", "local_power_forecast", "self_power_forecast")
+    col_sql = ", ".join(cols)
     sql = f"""
-        SELECT time_point, dispatched_load, tie_line_load,
-               wind_power, solar_power
+        SELECT time_point, {col_sql}
         FROM {table}
         WHERE date = %s
         ORDER BY time_point
     """
     rows = query(sql, (date_str,))
-    return {
-        "dispatched": [float(r.get("dispatched_load") or 0) for r in rows],
-        "tie_line": [float(r.get("tie_line_load") or 0) for r in rows],
-        "wind": [float(r.get("wind_power") or 0) for r in rows],
-        "solar": [float(r.get("solar_power") or 0) for r in rows],
-    }
+    keys = ("dispatched", "tie_line", "wind", "solar",
+            "nuclear", "local", "self")
+    result = {k: [] for k in keys}
+    for r in rows:
+        for i, k in enumerate(keys):
+            result[k].append(float(r.get(cols[i]) or 0))
+    # bidding_space = dispatched - tie_line - wind - solar - nuclear - self
+    # (local 不参与bs，预留用于分布式光伏)
+    result["bidding_space"] = [
+        result["dispatched"][i] - result["tie_line"][i] - result["wind"][i]
+        - result["solar"][i] - result["nuclear"][i]
+        - result["self"][i]
+        for i in range(len(rows))
+    ]
+    return result
 
 
 # ── DA-RT Deviation & Weather Queries ───────────────────────────

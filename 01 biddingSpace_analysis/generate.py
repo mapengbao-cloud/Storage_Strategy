@@ -1,5 +1,11 @@
 """Generate bidding space analysis for a given date.
 
+竞价空间标准定义（5 项）：直调负荷 - (联络线受电 + 风电 + 光伏 + 核电 + 自备机组)
+注：本脚本的 Excel 源文件（负荷信息预测.xls / 电网运行实际信息.xlsx）仅含 4 个分项
+    （直调/联络线/风电/光伏），不含核电/自备，故 Excel 模板 Row 7 公式为
+    4 项子集（=col3-col4-col5-col6）。完整 5 项定义见 src/business/bidding_space.py
+    与 06 DataMining/local_db.py（数据库路径，含 nuclear/local/self_power 列）。
+
 Usage:
     python generate.py MMDD                          # prediction (auto-find source)
     python generate.py MMDD <source_path>            # explicit source

@@ -71,11 +71,9 @@ def classify(vals, name=""):
         if rest_avg > peak * 0.03:
             return "日内停机", cv
 
-    # CV < 5% → flat
+    # CV < 5% → 平稳/直线型（合并为一个分类）
     if cv < 5:
-        if peak == trough:
-            return "全天直线型", cv
-        return "基本平稳", cv
+        return "平稳/直线型", cv
 
     # 其余所有非零出力火电 → 午间调峰机组（早晚负荷高、中午低，统称调峰）
     return "午间调峰机组", cv

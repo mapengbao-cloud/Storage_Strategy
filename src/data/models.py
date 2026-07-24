@@ -71,7 +71,8 @@ class TimeSeries96:
 class BiddingSpaceData:
     """Bidding space components for one date.
 
-    Bidding space = 直调负荷 - 联络线受电 - 风电总加 - 光伏总加
+    Bidding space = 直调负荷 - 联络线受电 - 风电总加 - 光伏总加 - 核电总加 - 自备机组
+    （注：local_power 地方电厂发电总加不参与bs，预留用于分布式光伏）
     """
     date_str: str
     dispatched_load: TimeSeries96      # 直调负荷 (MW)
@@ -79,14 +80,22 @@ class BiddingSpaceData:
     wind_power: TimeSeries96           # 风电总加 (MW)
     solar_power: TimeSeries96          # 光伏总加 (MW)
     bidding_space: TimeSeries96 | None = None  # computed on init
+    nuclear_power: TimeSeries96 | None = None  # 核电总加 (MW), optional (default 0)
+    local_power: TimeSeries96 | None = None   # 地方电厂发电总加 (MW), 预留(分布式光伏用), 不参与bs
+    self_power: TimeSeries96 | None = None     # 自备机组 (MW), optional (default 0)
 
     def __post_init__(self):
         if self.bidding_space is None:
+            nuc = self.nuclear_power.values if self.nuclear_power else [0.0] * N_POINTS
+            slf = self.self_power.values if self.self_power else [0.0] * N_POINTS
+            # local_power 不参与 bs（地方电厂发电总加，预留用于分布式光伏）
             bs_values = [
                 self.dispatched_load.values[i]
                 - self.tie_line_load.values[i]
                 - self.wind_power.values[i]
                 - self.solar_power.values[i]
+                - nuc[i]
+                - slf[i]
                 for i in range(N_POINTS)
             ]
             self.bidding_space = TimeSeries96(
