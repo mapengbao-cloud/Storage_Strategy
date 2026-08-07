@@ -24,11 +24,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | | `python bidding_space_viz.py --actual [start] [end]` | 真实竞价空间，从 `shandong_px_spot_actual_load_info` 提取 |
 | | `python bidding_space_viz.py --compare [start] [end]` | 预测vs实际对比，偏差构成分析 |
 | `similar_day_analysis.py` | `python similar_day_analysis.py compute` | 计算所有日期竞价空间特征（峰谷窗口、时段） |
-| | `python similar_day_analysis.py YYYY-MM-DD` | 生成相似日分析 HTML（Top N 相似日 + 曲线叠加 + 雷达图） |
+| | `python similar_day_analysis.py YYYY-MM-DD` | 生成相似日分析 HTML（含 v2 增强：必开估算、调节机组出力、地板概率） |
+| `_similar_day_v2.py` | `python _similar_day_v2.py YYYY-MM-DD` | 增强版相似日分析（独立版，含必开/调节机组估算） |
 | `local_db.py` | `python local_db.py sync` | 从远程 MySQL 同步数据到本地 SQLite（data/cache/local.db） |
 | | `python local_db.py status` | 查看本地数据库状态 |
 | `extract_prices.py` | `python extract_prices.py` | 从 01/02/03 产出文件提取 96 点电价+竞价空间，生成 `电价对比_MMDD-MMDD.html`。修改 `DATES` 和 `DATE_LABELS` 指定范围 |
 | `generate_analysis_html.py` | `python generate_analysis_html.py` | 生成竞价空间+电价+天气综合分析 HTML。依赖 `_tmp_html_data.json`（由外部数据提取流程生成）。搜索 `# DATE_RANGE:` 修改标题和输出文件名 |
+| `_gen_clearing_panorama.py` | `python _gen_clearing_panorama.py MMDD` | 日前出清全景分析（见根目录 `日前出清全景分析.md`） |
+| `_gen_daily_compare.py` | `python _gen_daily_compare.py` | 日运营复盘对比分析（见根目录 `日运营复盘对比分析.md`），修改脚本顶部 DATES 列表 |
 
 ### 日内出清计划
 
@@ -50,6 +53,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. `gen_prescheduling_page.py` 读取 `_tmp_all_results.json` 生成自包含 HTML（嵌入全部数据，无需服务器）
 
 **更新数据：** 数据库有新日期入库时，重新跑第 1-3 步即可刷新 `prescheduling_page.html`。
+
+### 火电 / 地板价分析（研究脚本）
+
+以下脚本用于火电出清、地板价形成机制、调节机组出力等专项研究，非日常管线脚本：
+
+| 脚本 | 用途 |
+|------|------|
+| `_bikaki_season_analysis.py` | 必开机组季节变化分析（台数/出力/占比随季节变化，CV<5%=必开） |
+| `_fire_peak_valley_benchmark.py` | 火电出清峰谷对标（5-7月，日前vs实际火电出清，含电价） |
+| `_floor_day_regulating_units.py` | 地板价日调节机组统计（必开/调节分类，谷段出力，单台均值） |
+| `_unit_regulating_vs_floor_v2.py` | 单台调节机组出力 vs 地板价区分度（修正版） |
+| `_valley_regulating_vs_floor.py` | 谷段调节机组出力 vs 地板价（5-7月验证，核心假设验证） |
+| `_gen_thermal_july_continuous.py` | 按连续时序模板生成火电+储能+电价 96 点连续数据 |
+
+**预调度数据覆盖：** `预调度数据爬取情况.txt` 记录 `shandong_px_provincial_prescheduling_results` 数据情况：
+- 176 天，2025-07~2026-07-24，3月30日~5月15日、6月9日~7月10日之间有显著缺口
+- 稳定期（2026年1-3月）：火电 200-204 台，储能 60-68 台
+- 5月恢复后：火电 192-193 台，储能 70 台
 
 ### extract → gen 数据管线
 

@@ -1,7 +1,7 @@
-"""Generate weekly settlement report (0713-0719) per 收益测算工作流程.md 第六节.
+"""Generate weekly settlement report (0720-0726) per 收益测算工作流程.md 第六节.
 
 Steps:
-  1. Copy last week's xlsx as template → output/日结算单收益测算/周报/日结算单收益测算_周报_0713-0719.xlsx
+  1. Copy last week's xlsx as template → output/日结算单收益测算/周报/日结算单收益测算_周报_0720-0726.xlsx
   2. openpyxl write Row 2-8 (A-T, 20 cols): A=date MMDD, B-T = DB cols 2-20
   3. Row 9 formulas preserved (Excel recalculates on open)
   4. Compute Row9 values in Python (= same formulas) → generate txt report
@@ -18,7 +18,7 @@ Text report format (per 周报要求.txt + 收益测算工作流程.md 六):
   日前套利：0万
   调频补偿：R9/10000万元（中标时段：N个，中标均价：X，性能：K）
 
-  数据来源：日结算单收益测算_周报_0713-0719.xlsx
+  数据来源：日结算单收益测算_周报_0720-0726.xlsx
 """
 import openpyxl
 import os
@@ -30,12 +30,12 @@ import glob
 PROJECT = r'E:\DataWork\Storage_Strategy'
 OUT_DIR = os.path.join(PROJECT, 'output', '日结算单收益测算', '周报')
 DB_PATH = os.path.join(PROJECT, 'data', 'cache', 'local.db')
-TEMPLATE = os.path.join(OUT_DIR, '日结算单收益测算_周报_0706-0712.xlsx')  # 上周周报作模板
+TEMPLATE = os.path.join(OUT_DIR, '日结算单收益测算_周报_0720-0726.xlsx')  # 上周周报作模板
 FM_PERF_DIR = os.path.join(PROJECT, '03 Real-time_Trading_Review', 'assets', '调频性能记录表格')
 MEMBER_ID = 'b9e64e64a713458eba94c9af05c0a757'
 
-DATES = ['0713', '0714', '0715', '0716', '0717', '0718', '0719']
-RANGE_LABEL = '0713-0719'
+DATES = ['0727', '0728', '0729', '0730', '0731', '0801', '0802']
+RANGE_LABEL = '0727-0802'
 
 
 def _load_env():
@@ -251,8 +251,113 @@ def generate_txt(r9, fm):
     return out_txt
 
 
+def generate_analysis_html():
+    """Build _tmp_html_data.json + generate 竞价空间_电价_天气综合分析 HTML."""
+    import json
+    import pymysql
+    import urllib.request
+    import time
+
+    iso_dates = [f'2026-{d[:2]}-{d[2:]}' for d in DATES]
+    TIMES = [f'{h:02d}:{m:02d}' for h in range(24) for m in (0, 15, 30, 45)]
+
+    # 1. Read from local DB
+    db = sqlite3.connect(DB_PATH)
+    cur = db.cursor()
+
+    cur.execute(f"SELECT date, time_order, dispatched_load, wind_power, photovoltaic_power, bidding_space FROM bidding_space_forecast WHERE date IN ('" + "','".join(iso_dates) + "') ORDER BY date, time_order")
+    fc = {}
+    for d, to, dl, wi, pv, bs in cur.fetchall():
+        fc.setdefault(d, []).append((int(to), float(dl or 0), float(wi or 0), float(pv or 0), float(bs or 0)))
+
+    cur.execute(f"SELECT date, time_order, dispatched_load, wind_power, photovoltaic_power, bidding_space FROM bidding_space_actual WHERE date IN ('" + "','".join(iso_dates) + "') ORDER BY date, time_order")
+    ac = {}
+    for d, to, dl, wi, pv, bs in cur.fetchall():
+        ac.setdefault(d, []).append((int(to), float(dl or 0), float(wi or 0), float(pv or 0), float(bs or 0)))
+
+    cur.execute(f"SELECT date, time_order, price FROM dayahead_price WHERE date IN ('" + "','".join(iso_dates) + "') ORDER BY date, time_order")
+    da_p = {}
+    for d, to, price in cur.fetchall():
+        da_p.setdefault(d, [0.0]*96)[max(0, int(to)-2)] = float(price or 0)
+
+    cur.execute(f"SELECT date, time_order, price FROM realtime_price WHERE date IN ('" + "','".join(iso_dates) + "') ORDER BY date, time_order")
+    rt_p = {}
+    for d, to, price in cur.fetchall():
+        rt_p.setdefault(d, [0.0]*96)[max(0, int(to)-2)] = float(price or 0)
+
+    db.close()
+
+    # 2. Power from 天机
+    conn = pymysql.connect(host='rm-2zej7q7186wi4eds5no.mysql.rds.aliyuncs.com', port=3306,
+        user='pengyiqiang', password='pengyiqiang123', database='tianrun_new',
+        charset='utf8mb4', connect_timeout=10, read_timeout=60)
+    cur2 = conn.cursor()
+    da_power = {}; rt_power = {}
+    for d in iso_dates:
+        cur2.execute("SELECT time_point, power FROM shandong_px_reliable_clearing_unit_data WHERE date=%s AND member_id='b9e64e64a713458eba94c9af05c0a757' AND unit_name NOT LIKE '%%发电%%' AND unit_name NOT LIKE '%%用电%%' ORDER BY time_point", (d,))
+        rows = cur2.fetchall()
+        da_power[d] = [float(r[1] or 0) for r in rows] if rows else [0]*96
+        cur2.execute("SELECT time_point, power FROM shandong_px_realtime_clearing_results_query WHERE date=%s AND member_id='b9e64e64a713458eba94c9af05c0a757' ORDER BY time_point", (d,))
+        rows = cur2.fetchall()
+        rt_power[d] = [float(r[1] or 0) for r in rows] if rows else [0]*96
+    cur2.close(); conn.close()
+
+    # 3. Weather
+    LAT, LON = 37.45, 116.36
+    def get_weather(ds):
+        url = f'https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}&daily=weather_code,temperature_2m_max,temperature_2m_min,shortwave_radiation_sum,wind_speed_10m_max,wind_direction_10m_dominant,precipitation_sum,relative_humidity_2m_mean,sunshine_duration,cloud_cover_mean&timezone=Asia/Shanghai&start_date={ds}&end_date={ds}'
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read())
+            daily = data['daily']
+            return {'code': daily['weather_code'][0], 'temp_max': daily['temperature_2m_max'][0], 'temp_min': daily['temperature_2m_min'][0], 'radiation': daily['shortwave_radiation_sum'][0] / 100.0 if daily['shortwave_radiation_sum'][0] else 0, 'wind_max': daily['wind_speed_10m_max'][0], 'wind_dir': daily['wind_direction_10m_dominant'][0], 'precip': daily['precipitation_sum'][0], 'humidity': daily['relative_humidity_2m_mean'][0], 'sunshine': daily['sunshine_duration'][0], 'cloud': daily['cloud_cover_mean'][0], 'desc': '', 'wind_dir_str': ''}
+        except Exception as e:
+            print(f'  Weather failed for {ds}: {e}')
+            return {'code': 0, 'temp_max': 0, 'temp_min': 0, 'radiation': 0, 'wind_max': 0, 'wind_dir': 0, 'precip': 0, 'humidity': 0, 'sunshine': 0, 'cloud': 0, 'desc': '', 'wind_dir_str': ''}
+
+    print('  Fetching weather...')
+    weather = {}
+    for d in iso_dates:
+        weather[d] = get_weather(d)
+        time.sleep(0.3)
+
+    # 4. Build data
+    data = {}
+    for d in iso_dates:
+        fc_d = fc.get(d, [(i+1,0,0,0,0) for i in range(96)])
+        ac_d = ac.get(d, [(i+1,0,0,0,0) for i in range(96)])
+        data[d] = {
+            'pred_load': [x[1] for x in sorted(fc_d, key=lambda x: x[0])],
+            'pred_wind': [x[2] for x in sorted(fc_d, key=lambda x: x[0])],
+            'pred_solar': [x[3] for x in sorted(fc_d, key=lambda x: x[0])],
+            'pred_bs': [x[4] for x in sorted(fc_d, key=lambda x: x[0])],
+            'act_load': [x[1] for x in sorted(ac_d, key=lambda x: x[0])],
+            'act_wind': [x[2] for x in sorted(ac_d, key=lambda x: x[0])],
+            'act_solar': [x[3] for x in sorted(ac_d, key=lambda x: x[0])],
+            'act_bs': [x[4] for x in sorted(ac_d, key=lambda x: x[0])],
+            'da_price': da_p.get(d, [0]*96),
+            'rt_price': rt_p.get(d, [0]*96),
+            'da_power': da_power.get(d, [0]*96),
+            'rt_power': rt_power.get(d, [0]*96),
+        }
+
+    # 5. Save tmp JSON
+    tmp_json = os.path.join(PROJECT, '_tmp_html_data.json')
+    with open(tmp_json, 'w', encoding='utf-8') as f:
+        json.dump({'data': data, 'weather': weather, 'timeLabels': TIMES}, f, ensure_ascii=False, indent=2)
+
+    # 6. Generate HTML
+    import subprocess
+    out_html = os.path.join(OUT_DIR, f'竞价空间_电价_天气综合分析_{RANGE_LABEL}.html')
+    title = f'2026年{RANGE_LABEL[:2]}月{RANGE_LABEL[2:4]}日-{RANGE_LABEL[5:7]}日'
+    gen_script = os.path.join(PROJECT, '06 DataMining', 'generate_analysis_html.py')
+    subprocess.run([sys.executable, gen_script, out_html, title], cwd=os.path.dirname(gen_script))
+    print(f'  [OK] 竞价空间_电价_天气综合分析_{RANGE_LABEL}.html')
+
+
 def main():
-    print('=== Generating weekly report 0713-0719 ===')
+    print(f'=== Generating weekly report {RANGE_LABEL} ===')
     rows, cols = load_db_rows()
 
     missing = [d for d in DATES if rows[d] is None]
@@ -264,6 +369,7 @@ def main():
     r9 = compute_row9(rows)
     fm = load_fm_data()
     generate_txt(r9, fm)
+    generate_analysis_html()
 
     print(f'\n--- Row9 computed values ---')
     print(f'  上周收益 P9/10000 = {r9["P9"]/10000:.2f}万')

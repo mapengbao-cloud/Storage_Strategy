@@ -20,6 +20,8 @@ Daily settlement review (阶段 04) — consolidates charge/discharge settlement
 | 4月 | `日结算收益复盘-4月.xlsx` |
 | 5月 | `日结算收益复盘-20260525日前.xlsx` |
 | 6月 | `日结算收益复盘-6月.xlsx` |
+| 7月 | `日结算收益复盘-7月.xlsx` |
+| 8月 | `日结算收益复盘-8月.xlsx` |
 
 > 模板路径：`assets/templates/`（项目根目录），由 `_get_template(month)` 自动选择。
 
@@ -50,6 +52,8 @@ python generate_review.py
 
 1. `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-充电.xlsx`（~11KB，含「日清算数据」sheet）
 2. `6052-YYYY-MM-DD德州润津储能科技有限公司结算单-放电.xlsx`（~21KB，含「日清算费用」sheet）
+
+> 2026年7月起，结算单文件名为 `德州润津储能科技有限公司_日清明细_YYYY-MM-DD.xlsx` 格式，同样按大小区分充放电（~11KB→充电，~22KB→放电）。
 
 结算单文件放在 `04 Daily_Settlement_Review/assets/`，从下载目录拷入时按大小区分充/放电。
 

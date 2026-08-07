@@ -280,6 +280,12 @@ MIN_OUTPUT_BY_UNITS = [
     (100, 9999, 22421),
 ]
 
+# 单机最小出力估算（MW/台，按峰值台数档位；7-8月保供季上调至≥280）
+UNIT_MIN_OUTPUT = {
+    (0, 60): 130, (60, 70): 160, (70, 80): 160,
+    (80, 90): 160, (90, 100): 180, (100, 9999): 220,
+}
+
 # 触地板概率矩阵（行=bs谷值, 列=峰值台数），用于 floor_prob 估算
 # 值为 0-1，来自历史 773 天日级统计，分保供季(7-8/12-2月)与非保供季
 # 关键修正：0722 实测反例（7月保供季, 谷值5217, 台数104, 未触地板）暴露
@@ -432,6 +438,40 @@ def compute_storage_recommendation(peak: float, valley: float, date_str: str = "
     else:
         floor_verdict = f'弱（触地板概率{floor_prob*100:.0f}%' if floor_prob else '弱'
 
+    # ── v2 必开/调节机组估算（增强指标）──
+    # 预估火电出清（经验系数：火电≈bs×0.85）
+    est_thermal_valley = round(valley * 0.85, 0)
+    est_thermal_peak = round(peak * 0.85, 0)
+    # 必开估算 = 直调负荷×13%（直调负荷≈bs/0.75）
+    est_dispatched_valley = valley / 0.75
+    est_dispatched_peak = peak / 0.75
+    must_run_valley = round(est_dispatched_valley * 0.13, 0)
+    must_run_peak = round(est_dispatched_peak * 0.13, 0)
+    # 必开台数（单台平均300MW）
+    must_run_units_valley = round(must_run_valley / 300)
+    must_run_units_peak = round(must_run_peak / 300)
+    # 调节机组台数
+    reg_units_valley = max(0, valley_units - must_run_units_valley)
+    reg_units_peak = max(0, peak_units - must_run_units_peak)
+    # 调节机组出力
+    reg_output_valley = round(est_thermal_valley - must_run_valley, 0)
+    reg_output_peak = round(est_thermal_peak - must_run_peak, 0)
+    # 单台调节机组出力
+    unit_output_valley = round(reg_output_valley / reg_units_valley, 0) if reg_units_valley > 0 else 0
+    unit_output_peak = round(reg_output_peak / reg_units_peak, 0) if reg_units_peak > 0 else 0
+    # 单机最小出力（按峰值台数档位，7-8月保供季上调至≥280MW）
+    month = int(date_str.split('-')[1]) if date_str else 0
+    min_output_per_unit = 160
+    for (lo, hi), v in UNIT_MIN_OUTPUT.items():
+        if lo <= peak_units < hi:
+            min_output_per_unit = v
+            break
+    if month in (7, 8):
+        min_output_per_unit = max(min_output_per_unit, 280)
+    # 是否压到最小出力 + 单台/最小出力比值
+    is_at_min_valley = unit_output_valley <= min_output_per_unit * 1.2
+    unit_ratio = round(unit_output_valley / min_output_per_unit, 2) if min_output_per_unit > 0 else 999
+
     return {
         'peak_units': int(peak_units),
         'valley_units': int(valley_units),
@@ -443,6 +483,22 @@ def compute_storage_recommendation(peak: float, valley: float, date_str: str = "
         'charge_mwh': charge_mwh,
         'discharge_mw': discharge_mw,
         'discharge_mwh': discharge_mwh,
+        # v2 增强指标
+        'est_thermal_valley': est_thermal_valley,
+        'est_thermal_peak': est_thermal_peak,
+        'must_run_valley': must_run_valley,
+        'must_run_peak': must_run_peak,
+        'must_run_units_valley': must_run_units_valley,
+        'must_run_units_peak': must_run_units_peak,
+        'reg_units_valley': reg_units_valley,
+        'reg_units_peak': reg_units_peak,
+        'reg_output_valley': reg_output_valley,
+        'reg_output_peak': reg_output_peak,
+        'unit_output_valley': unit_output_valley,
+        'unit_output_peak': unit_output_peak,
+        'min_output_per_unit': min_output_per_unit,
+        'is_at_min_valley': is_at_min_valley,
+        'unit_ratio': unit_ratio,
     }
 
 
@@ -1117,7 +1173,7 @@ function renderStorageRec() {{
   var probStr = r.floor_prob!=null ? r.floor_prob+'%' : '—';
   var probColor = r.floor_prob!=null ? (r.floor_prob>=80?'#52c41a':r.floor_prob>=50?'#faad14':'#f5222d') : '#888';
   var html = '';
-  html += '<h2>★ 储能充放推荐值（双变量判据：bs谷值 × 火电峰值台数）</h2>';
+  html += '<h2>★ 储能充放推荐值（双变量判据：bs谷值 × 火电峰值台数 + v2 必开/调节机组估算）</h2>';
   html += '<div class="rec-grid">';
   html += '<div class="rec-card"><div class="rc-label">2h谷值</div><div class="rc-value" style="color:#d13438">'+fmt(d.valley)+' MW</div><div class="rc-sub">'+d.valley_period+' '+d.valley_time+'</div></div>';
   html += '<div class="rec-card"><div class="rc-label">谷段火电台数(预测)</div><div class="rc-value" style="color:#0078d4">'+r.valley_units+'台</div><div class="rc-sub">最小出力运行</div></div>';
@@ -1132,12 +1188,21 @@ function renderStorageRec() {{
   html += '<div class="rec-card"><div class="rc-label">谷段最小出力地板线</div><div class="rc-value" style="color:#9a60b4">'+fmt(r.min_output_floor)+' MW</div><div class="rc-sub">峰值'+r.peak_units+'台对应</div></div>';
   html += '<div class="rec-card"><div class="rc-label">谷值 vs 地板线</div><div class="rc-value" style="color:'+(d.valley<r.min_output_floor?'#52c41a':'#f5222d')+'">'+(d.valley<r.min_output_floor?'谷值<地板→必压到最低':'谷值>地板→压不下去')+'</div><div class="rc-sub">差 '+(d.valley-r.min_output_floor)+' MW</div></div>';
   html += '</div>';
+  // v2 必开/调节机组估算行
+  var uoColor = r.is_at_min_valley?'#52c41a':'#f5222d';
+  html += '<div class="rec-grid" style="margin-top:6px">';
+  html += '<div class="rec-card"><div class="rc-label">预估火电出清(谷)</div><div class="rc-value" style="color:#0078d4">'+fmt(r.est_thermal_valley)+' MW</div><div class="rc-sub">bs×0.85</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">必开估算(谷)</div><div class="rc-value" style="color:#9a60b4">'+fmt(r.must_run_valley)+' MW</div><div class="rc-sub">直调负荷×13% | '+r.must_run_units_valley+'台</div></div>';
+  html += '<div class="rec-card"><div class="rc-label">调节机组出力(谷)</div><div class="rc-value" style="color:#e67e22">'+fmt(r.reg_output_valley)+' MW</div><div class="rc-sub">'+r.reg_units_valley+'台</div></div>';
+  html += '<div class="rec-card" style="border-color:'+uoColor+'"><div class="rc-label">★ 单台调节机组出力</div><div class="rc-value" style="color:'+uoColor+'">'+fmt(r.unit_output_valley)+' MW</div><div class="rc-sub">'+r.unit_ratio+'×最小出力 ('+r.min_output_per_unit+'MW)'+(r.is_at_min_valley?' 已压到最小':'')+'</div></div>';
+  html += '</div>';
   var simRef = sr.charge_mw!=null ? (SIMILAR[0].date+' 谷充'+fmt(sr.charge_mw)+'MW/峰放+'+fmt(sr.discharge_mw)+'MW/概率'+(sr.floor_prob!=null?sr.floor_prob+'%':'—')) : '—';
   html += '<div class="rec-note"><b>双变量逻辑：</b>主判据bs谷值（谷值越低→触地板概率越高→储能充电越强）；辅判据火电峰值台数（决定谷段最小出力地板线高度）。'
     +'<br><b>机制：</b>开停机有费用→为保峰值供应少停机→峰值台数越多→谷段最小出力被抬高（<60台=7856MW，>100台=22421MW）→火电压不到地板→触地板概率下降'
     +'<br><b>规律：</b>谷值<0无论台数100%触地板；谷值>20GW且台数>90仅29-34%触地板；中间区间10-20GW靠峰值台数修正；保供季(7-8/12-2月)单独矩阵'
     +'<br><b>电价参考：</b>谷段现货价<0=优先充电机会（负价套利）；实时峰谷价差>300=充放套利空间大。Top相似日电价信号纳入7维打分'
     +'<br><b>回归：</b>峰值台数≈0.0019×bs_peak+13.12(R²=0.65)；谷值台数≈0.0011×bs_valley+79.88(R²=0.55)'
+    +'<br><b>v2估算：</b>预估火电=bs×0.85 · 必开=直调负荷(bs/0.75)×13% · 调节出力=火电-必开 · 单台出力=调节出力/调节台数；单台出力接近最小出力('+r.min_output_per_unit+'MW)→火电无法下压→地板价'
     +'<br><b>最佳相似日参考：</b>'+simRef+' · 充放效率0.89</div>';
   document.getElementById('storageRec').innerHTML = html;
 }}

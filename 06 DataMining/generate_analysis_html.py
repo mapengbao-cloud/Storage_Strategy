@@ -6,24 +6,34 @@
   1. HTML <title> 中的日期范围文本（搜索 `DATE_RANGE:`）
   2. 输出文件名中的日期范围（搜索 `DATE_RANGE:`）
 每次更新数据后，将 _tmp_html_data.json 放在项目根目录运行本脚本即可。
+
+也可通过命令行参数指定输出路径和标题：
+  python generate_analysis_html.py [output_path] [title_suffix]
 """
 import json
 import os
+import sys
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(BASE)
+
+# CLI args: output_path [title_suffix]
+out_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'output', '竞价空间_电价_天气综合分析_0720-0726.html')
+title_suffix = sys.argv[2] if len(sys.argv) > 2 else '2026年7月20日-26日'
 
 # _tmp_html_data.json 由外部数据提取流程生成，包含 'data'/'weather'/'timeLabels' 三个字段
 # 生成方式：按需运行项目根目录的数据提取命令（读取竞价空间/日前复盘/实时复盘 + Open-Meteo 天气 API）
 with open(os.path.join(ROOT, '_tmp_html_data.json'), 'r', encoding='utf-8') as f:
     all_data = json.load(f)
 
+title_line = f'<title>竞价空间 &amp; 电价 &amp; 天气综合分析 | {title_suffix}</title>'
+
 html = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>竞价空间 & 电价 & 天气综合分析 | 2026年7月</title>  <!-- DATE_RANGE: 修改这里和下面文件名中的日期范围 -->
+''' + title_line + '''  <!-- DATE_RANGE: 修改标题 -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -323,7 +333,6 @@ document.addEventListener('keydown', function(e) {
 </body>
 </html>'''
 
-out_path = os.path.join(ROOT, 'output', '竞价空间_电价_天气综合分析_202507.html')  # DATE_RANGE: 修改这里的日期范围
 with open(out_path, 'w', encoding='utf-8') as f:
     f.write(html)
 

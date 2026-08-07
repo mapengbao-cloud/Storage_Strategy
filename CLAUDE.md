@@ -29,12 +29,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 日前复盘 | `python generate.py MMDD` | `02 Dayahead_Trading_Review/` |
 | 实时复盘 | `python -m src.cli stage 03 0605` | 根目录 |
 | 日结算复盘 | `python generate_review.py` | `04 Daily_Settlement_Review/` |
+| 日结算入库 | `python _ingest_settlement.py` | `04 Daily_Settlement_Review/` |
 | 更新统计表 | `python process_data.py --settlement MMDD-MMDD` | `05 Review_Dashboard_and _weeklyreport/` |
+| 周报生成 | `python _gen_weekly_report.py` | `04 Daily_Settlement_Review/` |
 | 相似日分析 | `python similar_day_analysis.py compute` → `python similar_day_analysis.py YYYY-MM-DD` | `06 DataMining/` |
 | 竞价空间可视化 | `python bidding_space_viz.py` | `06 DataMining/` |
 | 本地库同步 | `python local_db.py sync` | `06 DataMining/` |
 | 策略回测 | `python -m src.cli backtest MMDD-MMDD` | 根目录 |
 | 管线状态 | `python -m src.cli status` | 根目录 |
+| 日前出清全景 | `python _gen_clearing_panorama.py MMDD` | `06 DataMining/` |
+| 日运营复盘对比 | `python _gen_daily_compare.py` | `06 DataMining/` |
+| 日前充放申报分析 | 见 `07 Day‑ahead Bidding Strategy/` | `07 Day‑ahead Bidding Strategy/` |
 
 ## Project overview
 
@@ -114,13 +119,13 @@ python -m src.cli stage 03 0605               # 单跑一个阶段（stage 01-05
 | 子目录 | 内容 | 说明 |
 |--------|------|------|
 | `竞价空间/` | `竞价空间分析.xlsx` | 阶段 01 竞价空间分析 |
-| `收益测算/` | 日前/实时/日结算收益复盘模板（1-7月） | 按月匹配，不同月份列数不同 |
+| `收益测算/` | 日前/实时/日结算收益复盘模板（1-8月） | 按月匹配，不同月份列数不同 |
 | `月报周报/` | 统计表、周报模板、周报要求 | 阶段 05 统计表 + 周报生成 |
 | `调频测算/` | 调频收益及报价测算模板、策略文档 | 调频策略分析 |
 
 **关键：** 收益测算模板按月份和结算单版本区分：
-- 日结算：1-7月各有独立模板，5月25日起结算单增加2列（充电）和5列（放电），模板分「日前」和「日后」
-- 实时/日前出清：1-7月各有独立模板，每月参数（H12/H13等）不同，必须严格按月份对齐
+- 日结算：1-8月各有独立模板，5月25日起结算单增加2列（充电）和5列（放电），模板分「日前」和「日后」
+- 实时/日前出清：1-8月各有独立模板，每月参数（H12/H13等）不同，必须严格按月份对齐
 
 ### 数据目录
 
@@ -132,6 +137,7 @@ python -m src.cli stage 03 0605               # 单跑一个阶段（stage 01-05
 - `output/竞价空间分析结果/` — 竞价空间 HTML 可视化
 - `output/reports/` — 汇总报告和可视化
 - `output/日结算单收益测算_周报_MMDD-MMDD.xlsx` — 周报文件（根目录）
+- `06 DataMining/pre‑dispatch schedule/` — 预调度分析输出（省级预调度 HTML + 火电分类 Excel）
 
 ### 收益计算验证
 
@@ -147,8 +153,8 @@ python -m src.cli stage 03 0605               # 单跑一个阶段（stage 01-05
 
 ### 日结算单复盘
 
-- **数据源**：充放电结算单 Excel（`6052-YYYY-MM-DD德州润津储能科技有限公司结算单-.xlsx`）
-- **模板**：`assets/templates/收益测算/日结算收益复盘-X月.xlsx`（按月 + 结算单版本匹配）
+- **数据源**：充放电结算单 Excel（旧格式：`6052-YYYY-MM-DD德州润津储能科技有限公司结算单-.xlsx`；2026年7月起新格式：`德州润津储能科技有限公司_日清明细_YYYY-MM-DD.xlsx`，按大小区分充放电）
+- **模板**：`assets/templates/收益测算/日结算收益复盘-X月.xlsx`（按月 + 结算单版本匹配，1-8月）
 - **输出**：`output/日结算单收益测算/MMDD-日结算收益复盘.xlsx`
 - **入库表**：`日结算单收益测算`（19列）、`用电结算单`（25行/天）、`发电结算单`（97行/天）
 
@@ -256,6 +262,69 @@ MMDD-MMDD
 
 > 润津储能目前**没有调频收入**。调频相关表无对应润津数据。
 
+## 日前充放申报分析（07 Day‑ahead Bidding Strategy/）
+
+详见 `日前充放申报分析.txt` 和 `07 Day‑ahead Bidding Strategy/储能充放业务分析框架.md`。三大指标群：
+
+| 指标群 | 内容 | 核心逻辑 |
+|--------|------|---------|
+| 指标群1 | 相似日竞价空间分析 | 历史竞价空间与对应现货电价关系 → 充电推荐 |
+| 指标群2 | 火电出清峰谷分析 | 火电出清=竞价空间−(储能+抽蓄)，谷峰比值 vs 电价 |
+| 指标群3 | 可调机组最小出力分析 | 单台调节机组出力接近最小出力 → 地板价信号 |
+
+**分析框架核心：** 储能投运由「出清结算原则」驱动，电价由「火电出清功率」+「火电机组组合」共同决定。日前出清决定充放时段，实时电价决定实际收益。
+
+`07 Day‑ahead Bidding Strategy/storage_analysis/` 含 7 对 extract → gen 脚本：
+- 两步逻辑验证（光伏→储能充电总量→谷峰分布）
+- 储能+抽蓄出清关联分析
+- 谷值依峰值分层分析
+- 光伏投产意愿 / 谷段投产意愿
+- 填谷削峰效果验证
+
+## 06 DataMining 分析脚本（补充）
+
+除 CLAUDE.md 已列脚本外，以下分析脚本用于特定研究任务：
+
+| 脚本 | 用途 |
+|------|------|
+| `_bikaki_season_analysis.py` | 必开机组季节变化分析（台数/出力/占比随季节变化） |
+| `_fire_peak_valley_benchmark.py` | 火电出清峰谷对标（5-7月，日前vs实际，含电价） |
+| `_floor_day_regulating_units.py` | 地板价日调节机组统计（必开/调节分类，谷段出力） |
+| `_similar_day_v2.py` | 增强版相似日分析（含必开估算、调节机组、单机出力） |
+| `_unit_regulating_vs_floor_v2.py` | 单台调节机组出力 vs 地板价区分度 |
+| `_valley_regulating_vs_floor.py` | 谷段调节机组出力 vs 地板价（5-7月验证） |
+| `_gen_clearing_panorama.py` | 日前出清全景分析（见 `日前出清全景分析.md`） |
+| `_gen_daily_compare.py` | 日运营复盘对比分析（见 `日运营复盘对比分析.md`） |
+
+### 预调度分析（pre‑dispatch schedule/）
+
+`06 DataMining/pre‑dispatch schedule/` 含预调度相关输出：
+- `prescheduling_page.html` — 自包含交互式预调度页面（嵌入全部历史数据）
+- `省级预调度分析_火电储能_*.html` — 单日火电+储能预调度分析
+- `午间调峰机组_*.xlsx` — 午间调峰机组最低vs最高出力对比
+- `预调度数据爬取情况.txt` — `shandong_px_provincial_prescheduling_results` 数据覆盖情况（176天，2025-07~2026-07-24，有显著缺口）
+
+### similar_day_analysis.py v2 增强
+
+`similar_day_analysis.py` 已增强（v2），新增必开/调节机组估算：
+- 必开估算 = 直调负荷 × 13%（直调负荷 ≈ 竞价空间 / 0.75）
+- 单台调节机组出力 = (火电出清 − 必开) / 调节台数
+- 单机最小出力阈值（按峰值台数档位，7-8月保供季 ≥ 280MW）
+- 触地板概率矩阵（按竞价空间谷值 + 峰值台数，分保供/非保供季）
+
+## 根目录参考文档
+
+| 文档 | 内容 |
+|------|------|
+| `收益测算工作流程.md` | 三大收益测算体系完整流程（核心） |
+| `竞价空间分析工作流程.md` | 竞价空间四层分析体系（核心） |
+| `天机数据库_常用表速查.md` | 天机常用表 A-F 分组速查 |
+| `日前充放申报分析.txt` | 三大指标群 + 日前充放申报分析框架 |
+| `日前出清全景分析.md` | 日前出清全景分析（`_gen_clearing_panorama.py`） |
+| `日运营复盘对比分析.md` | 日运营多维度复盘对比（`_gen_daily_compare.py`） |
+| `竞价空间相似日分析.md` | 相似日分析方法论（`similar_day_analysis.py`） |
+| `07 Day‑ahead Bidding Strategy/储能充放业务分析框架.md` | 储能充放业务分析框架 + 电价预测 |
+
 ## 天机数据库关键表
 
 参考 `天机数据库_常用表速查.md`（按 A-F 工作流分组，含爬取时间）和 `06 DataMining/天机数据库_山东相关表分类.txt`（120+ 张山东相关表的分类索引）。润津 member_id = `b9e64e64a713458eba94c9af05c0a757`。
@@ -328,7 +397,7 @@ MMDD-MMDD
 
 **阶段 02 — `generate.py` vs `batch_generate.py`：** 前者用日期特定模版（`assets/MMDD-日前机组组合收益复盘.xlsx`），后者用固定模版 `输出模版-0505-日前机组组合收益复盘.xlsx` 且自动处理带编号后缀的源文件（如 `0509-发电侧日前交易结果查询 (1).xls`）。
 
-**阶段 04 — 模版（3-4 sheet）：** 模板位于 `assets/templates/收益测算/`，按月份匹配（如 `日结算收益复盘-6月.xlsx`）。含 3-4 个 sheet：`充放测算`、`充电日清算费用`、`放电日清算费用`、`容量分摊系数`（部分模板）。生成需要三个数据源：充电结算单 `.xlsx`（→ `充电日清算费用`）、放电结算单 `.xlsx`（→ `放电日清算费用`）、实时复盘 `.xlsx`（→ J4 容量分摊系数 + I8-I14 参数）。J4 通过 `compute_J4()` 从实时复盘文件的 `容量分摊系数` 和 `报价及预中标` 加权计算得到。
+**阶段 04 — 模版（3-4 sheet）：** 模板位于 `assets/templates/收益测算/`，按月份匹配（1-8月）。含 3-4 个 sheet：`充放测算`、`充电日清算费用`、`放电日清算费用`、`容量分摊系数`（部分模板）。生成需要两个数据源：充电结算单 `.xlsx`（→ `充电日清算费用`）、放电结算单 `.xlsx`（→ `放电日清算费用`）。模板 `充放测算` 的 J4 和 I8-I14 参数已自包含，`容量分摊系数` sheet 的公式直接引用 `充电日清算费用` sheet 数据计算，不再依赖实时复盘。
 
 **阶段 05 — 增量更新机制：** `process_data.py` 以上一轮 `output/` 中的文件为基础进行增量更新。带 filter 的单类型更新不会覆盖其他类型已写入的数据。首次运行需从 `assets/` 的模版开始。
 
@@ -353,6 +422,8 @@ MMDD-MMDD
 从下载目录拷入的结算单通常没有 `-充电`/`-放电` 后缀，按文件大小区分：
 - **~11KB → `-充电`**（含「日清算数据」sheet）
 - **~21KB → `-放电`**（含「日清算费用」sheet）
+
+**2026年7月起命名变更：** 结算单文件名为 `德州润津储能科技有限公司_日清明细_YYYY-MM-DD.xlsx` 格式（旧格式：`6052-YYYY-MM-DD德州润津储能科技有限公司结算单-.xlsx`），同样按大小区分充放电（~11KB→充电，~22KB→放电）。
 
 带 ` (1)` 编号后缀的文件同理处理，重命名时移除 ` (1)` 再加对应后缀。
 

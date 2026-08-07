@@ -17,7 +17,7 @@ import pythoncom
 PROJECT = r'E:\DataWork\Storage_Strategy'
 OUT_DIR = os.path.join(PROJECT, 'output', '日结算单收益测算')
 DB_PATH = os.path.join(PROJECT, 'data', 'cache', 'local.db')
-DATES = ['0714', '0715', '0716', '0717', '0718', '0719']
+DATES = ['0727', '0728', '0729', '0730', '0731', '0801']
 
 
 def com_refresh(path):

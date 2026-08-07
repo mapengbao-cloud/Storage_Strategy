@@ -1,7 +1,7 @@
-"""Generate 实时/日前出清收益测算 for July dates per 收益测算工作流程.md.
+"""Generate 实时/日前出清收益测算 per 收益测算工作流程.md.
 
 Step 1: Query 天机 MySQL directly for 96-point data
-Step 2: Copy 7月 template → output
+Step 2: Copy 按月 template → output
 Step 3: Write 报价及预中标 (H=timestamp, J/K=price, N=power)
 Step 4: COM refresh → openpyxl read Row 4 → SQLite ingest
 """
@@ -16,16 +16,24 @@ PROJECT = r'E:\DataWork\Storage_Strategy'
 TEMPLATES = os.path.join(PROJECT, 'assets', 'templates', '收益测算')
 DB_PATH = os.path.join(PROJECT, 'data', 'cache', 'local.db')
 
-# July 7月 template
-RT_TEMPLATE = os.path.join(TEMPLATES, '实时出清收益测算-7月.xlsx')
-DA_TEMPLATE = os.path.join(TEMPLATES, '日前出清收益测算-7月.xlsx')
-
 RT_OUT = os.path.join(PROJECT, 'output', '实时出清收益测算')
 DA_OUT = os.path.join(PROJECT, 'output', '日前出清收益测算')
 os.makedirs(RT_OUT, exist_ok=True)
 os.makedirs(DA_OUT, exist_ok=True)
 
 TIMES = [f'{h:02d}:{m:02d}' for h in range(24) for m in (0, 15, 30, 45)]
+
+
+def _get_template(month_int: int, mode: str) -> str:
+    """Select the correct monthly template."""
+    if mode == 'realtime':
+        name = f'实时出清收益测算-{month_int}月.xlsx'
+    else:
+        name = f'日前出清收益测算-{month_int}月.xlsx'
+    path = os.path.join(TEMPLATES, name)
+    if not os.path.exists(path):
+        raise FileNotFoundError(f'Template not found: {path}')
+    return path
 
 
 def get_conn():
@@ -72,7 +80,7 @@ def generate_one(mmdd, mode='realtime'):
     date_iso = f'2026-{mmdd[:2]}-{mmdd[2:]}'
 
     if mode == 'realtime':
-        template = RT_TEMPLATE
+        template = _get_template(int(mmdd[:2]), 'realtime')
         out_dir = RT_OUT
         out_name = f'{mmdd}-实时出清收益测算.xlsx'
         sql = f"""SELECT date, time_point, power, price
@@ -82,7 +90,7 @@ ORDER BY time_point"""
         table_name = '实时出清收益测算'
         raw_table = '润津实时出清结果'
     else:
-        template = DA_TEMPLATE
+        template = _get_template(int(mmdd[:2]), 'dayahead')
         out_dir = DA_OUT
         out_name = f'{mmdd}-日前出清收益测算.xlsx'
         sql = f"""SELECT date, time_point, power, price
@@ -172,15 +180,20 @@ ORDER BY time_point"""
 
 
 def main():
-    realtime_dates = ['0701', '0702', '0703', '0704', '0705', '0706', '0707']
-    dayahead_dates = ['0701', '0702', '0703', '0704', '0705', '0706', '0707', '0708', '0709']
+    # 天机有数据的实时出清日期
+    realtime_dates = ['0708','0712','0713','0714','0715','0716','0717','0718',
+                      '0719','0720','0721','0722','0723','0724','0725','0726',
+                      '0727','0728','0729','0730','0731','0801','0802','0803','0804','0805']
+    # 天机有数据的日前出清日期
+    dayahead_dates = ['0711','0712','0713','0714','0715','0716','0717','0718',
+                      '0719','0720','0721','0722','0723','0724','0725','0726',
+                      '0727','0728','0729','0730','0731','0801','0802','0803','0804','0805','0806']
 
-    # Check existing
     db = sqlite3.connect(DB_PATH)
     cur = db.cursor()
-    cur.execute("SELECT date FROM 实时出清收益测算 WHERE date LIKE '07%'")
+    cur.execute("SELECT date FROM 实时出清收益测算")
     existing_rt = set(r[0] for r in cur.fetchall())
-    cur.execute("SELECT date FROM 日前出清收益测算 WHERE date LIKE '07%'")
+    cur.execute("SELECT date FROM 日前出清收益测算")
     existing_da = set(r[0] for r in cur.fetchall())
     db.close()
 
@@ -188,16 +201,10 @@ def main():
     todo_da = [d for d in dayahead_dates if d not in existing_da]
 
     print(f'=== 实时出清收益测算 ===')
-    print(f'天机有数据: {realtime_dates}')
-    print(f'已入库: {sorted(existing_rt)}')
-    print(f'待生成: {todo_rt}')
-    print()
+    print(f'天机有数据: {len(realtime_dates)} 天, 已入库: {len(existing_rt)} 天, 待生成: {len(todo_rt)}')
     print(f'=== 日前出清收益测算 ===')
-    print(f'天机有数据: {dayahead_dates}')
-    print(f'已入库: {sorted(existing_da)}')
-    print(f'待生成: {todo_da}')
+    print(f'天机有数据: {len(dayahead_dates)} 天, 已入库: {len(existing_da)} 天, 待生成: {len(todo_da)}')
 
-    print()
     for d in todo_rt:
         print(f'\n--- 实时 {d} ---')
         generate_one(d, mode='realtime')

@@ -1,10 +1,10 @@
-"""Build _tmp_html_data.json for 0713-0719 from local DB + 天机 + Open-Meteo weather."""
+"""Build _tmp_html_data.json for 0701-0727 from local DB + 天机 + Open-Meteo weather."""
 import json, os, sqlite3, pymysql, urllib.request, time
 from datetime import datetime
 
 ROOT = r'E:\DataWork\Storage_Strategy'
 DB_PATH = os.path.join(ROOT, 'data', 'cache', 'local.db')
-DATES = ['2026-07-13','2026-07-14','2026-07-15','2026-07-16','2026-07-17','2026-07-18','2026-07-19']
+DATES = ['2026-07-{:02d}'.format(d) for d in range(17, 32)] + ['2026-08-{:02d}'.format(d) for d in range(1, 7)]
 TIMES = [f'{h:02d}:{m:02d}' for h in range(24) for m in (0,15,30,45)]
 
 db = sqlite3.connect(DB_PATH)

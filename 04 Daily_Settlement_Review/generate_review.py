@@ -21,7 +21,7 @@ TEMPLATES = os.path.join(PROJECT, 'assets', 'templates', '收益测算')
 os.makedirs(OUTPUT, exist_ok=True)
 
 # Default dates for batch mode
-DATES = []
+DATES = ['0727', '0728', '0729', '0730', '0731', '0801']
 
 # ── template selection ──────────────────────────────────────────
 
@@ -37,6 +37,8 @@ def _get_template(month: int) -> str:
         4:  '日结算收益复盘-4月.xlsx',
         5:  '日结算收益复盘-20260525日前.xlsx',
         6:  '日结算收益复盘-6月.xlsx',
+        7:  '日结算收益复盘-7月.xlsx',
+        8:  '日结算收益复盘-8月.xlsx',
     }
     name = mapping.get(month, f'日结算收益复盘-{month}月.xlsx')
     path = os.path.join(TEMPLATES, name)
